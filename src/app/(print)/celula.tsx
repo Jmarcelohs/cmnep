@@ -15,7 +15,7 @@ export function Celula({
 }) {
   return (
     <div
-      className={`border-r border-b border-black px-2 py-1 ${className}`}
+      className={`border-r border-b border-black px-2 py-1 text-center ${className}`}
       style={{ gridColumn: `span ${span} / span ${span}` }}
     >
       {children}

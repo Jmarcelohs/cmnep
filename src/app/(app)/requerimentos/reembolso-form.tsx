@@ -127,15 +127,13 @@ export function ReembolsoForm({
           <label className="block text-sm font-medium text-slate-700">Protocolo</label>
           <input
             name="protocolo"
-            required={Boolean(valoresIniciais)}
+            required
             defaultValue={valoresIniciais?.protocolo ?? ""}
-            placeholder={valoresIniciais ? undefined : "Deixe em branco para gerar automaticamente"}
+            placeholder="ex.: 004/2026"
             className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
           <p className="mt-1 text-xs text-slate-500">
-            {valoresIniciais
-              ? "Gerado automaticamente na criação — só altere se precisar corrigir a numeração."
-              : "Deixe em branco para gerar automaticamente (sequencial por ano) ou digite o número manualmente."}
+            Preenchimento manual — a geração automática está desativada durante os testes.
           </p>
         </div>
 

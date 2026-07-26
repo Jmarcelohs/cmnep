@@ -13,7 +13,7 @@ export async function criarReembolso(formData: FormData) {
   const usuario = await getCurrentUsuario();
   if (!usuario) redirect("/login");
 
-  const protocoloManual = String(formData.get("protocolo") ?? "").trim();
+  const protocolo = String(formData.get("protocolo") ?? "").trim();
   const pessoa_id = String(formData.get("pessoa_id") ?? "");
   const cargo_declarado = String(formData.get("cargo_declarado") ?? "") as CargoDeclarado;
   const cpf = apenasDigitos(String(formData.get("cpf") ?? "")) || null;
@@ -29,6 +29,7 @@ export async function criarReembolso(formData: FormData) {
   const modelo_veiculo = String(formData.get("modelo_veiculo") ?? "").trim() || null;
 
   if (
+    !protocolo ||
     !pessoa_id ||
     !cargo_declarado ||
     !subassunto ||
@@ -51,25 +52,6 @@ export async function criarReembolso(formData: FormData) {
   }
 
   const supabase = await createClient();
-
-  // Protocolo: se foi digitado manualmente, usa esse número; senão gera o
-  // próximo da sequência do ano corrente.
-  let protocolo = protocoloManual;
-  if (!protocolo) {
-    const ano = new Date().getFullYear();
-    const { data: protocoloNumero, error: protocoloError } = await supabase.rpc(
-      "proximo_protocolo_requerimento",
-      { p_ano: ano },
-    );
-
-    if (protocoloError || protocoloNumero == null) {
-      redirect(
-        `/requerimentos/novo?error=${encodeURIComponent(protocoloError?.message ?? "Erro ao gerar o protocolo")}`,
-      );
-    }
-
-    protocolo = `${String(protocoloNumero).padStart(3, "0")}/${ano}`;
-  }
 
   const { data: requerimento, error } = await supabase
     .from("requerimentos_reembolso")
