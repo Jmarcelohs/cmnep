@@ -1,7 +1,8 @@
 import { formatarData, formatarMoeda, valorPorExtenso } from "@/lib/pdf/formato";
+import { formatarCpfDigitado } from "@/lib/reembolso/mascaras";
 import type { SubassuntoReembolso } from "@/lib/supabase/database.types";
 
-export const FUNDAMENTO_REEMBOLSO = "Art. 9º, da Resolução nº 40 de 04 de abril de 2023";
+export const FUNDAMENTO_REEMBOLSO = "Art. 9º da Resolução nº 40, de 04 de abril de 2023";
 
 export const PRESIDENTE_PADRAO = "Tullio Ian Marangoni de Morais";
 
@@ -48,18 +49,20 @@ export function corpoReembolso({
 }) {
   const nomeTexto = nome || "[solicitante]";
   const municipioTexto = municipio || "[município]";
+  const cpfTexto = cpf ? formatarCpfDigitado(cpf) : "—";
 
   // Reembolso de combustível/estacionamento identifica o veículo
-  // utilizado (placa e modelo) direto no corpo do requerimento.
+  // utilizado (placa e modelo) numa frase própria, direto no corpo do
+  // requerimento.
   const clausulaVeiculo =
     subassunto === "combustivel" && (placaVeiculo || modeloVeiculo)
-      ? `, utilizando o veículo locado pela Câmara Municipal de Nepomuceno, placa ${placaVeiculo || "—"}, modelo ${modeloVeiculo || "—"},`
+      ? `. Veículo locado pela Câmara Municipal de Nepomuceno, placa ${placaVeiculo || "—"}, modelo ${modeloVeiculo || "—"},`
       : ",";
 
   return (
-    `${nomeTexto}, ${cargoDeclarado}, portador(a) do CPF nº ${cpf ?? "—"}, vem respeitosamente ` +
+    `${nomeTexto}, ${cargoDeclarado}, portador(a) do CPF nº ${cpfTexto}, vem respeitosamente ` +
     `requerer a Vossa Excelência, com fundamento no ${FUNDAMENTO_REEMBOLSO}, o reembolso de ` +
-    `${SUBASSUNTO_LABEL[subassunto]}${clausulaVeiculo} referentes à viagem ao município de ${municipioTexto}, ` +
+    `${SUBASSUNTO_LABEL[subassunto]}${clausulaVeiculo} referente à viagem ao município de ${municipioTexto}, ` +
     `realizada no período de ${formatarData(dataIda)} a ${formatarData(dataVolta)}, no valor de ` +
     `${formatarMoeda(valor)} (${valorPorExtenso(valor)}), solicitando o pagamento pelos meios de praxe.`
   );
