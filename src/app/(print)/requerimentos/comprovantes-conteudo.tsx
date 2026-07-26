@@ -1,9 +1,8 @@
 import { Celula, headerCell, PaginaA4, TabelaGrid } from "../celula";
+import { FOTOS_POR_PAGINA } from "@/lib/pdf/paginacao";
 
 type Foto = { url: string; nome: string };
 type Documento = { nome: string };
-
-const FOTOS_POR_PAGINA = 2;
 
 export function ComprovantesConteudo({
   fotos,
@@ -45,7 +44,7 @@ export function ComprovantesConteudo({
                           key={i}
                           src={foto.url}
                           alt={foto.nome}
-                          className="h-[105mm] w-full rounded border border-slate-300 object-cover"
+                          className="h-[105mm] w-full rounded border border-slate-300 bg-slate-50 object-contain"
                         />
                       ))}
                     </div>

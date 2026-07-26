@@ -10,14 +10,10 @@ export function slugify(texto: string) {
     .replace(/^-+|-+$/g, "");
 }
 
-export async function gerarPdfDeRota(
+export async function renderizarPdfDaRota(
   request: NextRequest,
   caminhoInterno: string,
-  filename: string,
-  // PDFs de comprovantes anexados — entram como páginas extras, ao final
-  // do documento gerado (ex.: recibos em PDF anexados a um requerimento).
-  pdfsParaAnexar: Buffer[] = [],
-) {
+): Promise<Buffer> {
   const cookies = request.cookies.getAll();
   const origin = request.nextUrl.origin;
 
@@ -46,45 +42,107 @@ export async function gerarPdfDeRota(
     });
 
     if (!response || response.status() >= 400) {
-      return NextResponse.json(
-        { error: "Não foi possível renderizar o documento" },
-        { status: 502 },
-      );
+      throw new Error("Não foi possível renderizar o documento");
     }
 
-    let pdfBuffer = Buffer.from(
+    return Buffer.from(
       await page.pdf({
         format: "A4",
         printBackground: true,
         margin: { top: "0", right: "0", bottom: "0", left: "0" },
       }),
     );
-
-    if (pdfsParaAnexar.length > 0) {
-      const documentoFinal = await PDFDocument.load(pdfBuffer);
-      for (const anexo of pdfsParaAnexar) {
-        try {
-          const documentoAnexo = await PDFDocument.load(anexo);
-          const paginas = await documentoFinal.copyPages(
-            documentoAnexo,
-            documentoAnexo.getPageIndices(),
-          );
-          paginas.forEach((paginaAnexo) => documentoFinal.addPage(paginaAnexo));
-        } catch {
-          // Um PDF anexado corrompido/inválido não pode derrubar a geração
-          // do documento inteiro — só deixa de entrar nesse caso.
-        }
-      }
-      pdfBuffer = Buffer.from(await documentoFinal.save());
-    }
-
-    return new NextResponse(Buffer.from(pdfBuffer), {
-      headers: {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="${filename}"`,
-      },
-    });
   } finally {
     await browser.close();
   }
+}
+
+// Mescla PDFs extras (ex.: comprovantes em PDF anexados a um requerimento)
+// ao final de um documento já gerado.
+export async function anexarPdfsAoFinal(
+  pdfBase: Buffer,
+  pdfsParaAnexar: Buffer[],
+): Promise<Buffer> {
+  if (pdfsParaAnexar.length === 0) return pdfBase;
+
+  const documentoFinal = await PDFDocument.load(pdfBase);
+  for (const anexo of pdfsParaAnexar) {
+    try {
+      const documentoAnexo = await PDFDocument.load(anexo);
+      const paginas = await documentoFinal.copyPages(
+        documentoAnexo,
+        documentoAnexo.getPageIndices(),
+      );
+      paginas.forEach((paginaAnexo) => documentoFinal.addPage(paginaAnexo));
+    } catch {
+      // Um PDF anexado corrompido/inválido não pode derrubar a geração
+      // do documento inteiro — só deixa de entrar nesse caso.
+    }
+  }
+  return Buffer.from(await documentoFinal.save());
+}
+
+// Reconstrói um PDF intercalando, logo depois de páginas específicas
+// (índice 0-based da última página da seção), as páginas de outros PDFs —
+// usado pra colocar os comprovantes em PDF de cada requerimento logo após
+// a seção dele no PDF combinado, em vez de jogar tudo no final do arquivo.
+export async function intercalarPdfs(
+  pdfBase: Buffer,
+  insercoes: { aposPagina: number; pdfs: Buffer[] }[],
+): Promise<Buffer> {
+  const comInsercoes = insercoes.filter((i) => i.pdfs.length > 0);
+  if (comInsercoes.length === 0) return pdfBase;
+
+  const base = await PDFDocument.load(pdfBase);
+  const totalPaginasBase = base.getPageCount();
+  const documentoFinal = await PDFDocument.create();
+  const mapaInsercoes = new Map(comInsercoes.map((i) => [i.aposPagina, i.pdfs]));
+
+  for (let i = 0; i < totalPaginasBase; i++) {
+    const [pagina] = await documentoFinal.copyPages(base, [i]);
+    documentoFinal.addPage(pagina);
+
+    const pdfsParaInserir = mapaInsercoes.get(i);
+    if (pdfsParaInserir) {
+      for (const pdfExtra of pdfsParaInserir) {
+        try {
+          const anexo = await PDFDocument.load(pdfExtra);
+          const paginasAnexo = await documentoFinal.copyPages(anexo, anexo.getPageIndices());
+          paginasAnexo.forEach((p) => documentoFinal.addPage(p));
+        } catch {
+          // PDF corrompido/inválido — ignora, não derruba o documento inteiro.
+        }
+      }
+    }
+  }
+
+  return Buffer.from(await documentoFinal.save());
+}
+
+export async function gerarPdfDeRota(
+  request: NextRequest,
+  caminhoInterno: string,
+  filename: string,
+  // PDFs de comprovantes anexados — entram como páginas extras, ao final
+  // do documento gerado (ex.: recibos em PDF anexados a um requerimento).
+  pdfsParaAnexar: Buffer[] = [],
+) {
+  let pdfBuffer: Buffer;
+  try {
+    pdfBuffer = await renderizarPdfDaRota(request, caminhoInterno);
+  } catch {
+    return NextResponse.json(
+      { error: "Não foi possível renderizar o documento" },
+      { status: 502 },
+    );
+  }
+
+  pdfBuffer = await anexarPdfsAoFinal(pdfBuffer, pdfsParaAnexar);
+
+  return new NextResponse(Buffer.from(pdfBuffer), {
+    headers: {
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `attachment; filename="${filename}"`,
+    },
+  });
 }

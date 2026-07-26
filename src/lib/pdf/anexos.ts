@@ -45,8 +45,12 @@ export async function baixarComprovantesPdf(
 
   const buffers = await Promise.all(
     (anexos ?? []).map(async (anexo) => {
-      const { data } = await supabase.storage.from(BUCKET_REEMBOLSO).download(anexo.caminho);
-      return data ? Buffer.from(await data.arrayBuffer()) : null;
+      const { data, error } = await supabase.storage.from(BUCKET_REEMBOLSO).download(anexo.caminho);
+      if (error) {
+        console.error(`Falha ao baixar comprovante "${anexo.caminho}":`, error.message);
+        return null;
+      }
+      return Buffer.from(await data.arrayBuffer());
     }),
   );
 

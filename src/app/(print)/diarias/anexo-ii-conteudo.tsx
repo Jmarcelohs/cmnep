@@ -1,5 +1,6 @@
 import { Celula, headerCell, PaginaA4, TabelaGrid } from "../celula";
 import { formatarData, formatarMoeda } from "@/lib/pdf/formato";
+import { FOTOS_POR_PAGINA } from "@/lib/pdf/paginacao";
 
 const PARECER_LABEL: Record<string, string> = {
   aprovacao_sem_ressalvas: "APROVAÇÃO sem ressalvas",
@@ -55,7 +56,6 @@ export function AnexoIIConteudo({
   // vinculado) — força a quebra de página após a última página de fotos.
   ultimoDocumento?: boolean;
 }) {
-  const FOTOS_POR_PAGINA = 2;
   const paginasDeFotos: Foto[][] =
     fotos.length > 0
       ? Array.from({ length: Math.ceil(fotos.length / FOTOS_POR_PAGINA) }, (_, i) =>
@@ -107,7 +107,7 @@ export function AnexoIIConteudo({
               <br />
               COM ÊNFASE NO INTERESSE PÚBLICO DEFENDIDO
             </Celula>
-            <Celula span={12} className="min-h-[140mm] align-top whitespace-pre-wrap">
+            <Celula span={12} className="min-h-[140mm] align-top whitespace-pre-wrap !text-justify">
               {prestacao.relatorio_resultado}
             </Celula>
           </TabelaGrid>
@@ -259,7 +259,7 @@ export function AnexoIIConteudo({
                           key={i}
                           src={foto.url}
                           alt={foto.nome}
-                          className="h-[105mm] w-full rounded border border-slate-300 object-cover"
+                          className="h-[105mm] w-full rounded border border-slate-300 bg-slate-50 object-contain"
                         />
                       ))}
                     </div>
