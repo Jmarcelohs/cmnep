@@ -385,6 +385,33 @@ export interface Database {
           },
         ];
       };
+      requerimentos_reembolso_anexos: {
+        Row: {
+          id: string;
+          requerimento_id: string;
+          caminho: string;
+          nome_original: string;
+          tipo: TipoAnexo;
+          criado_por: string | null;
+          criado_em: string;
+        };
+        Insert: Partial<Omit<Database["public"]["Tables"]["requerimentos_reembolso_anexos"]["Row"], "id">> & {
+          requerimento_id: string;
+          caminho: string;
+          nome_original: string;
+          tipo: TipoAnexo;
+        };
+        Update: Partial<Database["public"]["Tables"]["requerimentos_reembolso_anexos"]["Row"]>;
+        Relationships: [
+          {
+            foreignKeyName: "requerimentos_reembolso_anexos_requerimento_id_fkey";
+            columns: ["requerimento_id"];
+            isOneToOne: false;
+            referencedRelation: "requerimentos_reembolso";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       requerimentos_internos: {
         Row: {
           id: string;

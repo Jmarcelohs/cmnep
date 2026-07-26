@@ -6,6 +6,7 @@ import { formatarData, formatarMoeda } from "@/lib/pdf/formato";
 import { SUBASSUNTO_TITULO, corpoReembolso } from "@/lib/reembolso/documento";
 import { ExcluirSolicitacaoButton } from "@/components/excluir-solicitacao-button";
 import { DownloadPdfButton } from "@/components/download-pdf-button";
+import { AnexosForm } from "../anexos-form";
 import {
   excluirReembolso,
   marcarEmAnaliseReembolso,
@@ -60,6 +61,12 @@ export default async function DetalheReembolsoPage({
     (usuario?.papel === "ordenador_despesa" || usuario?.papel === "admin") &&
     requerimento.status !== "deferido" &&
     requerimento.status !== "indeferido";
+
+  const { data: anexos } = await supabase
+    .from("requerimentos_reembolso_anexos")
+    .select("id, nome_original, tipo, caminho")
+    .eq("requerimento_id", id)
+    .order("criado_em");
 
   const corpo = corpoReembolso({
     nome: pessoa?.nome ?? "",
@@ -186,6 +193,8 @@ export default async function DetalheReembolsoPage({
         <p className="text-xs font-semibold uppercase text-slate-500">Corpo do requerimento</p>
         <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">{corpo}</p>
       </div>
+
+      <AnexosForm requerimentoId={id} anexos={anexos ?? []} podeEditar={podeGerenciar} />
 
       {podeDecidir && (
         <div className="mt-6 flex flex-wrap gap-3">
