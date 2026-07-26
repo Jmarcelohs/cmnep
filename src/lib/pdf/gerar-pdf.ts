@@ -74,9 +74,10 @@ export async function anexarPdfsAoFinal(
         documentoAnexo.getPageIndices(),
       );
       paginas.forEach((paginaAnexo) => documentoFinal.addPage(paginaAnexo));
-    } catch {
+    } catch (err) {
       // Um PDF anexado corrompido/inválido não pode derrubar a geração
       // do documento inteiro — só deixa de entrar nesse caso.
+      console.error("Falha ao mesclar comprovante em PDF:", err);
     }
   }
   return Buffer.from(await documentoFinal.save());
@@ -109,8 +110,9 @@ export async function intercalarPdfs(
           const anexo = await PDFDocument.load(pdfExtra);
           const paginasAnexo = await documentoFinal.copyPages(anexo, anexo.getPageIndices());
           paginasAnexo.forEach((p) => documentoFinal.addPage(p));
-        } catch {
+        } catch (err) {
           // PDF corrompido/inválido — ignora, não derruba o documento inteiro.
+          console.error("Falha ao intercalar comprovante em PDF:", err);
         }
       }
     }
