@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { gerarPdfDeRota, slugify } from "@/lib/pdf/gerar-pdf";
+import { baixarComprovantesPdf } from "@/lib/pdf/anexos";
 
 export const maxDuration = 60;
 
@@ -34,5 +35,7 @@ export async function GET(
   if (pessoa?.nome) partes.push(slugify(pessoa.nome));
   const filename = `${partes.join("-").toLowerCase()}.pdf`;
 
-  return gerarPdfDeRota(request, `/requerimentos/${id}/imprimir`, filename);
+  const pdfsParaAnexar = await baixarComprovantesPdf(supabase, id);
+
+  return gerarPdfDeRota(request, `/requerimentos/${id}/imprimir`, filename, pdfsParaAnexar);
 }

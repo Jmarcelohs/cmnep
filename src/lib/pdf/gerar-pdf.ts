@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { PDFDocument } from "pdf-lib";
 import { launchBrowser } from "@/lib/pdf/launch-browser";
 
 export function slugify(texto: string) {
@@ -13,6 +14,9 @@ export async function gerarPdfDeRota(
   request: NextRequest,
   caminhoInterno: string,
   filename: string,
+  // PDFs de comprovantes anexados — entram como páginas extras, ao final
+  // do documento gerado (ex.: recibos em PDF anexados a um requerimento).
+  pdfsParaAnexar: Buffer[] = [],
 ) {
   const cookies = request.cookies.getAll();
   const origin = request.nextUrl.origin;
@@ -48,11 +52,31 @@ export async function gerarPdfDeRota(
       );
     }
 
-    const pdfBuffer = await page.pdf({
-      format: "A4",
-      printBackground: true,
-      margin: { top: "0", right: "0", bottom: "0", left: "0" },
-    });
+    let pdfBuffer = Buffer.from(
+      await page.pdf({
+        format: "A4",
+        printBackground: true,
+        margin: { top: "0", right: "0", bottom: "0", left: "0" },
+      }),
+    );
+
+    if (pdfsParaAnexar.length > 0) {
+      const documentoFinal = await PDFDocument.load(pdfBuffer);
+      for (const anexo of pdfsParaAnexar) {
+        try {
+          const documentoAnexo = await PDFDocument.load(anexo);
+          const paginas = await documentoFinal.copyPages(
+            documentoAnexo,
+            documentoAnexo.getPageIndices(),
+          );
+          paginas.forEach((paginaAnexo) => documentoFinal.addPage(paginaAnexo));
+        } catch {
+          // Um PDF anexado corrompido/inválido não pode derrubar a geração
+          // do documento inteiro — só deixa de entrar nesse caso.
+        }
+      }
+      pdfBuffer = Buffer.from(await documentoFinal.save());
+    }
 
     return new NextResponse(Buffer.from(pdfBuffer), {
       headers: {
