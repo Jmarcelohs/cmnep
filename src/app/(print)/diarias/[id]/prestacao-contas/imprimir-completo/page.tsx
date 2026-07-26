@@ -1,10 +1,12 @@
+import { Fragment } from "react";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PrintButton } from "../../../../print-button";
 import { AnexoIConteudo } from "../../../anexo-i-conteudo";
 import { AnexoIIConteudo } from "../../../anexo-ii-conteudo";
 import { RequerimentoConteudo } from "../../../../requerimentos/requerimento-conteudo";
-import { carregarAnexosParaImpressao } from "@/lib/pdf/anexos";
+import { ComprovantesConteudo } from "../../../../requerimentos/comprovantes-conteudo";
+import { carregarAnexosParaImpressao, carregarAnexosReembolsoParaImpressao } from "@/lib/pdf/anexos";
 
 export default async function ImprimirCompletoPage({
   params,
@@ -60,6 +62,13 @@ export default async function ImprimirCompletoPage({
 
   const temRequerimentos = (requerimentos ?? []).length > 0;
 
+  const requerimentosComAnexos = await Promise.all(
+    (requerimentos ?? []).map(async (requerimento) => ({
+      requerimento,
+      ...(await carregarAnexosReembolsoParaImpressao(supabase, requerimento.id)),
+    })),
+  );
+
   return (
     <>
       <PrintButton
@@ -80,15 +89,25 @@ export default async function ImprimirCompletoPage({
         documentos={documentos}
         ultimoDocumento={!temRequerimentos}
       />
-      {(requerimentos ?? []).map((requerimento, indice) => (
-        <RequerimentoConteudo
-          key={requerimento.id}
-          requerimento={requerimento}
-          pessoa={requerimento.pessoas as unknown as { nome: string } | null}
-          cpf={requerimento.cpf}
-          quebrarPagina={indice < (requerimentos ?? []).length - 1}
-        />
-      ))}
+      {requerimentosComAnexos.map(({ requerimento, fotos, documentos }, indice) => {
+        const ultimoRequerimento = indice === requerimentosComAnexos.length - 1;
+        const temAnexos = fotos.length > 0 || documentos.length > 0;
+        return (
+          <Fragment key={requerimento.id}>
+            <RequerimentoConteudo
+              requerimento={requerimento}
+              pessoa={requerimento.pessoas as unknown as { nome: string } | null}
+              cpf={requerimento.cpf}
+              quebrarPagina={temAnexos || !ultimoRequerimento}
+            />
+            <ComprovantesConteudo
+              fotos={fotos}
+              documentos={documentos}
+              ultimoDocumento={ultimoRequerimento}
+            />
+          </Fragment>
+        );
+      })}
     </>
   );
 }
