@@ -112,6 +112,14 @@ export default async function RequerimentosPage({
                         Ver
                       </Link>
                       {podeExcluir && (
+                        <Link
+                          href={`/requerimentos/${r.id}/editar`}
+                          className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                        >
+                          Editar
+                        </Link>
+                      )}
+                      {podeExcluir && (
                         <ExcluirSolicitacaoButton
                           action={excluirReembolso.bind(null, r.id)}
                           mensagemConfirmacao={`Tem certeza que deseja excluir o requerimento ${r.protocolo}? Essa ação não pode ser desfeita.`}
