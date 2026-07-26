@@ -53,7 +53,7 @@ export function corpoReembolso({
   // utilizado (placa e modelo) direto no corpo do requerimento.
   const clausulaVeiculo =
     subassunto === "combustivel" && (placaVeiculo || modeloVeiculo)
-      ? `, utilizando o veículo "LOCADO PELA CAMARA MUNICIPAL", placa ${placaVeiculo || "—"}, modelo ${modeloVeiculo || "—"},`
+      ? `, utilizando o veículo locado pela Câmara Municipal de Nepomuceno, placa ${placaVeiculo || "—"}, modelo ${modeloVeiculo || "—"},`
       : ",";
 
   return (
