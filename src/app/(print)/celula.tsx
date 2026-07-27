@@ -4,11 +4,11 @@ export const headerCell = "bg-[#CDF3F3] text-center font-semibold";
 // esquerda da tabela inteira vem do wrapper (TabelaGrid). Isso evita que
 // bordas de células vizinhas se sobreponham e pareçam mais grossas
 // (efeito "negrito") nas linhas internas. Todas as bordas (aqui e no
-// TabelaGrid) usam a mesma espessura (2px) pra não ficar linha grossa
+// TabelaGrid) usam a mesma espessura (1.5px) pra não ficar linha grossa
 // misturada com linha fina — 1px demonstrou sumir por arredondamento de
 // sub-pixel na rasterização do PDF em algumas linhas, mesmo com o
-// deviceScaleFactor alto (ver gerar-pdf.ts); 2px em todas dá margem
-// suficiente pra nunca arredondar a zero, mantendo a espessura uniforme.
+// deviceScaleFactor alto (ver gerar-pdf.ts); 1.5px (3 pixels físicos com
+// deviceScaleFactor 2) dá margem suficiente sem ficar tão grosso quanto 2px.
 export function Celula({
   span,
   className = "",
@@ -20,7 +20,7 @@ export function Celula({
 }) {
   return (
     <div
-      className={`border-r-2 border-b-2 border-black px-2 py-1 text-center ${className}`}
+      className={`border-r-[1.5px] border-b-[1.5px] border-black px-2 py-1 text-center ${className}`}
       style={{ gridColumn: `span ${span} / span ${span}` }}
     >
       {children}
@@ -37,7 +37,7 @@ export function TabelaGrid({
 }) {
   return (
     <div
-      className={`grid grid-cols-12 border-t-2 border-l-2 border-black ${className}`}
+      className={`grid grid-cols-12 border-t-[1.5px] border-l-[1.5px] border-black ${className}`}
     >
       {children}
     </div>
