@@ -177,13 +177,19 @@ export async function excluirSolicitacao(id: string) {
   redirect("/diarias");
 }
 
-export async function autorizarSolicitacao(id: string) {
+export async function autorizarSolicitacao(id: string, formData: FormData) {
+  const data_autorizacao = String(formData.get("data_autorizacao") ?? "") || null;
+
+  if (!data_autorizacao) {
+    redirect(`/diarias/${id}?error=${encodeURIComponent("Informe a data de autorização")}`);
+  }
+
   const supabase = await createClient();
   await supabase
     .from("diarias_solicitacoes")
     .update({
       status: "Autorizado",
-      data_autorizacao: new Date().toISOString().slice(0, 10),
+      data_autorizacao,
     })
     .eq("id", id);
 

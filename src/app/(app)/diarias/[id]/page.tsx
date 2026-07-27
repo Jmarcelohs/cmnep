@@ -232,8 +232,17 @@ export default async function DetalheSolicitacaoPage({
       )}
 
       {podeAutorizar && (
-        <div className="mt-6 flex gap-3">
-          <form action={autorizarSolicitacao.bind(null, id)}>
+        <div className="mt-6 flex flex-wrap items-end gap-3">
+          <form action={autorizarSolicitacao.bind(null, id)} className="flex items-end gap-2">
+            <div>
+              <label className="block text-xs font-medium text-slate-500">Data da autorização</label>
+              <input
+                type="date"
+                name="data_autorizacao"
+                required
+                className="mt-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+              />
+            </div>
             <button
               type="submit"
               className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
