@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
+import { TESOUREIRO_PADRAO } from "@/lib/diarias/documento";
 import type { Parecer } from "@/lib/supabase/database.types";
 
 function numero(formData: FormData, campo: string) {
@@ -192,7 +193,6 @@ export async function darBaixaPagamento(
   solicitacaoId: string,
   formData: FormData,
 ) {
-  const usuario = await getCurrentUsuario();
   const supabase = await createClient();
 
   const numeroProcesso = String(formData.get("numero_processo") ?? "");
@@ -208,7 +208,7 @@ export async function darBaixaPagamento(
 
   await supabase
     .from("diarias_prestacoes_contas")
-    .update({ tesoureiro_nome: usuario?.nome ?? null })
+    .update({ tesoureiro_nome: TESOUREIRO_PADRAO })
     .eq("id", prestacaoId);
 
   revalidatePath(`/diarias/${solicitacaoId}/prestacao-contas`);

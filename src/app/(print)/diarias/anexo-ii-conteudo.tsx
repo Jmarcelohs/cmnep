@@ -32,6 +32,7 @@ type Prestacao = {
   parecer_data: string | null;
   controle_interno_nome: string;
   controle_interno_cargo: string;
+  tesoureiro_nome: string | null;
 };
 
 type Pagamento = { id: string; numero_processo: string | null; valor: number };
@@ -209,6 +210,13 @@ export function AnexoIIConteudo({
               <div className="mx-auto mt-[6mm] w-2/3 border-t border-black pt-1 text-center">
                 Assinatura do Tesoureiro
               </div>
+              {prestacao.tesoureiro_nome && (
+                <div className="mx-auto mt-[6mm] w-2/3 border-t border-black pt-1 text-center">
+                  P.P. {prestacao.tesoureiro_nome}
+                  <br />
+                  Tesoureiro
+                </div>
+              )}
             </Celula>
 
             <Celula span={12} className={headerCell}>
