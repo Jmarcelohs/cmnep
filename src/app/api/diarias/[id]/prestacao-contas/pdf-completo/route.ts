@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { renderizarPdfDaRota, intercalarPdfs, slugify } from "@/lib/pdf/gerar-pdf";
 import {
   baixarComprovantesPdf,
+  baixarDocumentosPdfDiaria,
   carregarAnexosParaImpressao,
   carregarAnexosReembolsoParaImpressao,
 } from "@/lib/pdf/anexos";
@@ -61,6 +62,13 @@ export async function GET(
   paginaAtual += 2 + contarPaginasFotos(fotosDiaria.length, documentosDiaria.length, true); // Anexo II
 
   const insercoes: { aposPagina: number; pdfs: Buffer[] }[] = [];
+
+  // Documentos em PDF da própria prestação de contas (ex.: certificado de
+  // participação, nota fiscal) — entram logo depois da seção do Anexo II.
+  const pdfsDaDiaria = await baixarDocumentosPdfDiaria(supabase, prestacao.id);
+  if (pdfsDaDiaria.length > 0) {
+    insercoes.push({ aposPagina: paginaAtual - 1, pdfs: pdfsDaDiaria });
+  }
 
   for (const requerimento of requerimentos ?? []) {
     const [{ fotos, documentos }, pdfsDoRequerimento] = await Promise.all([

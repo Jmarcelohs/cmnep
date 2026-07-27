@@ -32,6 +32,31 @@ export async function carregarAnexosParaImpressao(
   return { fotos: fotos.filter((f) => f.url), documentos };
 }
 
+export async function baixarDocumentosPdfDiaria(
+  supabase: SupabaseClient<Database>,
+  prestacaoId: string,
+) {
+  const { data: anexos } = await supabase
+    .from("diarias_prestacoes_anexos")
+    .select("caminho")
+    .eq("prestacao_id", prestacaoId)
+    .eq("tipo", "pdf")
+    .order("criado_em");
+
+  const buffers = await Promise.all(
+    (anexos ?? []).map(async (anexo) => {
+      const { data, error } = await supabase.storage.from(BUCKET).download(anexo.caminho);
+      if (error) {
+        console.error(`Falha ao baixar anexo "${anexo.caminho}":`, error.message);
+        return null;
+      }
+      return Buffer.from(await data.arrayBuffer());
+    }),
+  );
+
+  return buffers.filter((b): b is NonNullable<typeof b> => b !== null);
+}
+
 export async function baixarComprovantesPdf(
   supabase: SupabaseClient<Database>,
   requerimentoId: string,

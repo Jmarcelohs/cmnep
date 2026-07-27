@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { gerarPdfDeRota, slugify } from "@/lib/pdf/gerar-pdf";
+import { baixarDocumentosPdfDiaria } from "@/lib/pdf/anexos";
 
 export const maxDuration = 60;
 
@@ -21,7 +22,7 @@ export async function GET(
 
   const { data: prestacao } = await supabase
     .from("diarias_prestacoes_contas")
-    .select("numero_solicitacao, pessoas(nome)")
+    .select("id, numero_solicitacao, pessoas(nome)")
     .eq("solicitacao_id", id)
     .single();
 
@@ -35,5 +36,12 @@ export async function GET(
   if (pessoa?.nome) partes.push(slugify(pessoa.nome));
   const filename = `${partes.join("-").toLowerCase()}.pdf`;
 
-  return gerarPdfDeRota(request, `/diarias/${id}/prestacao-contas/imprimir`, filename);
+  const pdfsParaAnexar = await baixarDocumentosPdfDiaria(supabase, prestacao.id);
+
+  return gerarPdfDeRota(
+    request,
+    `/diarias/${id}/prestacao-contas/imprimir`,
+    filename,
+    pdfsParaAnexar,
+  );
 }
