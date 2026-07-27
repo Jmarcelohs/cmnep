@@ -81,6 +81,7 @@ export default async function EditarSolicitacaoPage({
           contato_destino: solicitacao.contato_destino ?? "",
           data_partida: solicitacao.data_partida ?? "",
           data_chegada: solicitacao.data_chegada ?? "",
+          data_autorizacao: solicitacao.data_autorizacao ?? "",
           finalidade: solicitacao.finalidade ?? "",
           itens: (itens ?? []).map((item) => ({
             modo: item.modo,

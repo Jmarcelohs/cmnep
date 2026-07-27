@@ -23,6 +23,7 @@ export type ValoresIniciais = {
   contato_destino: string;
   data_partida: string;
   data_chegada: string;
+  data_autorizacao: string;
   finalidade: string;
   itens: Item[];
 };
@@ -233,6 +234,20 @@ export function SolicitacaoForm({
             className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
         </div>
+        {valoresIniciais && (
+          <div>
+            <label className="block text-sm font-medium text-slate-700">Data de autorização</label>
+            <input
+              type="date"
+              name="data_autorizacao"
+              defaultValue={valoresIniciais.data_autorizacao}
+              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            />
+            <p className="mt-1 text-xs text-slate-500">
+              Só se aplica a diárias já autorizadas — ajuste aqui se precisar corrigir a data.
+            </p>
+          </div>
+        )}
         <div className="sm:col-span-2">
           <label className="block text-sm font-medium text-slate-700">Finalidade</label>
           <textarea

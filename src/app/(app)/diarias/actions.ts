@@ -100,6 +100,7 @@ export async function editarSolicitacao(id: string, formData: FormData) {
   const data_partida = String(formData.get("data_partida") ?? "") || null;
   const data_chegada = String(formData.get("data_chegada") ?? "") || null;
   const data_solicitacao = String(formData.get("data_solicitacao") ?? "") || null;
+  const data_autorizacao = String(formData.get("data_autorizacao") ?? "") || null;
   const itens: ItemInput[] = JSON.parse(String(formData.get("itens") ?? "[]"));
 
   if (!data_solicitacao || itens.length === 0) {
@@ -125,6 +126,7 @@ export async function editarSolicitacao(id: string, formData: FormData) {
       data_partida,
       data_chegada,
       data_solicitacao,
+      data_autorizacao,
       total,
     })
     .eq("id", id);
