@@ -3,7 +3,12 @@ export const headerCell = "bg-[#CDF3F3] text-center font-semibold";
 // Cada célula desenha só a borda direita/inferior — a borda de cima e da
 // esquerda da tabela inteira vem do wrapper (TabelaGrid). Isso evita que
 // bordas de células vizinhas se sobreponham e pareçam mais grossas
-// (efeito "negrito") nas linhas internas.
+// (efeito "negrito") nas linhas internas. Todas as bordas (aqui e no
+// TabelaGrid) usam a mesma espessura (2px) pra não ficar linha grossa
+// misturada com linha fina — 1px demonstrou sumir por arredondamento de
+// sub-pixel na rasterização do PDF em algumas linhas, mesmo com o
+// deviceScaleFactor alto (ver gerar-pdf.ts); 2px em todas dá margem
+// suficiente pra nunca arredondar a zero, mantendo a espessura uniforme.
 export function Celula({
   span,
   className = "",
@@ -15,7 +20,7 @@ export function Celula({
 }) {
   return (
     <div
-      className={`border-r border-b border-black px-2 py-1 text-center ${className}`}
+      className={`border-r-2 border-b-2 border-black px-2 py-1 text-center ${className}`}
       style={{ gridColumn: `span ${span} / span ${span}` }}
     >
       {children}
@@ -30,12 +35,6 @@ export function TabelaGrid({
   className?: string;
   children: React.ReactNode;
 }) {
-  // A borda de cima/esquerda da tabela inteira não tem nenhuma célula
-  // reforçando ela (ao contrário das linhas internas, cobertas por
-  // border-r/border-b de várias células vizinhas), então fica mais sujeita
-  // a sumir por arredondamento de sub-pixel na rasterização do PDF mesmo
-  // com o deviceScaleFactor alto (ver gerar-pdf.ts). 2px em vez de 1px dá
-  // margem suficiente pra nunca arredondar a zero.
   return (
     <div
       className={`grid grid-cols-12 border-t-2 border-l-2 border-black ${className}`}
