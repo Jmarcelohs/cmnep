@@ -30,12 +30,15 @@ export function TabelaGrid({
   className?: string;
   children: React.ReactNode;
 }) {
-  // A borda de 1px sumindo na rasterização do PDF era causada pelo
-  // deviceScaleFactor da página no Puppeteer (ver gerar-pdf.ts) — corrigido
-  // lá, então aqui a borda volta a ser 1px, igual às células internas.
+  // A borda de cima/esquerda da tabela inteira não tem nenhuma célula
+  // reforçando ela (ao contrário das linhas internas, cobertas por
+  // border-r/border-b de várias células vizinhas), então fica mais sujeita
+  // a sumir por arredondamento de sub-pixel na rasterização do PDF mesmo
+  // com o deviceScaleFactor alto (ver gerar-pdf.ts). 2px em vez de 1px dá
+  // margem suficiente pra nunca arredondar a zero.
   return (
     <div
-      className={`grid grid-cols-12 border-t border-l border-black ${className}`}
+      className={`grid grid-cols-12 border-t-2 border-l-2 border-black ${className}`}
     >
       {children}
     </div>
