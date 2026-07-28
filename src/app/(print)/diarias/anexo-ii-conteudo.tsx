@@ -223,7 +223,10 @@ export function AnexoIIConteudo({
               <div className="mt-2 space-y-1 text-center">
                 {Object.entries(PARECER_LABEL).map(([valor, label]) => (
                   <p key={valor}>
-                    {prestacao.parecer === valor ? "☒" : "☐"} {label}
+                    <span className="mr-1 inline-block w-[4mm] border-2 border-black text-center align-middle">
+                      {prestacao.parecer === valor ? "X" : ""}
+                    </span>{" "}
+                    {label}
                   </p>
                 ))}
               </div>
