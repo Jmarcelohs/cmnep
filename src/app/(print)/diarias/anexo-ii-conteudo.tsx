@@ -210,11 +210,6 @@ export function AnexoIIConteudo({
               <div className="mx-auto mt-[6mm] w-2/3 border-t border-black pt-1 text-center">
                 Assinatura do Tesoureiro
               </div>
-              {prestacao.tesoureiro_nome && (
-                <p className="mt-1 text-center text-[7pt]">
-                  {prestacao.tesoureiro_nome} — Tesoureiro
-                </p>
-              )}
             </Celula>
 
             <Celula span={12} className={headerCell}>
