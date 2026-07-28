@@ -211,11 +211,9 @@ export function AnexoIIConteudo({
                 Assinatura do Tesoureiro
               </div>
               {prestacao.tesoureiro_nome && (
-                <div className="mx-auto mt-[6mm] w-2/3 border-t border-black pt-1 text-center">
-                  P.P. {prestacao.tesoureiro_nome}
-                  <br />
-                  Tesoureiro
-                </div>
+                <p className="mt-1 text-center text-[7pt]">
+                  {prestacao.tesoureiro_nome} — Tesoureiro
+                </p>
               )}
             </Celula>
 
@@ -239,11 +237,9 @@ export function AnexoIIConteudo({
               <div className="mx-auto mt-[8mm] w-2/3 border-t border-black pt-1 text-center">
                 Assinatura do Controle Interno
               </div>
-              <div className="mx-auto mt-[6mm] w-2/3 border-t border-black pt-1 text-center">
-                P.P. {prestacao.controle_interno_nome}
-                <br />
-                {prestacao.controle_interno_cargo}
-              </div>
+              <p className="mt-1 text-center text-[7pt]">
+                P.P. {prestacao.controle_interno_nome} — {prestacao.controle_interno_cargo}
+              </p>
             </Celula>
           </TabelaGrid>
         </div>
