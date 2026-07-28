@@ -15,7 +15,7 @@ export default async function ImprimirAvaliacaoPage({
   const { data: avaliacao } = await supabase
     .from("avaliacoes")
     .select(
-      "ano, periodo, template, data_avaliacao, avaliadores, itens, pontos_melhorar, pontos_positivos, pessoas(nome, matricula)",
+      "ano, periodo, template, data_avaliacao, em_estagio_probatorio, avaliadores, itens, pontos_melhorar, pontos_positivos, pessoas(nome, matricula)",
     )
     .eq("id", id)
     .single();
@@ -36,6 +36,7 @@ export default async function ImprimirAvaliacaoPage({
           ano: avaliacao.ano,
           periodo: avaliacao.periodo,
           data_avaliacao: avaliacao.data_avaliacao,
+          em_estagio_probatorio: avaliacao.em_estagio_probatorio,
           avaliadores: avaliacao.avaliadores,
           itens: avaliacao.itens,
           pontos_melhorar: avaliacao.pontos_melhorar,

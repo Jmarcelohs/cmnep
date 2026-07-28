@@ -22,7 +22,7 @@ export default async function EditarAvaliacaoPage({
     supabase
       .from("avaliacoes")
       .select(
-        "id, pessoa_id, ano, periodo, template, data_avaliacao, avaliadores, itens, pontos_melhorar, pontos_positivos",
+        "id, pessoa_id, ano, periodo, template, data_avaliacao, em_estagio_probatorio, avaliadores, itens, pontos_melhorar, pontos_positivos",
       )
       .eq("id", id)
       .single(),
@@ -60,6 +60,7 @@ export default async function EditarAvaliacaoPage({
           ano: String(avaliacao.ano),
           periodo: avaliacao.periodo,
           data_avaliacao: avaliacao.data_avaliacao,
+          em_estagio_probatorio: avaliacao.em_estagio_probatorio,
           avaliadores: avaliacao.avaliadores,
           itens: avaliacao.itens,
           pontos_melhorar: avaliacao.pontos_melhorar ?? "",

@@ -9,6 +9,7 @@ type Avaliacao = {
   ano: number;
   periodo: PeriodoAvaliacao;
   data_avaliacao: string;
+  em_estagio_probatorio: boolean;
   avaliadores: AvaliadorLancado[];
   itens: ItemAvaliacaoLancado[];
   pontos_melhorar: string | null;
@@ -19,7 +20,7 @@ const PERIODO_LABEL: Record<PeriodoAvaliacao, string> = {
   trimestre_1: "1º Trimestre",
   trimestre_2: "2º Trimestre",
   trimestre_3: "3º Trimestre",
-  anual: "Anual (Final)",
+  anual: "Final",
 };
 
 // Colunas de conceito na tabela de detalhamento são estreitas (span 1 de
@@ -38,7 +39,9 @@ function Cabecalho({ avaliacao, template }: { avaliacao: Avaliacao; template: Av
   return (
     <>
       <p className="text-center text-[13pt] font-bold">AVALIAÇÃO DE DESEMPENHO</p>
-      <p className="mt-1 text-center text-[10pt] font-bold uppercase">{template.nome}</p>
+      <p className="mt-1 text-center text-[10pt] font-bold uppercase">
+        {avaliacao.em_estagio_probatorio ? template.nome : "Avaliação de Desempenho de Servidor(a)"}
+      </p>
 
       <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-[10pt]">
         <p>
@@ -52,6 +55,10 @@ function Cabecalho({ avaliacao, template }: { avaliacao: Avaliacao; template: Av
         </p>
         <p>
           <span className="font-bold">Data da avaliação:</span> {formatarData(avaliacao.data_avaliacao)}
+        </p>
+        <p>
+          <span className="font-bold">Situação:</span>{" "}
+          {avaliacao.em_estagio_probatorio ? "Em estágio probatório" : "Efetivo(a) / estável"}
         </p>
         <p className="col-span-2">
           <span className="font-bold">Responsáveis pela avaliação:</span>{" "}

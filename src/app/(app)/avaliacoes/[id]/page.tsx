@@ -13,7 +13,7 @@ const PERIODO_LABEL: Record<string, string> = {
   trimestre_1: "1º Trimestre",
   trimestre_2: "2º Trimestre",
   trimestre_3: "3º Trimestre",
-  anual: "Anual (Final)",
+  anual: "Final",
 };
 
 export default async function DetalheAvaliacaoPage({ params }: { params: Promise<{ id: string }> }) {
@@ -41,7 +41,9 @@ export default async function DetalheAvaliacaoPage({ params }: { params: Promise
           <h1 className="text-xl font-semibold text-brand-navy">
             {pessoa?.nome ?? "Servidor(a)"} — {PERIODO_LABEL[avaliacao.periodo]}/{avaliacao.ano}
           </h1>
-          <p className="text-sm text-slate-500">{template.nome}</p>
+          <p className="text-sm text-slate-500">
+            {avaliacao.em_estagio_probatorio ? template.nome : "Avaliação de Desempenho de Servidor(a)"}
+          </p>
         </div>
         <div className="flex items-center gap-3">
           {podeGerenciar && (
@@ -75,6 +77,12 @@ export default async function DetalheAvaliacaoPage({ params }: { params: Promise
         <div>
           <dt className="text-slate-500">Data da avaliação</dt>
           <dd className="text-slate-900">{formatarData(avaliacao.data_avaliacao)}</dd>
+        </div>
+        <div>
+          <dt className="text-slate-500">Situação</dt>
+          <dd className="text-slate-900">
+            {avaliacao.em_estagio_probatorio ? "Em estágio probatório" : "Efetivo(a) / estável"}
+          </dd>
         </div>
         <div className="sm:col-span-2">
           <dt className="text-slate-500">Avaliadores</dt>

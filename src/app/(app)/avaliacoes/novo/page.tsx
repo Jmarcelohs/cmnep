@@ -53,6 +53,7 @@ export default async function NovaAvaliacaoPage({
                 ano: String(new Date().getFullYear()),
                 periodo: "trimestre_1",
                 data_avaliacao: new Date().toISOString().slice(0, 10),
+                em_estagio_probatorio: true,
                 avaliadores: [],
                 itens: [],
                 pontos_melhorar: "",

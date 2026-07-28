@@ -12,7 +12,7 @@ const PERIODOS: { value: PeriodoAvaliacao; label: string }[] = [
   { value: "trimestre_1", label: "1º Trimestre" },
   { value: "trimestre_2", label: "2º Trimestre" },
   { value: "trimestre_3", label: "3º Trimestre" },
-  { value: "anual", label: "Anual (Final)" },
+  { value: "anual", label: "Final" },
 ];
 
 export type ValoresIniciaisAvaliacao = {
@@ -20,6 +20,7 @@ export type ValoresIniciaisAvaliacao = {
   ano: string;
   periodo: PeriodoAvaliacao;
   data_avaliacao: string;
+  em_estagio_probatorio: boolean;
   avaliadores: AvaliadorLancado[];
   itens: ItemAvaliacaoLancado[];
   pontos_melhorar: string;
@@ -50,6 +51,9 @@ export function AvaliacaoForm({
   const [periodo, setPeriodo] = useState<PeriodoAvaliacao>(valoresIniciais?.periodo ?? "trimestre_1");
   const [dataAvaliacao, setDataAvaliacao] = useState(
     valoresIniciais?.data_avaliacao ?? new Date().toISOString().slice(0, 10),
+  );
+  const [emEstagioProbatorio, setEmEstagioProbatorio] = useState(
+    valoresIniciais?.em_estagio_probatorio ?? true,
   );
 
   const nomesIniciaisSelecionados = useMemo(
@@ -115,6 +119,7 @@ export function AvaliacaoForm({
       <input type="hidden" name="ano" value={ano} />
       <input type="hidden" name="periodo" value={periodo} />
       <input type="hidden" name="data_avaliacao" value={dataAvaliacao} />
+      <input type="hidden" name="em_estagio_probatorio" value={emEstagioProbatorio ? "true" : "false"} />
       <input type="hidden" name="avaliadores" value={JSON.stringify(avaliadoresJson)} />
       <input type="hidden" name="itens" value={JSON.stringify(itensLancados)} />
       <input type="hidden" name="pontos_melhorar" value={pontosMelhorar} />
@@ -172,6 +177,28 @@ export function AvaliacaoForm({
               onChange={(e) => setDataAvaliacao(e.target.value)}
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
             />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700">Servidor(a) em estágio probatório?</label>
+            <div className="mt-2 flex gap-2 text-xs">
+              <button
+                type="button"
+                onClick={() => setEmEstagioProbatorio(true)}
+                className={`rounded-full px-3 py-1 ${emEstagioProbatorio ? "bg-brand-navy text-white" : "bg-slate-100 text-slate-600"}`}
+              >
+                Sim
+              </button>
+              <button
+                type="button"
+                onClick={() => setEmEstagioProbatorio(false)}
+                className={`rounded-full px-3 py-1 ${!emEstagioProbatorio ? "bg-brand-navy text-white" : "bg-slate-100 text-slate-600"}`}
+              >
+                Não
+              </button>
+            </div>
+            <p className="mt-1 text-xs text-slate-500">
+              Define o título do documento gerado ({emEstagioProbatorio ? "…em Estágio Probatório" : "Avaliação de Desempenho"}).
+            </p>
           </div>
         </div>
       </div>

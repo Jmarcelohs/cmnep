@@ -627,6 +627,7 @@ export interface Database {
           periodo: PeriodoAvaliacao;
           template: string;
           data_avaliacao: string;
+          em_estagio_probatorio: boolean;
           avaliadores: AvaliadorLancado[];
           itens: ItemAvaliacaoLancado[];
           pontos_melhorar: string | null;

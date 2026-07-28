@@ -7,7 +7,7 @@ const PERIODOS: { value: PeriodoAvaliacao; label: string }[] = [
   { value: "trimestre_1", label: "1º Trimestre" },
   { value: "trimestre_2", label: "2º Trimestre" },
   { value: "trimestre_3", label: "3º Trimestre" },
-  { value: "anual", label: "Anual" },
+  { value: "anual", label: "Final" },
 ];
 
 export default async function HistoricoServidorPage({

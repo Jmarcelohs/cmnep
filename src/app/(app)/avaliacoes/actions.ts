@@ -15,6 +15,7 @@ function lerAvaliacaoFormData(formData: FormData) {
   const ano = Number(formData.get("ano") ?? "");
   const periodo = String(formData.get("periodo") ?? "") as PeriodoAvaliacao;
   const data_avaliacao = String(formData.get("data_avaliacao") ?? "").trim();
+  const em_estagio_probatorio = String(formData.get("em_estagio_probatorio") ?? "true") === "true";
   const pontos_melhorar = String(formData.get("pontos_melhorar") ?? "").trim() || null;
   const pontos_positivos = String(formData.get("pontos_positivos") ?? "").trim() || null;
 
@@ -27,7 +28,17 @@ function lerAvaliacaoFormData(formData: FormData) {
     // formatos inválidos caem na validação abaixo como listas vazias
   }
 
-  return { pessoa_id, ano, periodo, data_avaliacao, pontos_melhorar, pontos_positivos, avaliadores, itens };
+  return {
+    pessoa_id,
+    ano,
+    periodo,
+    data_avaliacao,
+    em_estagio_probatorio,
+    pontos_melhorar,
+    pontos_positivos,
+    avaliadores,
+    itens,
+  };
 }
 
 export async function criarAvaliacao(formData: FormData) {
@@ -55,6 +66,7 @@ export async function criarAvaliacao(formData: FormData) {
     periodo: dados.periodo,
     template: TEMPLATE_PADRAO,
     data_avaliacao: dados.data_avaliacao,
+    em_estagio_probatorio: dados.em_estagio_probatorio,
     avaliadores: dados.avaliadores,
     itens: dados.itens,
     pontos_melhorar: dados.pontos_melhorar,
@@ -100,6 +112,7 @@ export async function editarAvaliacao(id: string, formData: FormData) {
       ano: dados.ano,
       periodo: dados.periodo,
       data_avaliacao: dados.data_avaliacao,
+      em_estagio_probatorio: dados.em_estagio_probatorio,
       avaliadores: dados.avaliadores,
       itens: dados.itens,
       pontos_melhorar: dados.pontos_melhorar,
