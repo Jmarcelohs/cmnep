@@ -1,14 +1,17 @@
 export const headerCell = "bg-[#CDF3F3] text-center font-semibold";
 
 // Cada célula desenha só a borda direita/inferior — a borda de cima e da
-// esquerda da tabela inteira vem do wrapper (TabelaGrid). Isso evita que
-// bordas de células vizinhas se sobreponham e pareçam mais grossas
-// (efeito "negrito") nas linhas internas. Todas as bordas (aqui e no
-// TabelaGrid) usam a mesma espessura (1.5px) pra não ficar linha grossa
-// misturada com linha fina — 1px demonstrou sumir por arredondamento de
-// sub-pixel na rasterização do PDF em algumas linhas, mesmo com o
-// deviceScaleFactor alto (ver gerar-pdf.ts); 1.5px (3 pixels físicos com
-// deviceScaleFactor 2) dá margem suficiente sem ficar tão grosso quanto 2px.
+// esquerda da tabela inteira vem do wrapper (TabelaGrid), como um "quadro"
+// preenchido (padding-top/left sobre fundo preto), não uma border CSS.
+//
+// Já tentamos border-t/border-l em 1px, 2px e 1.5px nesse wrapper e a linha
+// de cima sumia de novo em arquivos reais mesmo assim — border é desenhada
+// como um traço fino (stroke) que pode cair numa posição de sub-pixel e
+// ficar invisível na rasterização do PDF, não importa a espessura em CSS.
+// Uma área preenchida (como as células de cabeçalho com bg-[#CDF3F3], que
+// nunca tiveram esse problema) não sofre desse arredondamento, porque é
+// pintada como um retângulo sólido, não como um traço. Por isso o quadro
+// externo virou padding sobre fundo preto em vez de border.
 export function Celula({
   span,
   className = "",
@@ -36,10 +39,8 @@ export function TabelaGrid({
   children: React.ReactNode;
 }) {
   return (
-    <div
-      className={`grid grid-cols-12 border-t-[1.5px] border-l-[1.5px] border-black ${className}`}
-    >
-      {children}
+    <div className={`bg-black pl-[1.5px] pt-[1.5px] ${className}`}>
+      <div className="grid grid-cols-12 bg-white">{children}</div>
     </div>
   );
 }
