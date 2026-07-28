@@ -34,7 +34,7 @@ export default async function AvaliacoesPage({
     ? await supabase
         .from("pessoas")
         .select("id, nome, matricula")
-        .in("categoria", ["Efetivo", "Comissionado"])
+        .eq("categoria", "Efetivo")
         .eq("ativo", true)
         .order("nome")
     : { data: null };

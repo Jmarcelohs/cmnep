@@ -29,7 +29,7 @@ export default async function EditarAvaliacaoPage({
     supabase
       .from("pessoas")
       .select("id, nome, matricula, categoria")
-      .in("categoria", ["Efetivo", "Comissionado"])
+      .eq("categoria", "Efetivo")
       .eq("ativo", true)
       .order("nome"),
     supabase
