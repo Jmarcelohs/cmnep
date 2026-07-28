@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { href: "/requerimentos", label: "Reembolso" },
   { href: "/veiculos", label: "Veículos" },
   { href: "/pessoas", label: "Pessoas" },
+  { href: "/avaliacoes", label: "Avaliações" },
 ];
 
 const NAV_ITEM_ADMIN = { href: "/usuarios", label: "Usuários" };

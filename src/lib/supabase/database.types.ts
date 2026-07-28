@@ -42,6 +42,21 @@ export type StatusRequerimentoInterno = "pendente" | "analise" | "deferido" | "i
 
 export type DecisaoRequerimentoInterno = "autorizado" | "nao_autorizado";
 
+export type PeriodoAvaliacao = "trimestre_1" | "trimestre_2" | "trimestre_3" | "anual";
+
+export type ConceitoAvaliacao = "otimo" | "muito_bom" | "bom" | "regular" | "insuficiente";
+
+export interface ItemAvaliacaoLancado {
+  criterio: string;
+  numero: number;
+  conceito: ConceitoAvaliacao;
+}
+
+export interface AvaliadorLancado {
+  nome: string;
+  matricula: string | null;
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -583,6 +598,53 @@ export interface Database {
         Relationships: [
           {
             foreignKeyName: "veiculos_solicitacoes_pessoa_id_fkey";
+            columns: ["pessoa_id"];
+            isOneToOne: false;
+            referencedRelation: "pessoas";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      avaliacoes_avaliadores: {
+        Row: {
+          id: string;
+          nome: string;
+          matricula: string | null;
+          ativo: boolean;
+          criado_em: string;
+        };
+        Insert: Partial<Omit<Database["public"]["Tables"]["avaliacoes_avaliadores"]["Row"], "id">> & {
+          nome: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["avaliacoes_avaliadores"]["Row"]>;
+        Relationships: [];
+      };
+      avaliacoes: {
+        Row: {
+          id: string;
+          pessoa_id: string;
+          ano: number;
+          periodo: PeriodoAvaliacao;
+          template: string;
+          data_avaliacao: string;
+          avaliadores: AvaliadorLancado[];
+          itens: ItemAvaliacaoLancado[];
+          pontos_melhorar: string | null;
+          pontos_positivos: string | null;
+          nota_final: number | null;
+          criado_por: string | null;
+          criado_em: string;
+          atualizado_em: string;
+        };
+        Insert: Partial<Omit<Database["public"]["Tables"]["avaliacoes"]["Row"], "id">> & {
+          pessoa_id: string;
+          ano: number;
+          periodo: PeriodoAvaliacao;
+        };
+        Update: Partial<Database["public"]["Tables"]["avaliacoes"]["Row"]>;
+        Relationships: [
+          {
+            foreignKeyName: "avaliacoes_pessoa_id_fkey";
             columns: ["pessoa_id"];
             isOneToOne: false;
             referencedRelation: "pessoas";
