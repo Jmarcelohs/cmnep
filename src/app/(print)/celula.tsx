@@ -12,6 +12,12 @@ export const headerCell = "bg-[#CDF3F3] text-center font-semibold";
 // nunca tiveram esse problema) não sofre desse arredondamento, porque é
 // pintada como um retângulo sólido, não como um traço. Por isso o quadro
 // externo virou padding sobre fundo preto em vez de border.
+//
+// Mesmo preenchido, 1.5px ainda sumiu no Adobe Acrobat Reader (motor de
+// renderização diferente do Chrome, mais rigoroso com áreas finas demais) —
+// só esse quadro externo (não as linhas internas da grade) subiu pra 2px
+// pra dar margem contra esse motor específico, sem deixar a grade inteira
+// com aparência mais grossa.
 export function Celula({
   span,
   className = "",
@@ -39,7 +45,7 @@ export function TabelaGrid({
   children: React.ReactNode;
 }) {
   return (
-    <div className={`bg-black pl-[1.5px] pt-[1.5px] ${className}`}>
+    <div className={`bg-black pl-[2px] pt-[2px] ${className}`}>
       <div className="grid grid-cols-12 bg-white">{children}</div>
     </div>
   );
