@@ -77,6 +77,7 @@ export default async function EditarSolicitacaoPage({
           numero_solicitacao: solicitacao.numero_solicitacao ?? "",
           data_solicitacao: solicitacao.data_solicitacao ?? "",
           municipio_destino: solicitacao.municipio_destino ?? "",
+          uf_destino: solicitacao.uf_destino ?? "MG",
           instituicao_destino: solicitacao.instituicao_destino ?? "",
           contato_destino: solicitacao.contato_destino ?? "",
           data_partida: solicitacao.data_partida ?? "",

@@ -158,6 +158,7 @@ export interface Database {
           data_chegada: string | null;
           municipio_origem: string;
           municipio_destino: string | null;
+          uf_destino: string | null;
           instituicao_destino: string | null;
           contato_destino: string | null;
           finalidade: string | null;

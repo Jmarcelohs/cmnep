@@ -10,6 +10,19 @@ export function slugify(texto: string) {
     .replace(/^-+|-+$/g, "");
 }
 
+// Monta o cabeçalho Content-Disposition com acentos/espaços/caracteres
+// especiais no nome do arquivo baixado (ex.: "Solicitação de Diária...pdf").
+// Só "filename=" com UTF-8 cru não é garantido em todo cliente HTTP, então
+// manda os dois: um nome ASCII seguro como fallback (filename=) e o nome
+// de verdade, codificado conforme RFC 5987 (filename*=), que os
+// navegadores atuais usam preferencialmente.
+export function cabecalhoContentDisposition(filename: string): string {
+  const semExtensao = filename.replace(/\.pdf$/i, "");
+  const fallbackAscii = `${slugify(semExtensao)}.pdf`;
+  const utf8 = encodeURIComponent(filename);
+  return `attachment; filename="${fallbackAscii}"; filename*=UTF-8''${utf8}`;
+}
+
 export async function renderizarPdfDaRota(
   request: NextRequest,
   caminhoInterno: string,
@@ -144,7 +157,7 @@ export async function gerarPdfDeRota(
   return new NextResponse(Buffer.from(pdfBuffer), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="${filename}"`,
+      "Content-Disposition": cabecalhoContentDisposition(filename),
     },
   });
 }

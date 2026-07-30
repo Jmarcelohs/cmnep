@@ -19,6 +19,7 @@ export type ValoresIniciais = {
   numero_solicitacao: string;
   data_solicitacao: string;
   municipio_destino: string;
+  uf_destino: string;
   instituicao_destino: string;
   contato_destino: string;
   data_partida: string;
@@ -31,6 +32,11 @@ export type ValoresIniciais = {
 const TIPOS = [
   { value: "semPernoite", label: "Sem pernoite" },
   { value: "comPernoite", label: "Com pernoite" },
+];
+
+const UFS = [
+  "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG",
+  "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO",
 ];
 
 function novoItem(): Item {
@@ -199,6 +205,21 @@ export function SolicitacaoForm({
             defaultValue={valoresIniciais?.municipio_destino}
             className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700">UF de destino</label>
+          <select
+            name="uf_destino"
+            required
+            defaultValue={valoresIniciais?.uf_destino ?? "MG"}
+            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          >
+            {UFS.map((uf) => (
+              <option key={uf} value={uf}>
+                {uf}
+              </option>
+            ))}
+          </select>
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700">Instituição de destino</label>

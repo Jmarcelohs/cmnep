@@ -24,6 +24,7 @@ export async function criarSolicitacao(formData: FormData) {
   const numero_diaria = String(formData.get("numero_diaria") ?? "") || null;
   const numero_solicitacao = String(formData.get("numero_solicitacao") ?? "") || null;
   const municipio_destino = String(formData.get("municipio_destino") ?? "");
+  const uf_destino = String(formData.get("uf_destino") ?? "") || null;
   const instituicao_destino = String(formData.get("instituicao_destino") ?? "");
   const contato_destino = String(formData.get("contato_destino") ?? "");
   const finalidade = String(formData.get("finalidade") ?? "");
@@ -50,6 +51,7 @@ export async function criarSolicitacao(formData: FormData) {
       numero_diaria,
       numero_solicitacao,
       municipio_destino,
+      uf_destino,
       instituicao_destino,
       contato_destino,
       finalidade,
@@ -94,6 +96,7 @@ export async function editarSolicitacao(id: string, formData: FormData) {
   const numero_diaria = String(formData.get("numero_diaria") ?? "") || null;
   const numero_solicitacao = String(formData.get("numero_solicitacao") ?? "") || null;
   const municipio_destino = String(formData.get("municipio_destino") ?? "");
+  const uf_destino = String(formData.get("uf_destino") ?? "") || null;
   const instituicao_destino = String(formData.get("instituicao_destino") ?? "");
   const contato_destino = String(formData.get("contato_destino") ?? "");
   const finalidade = String(formData.get("finalidade") ?? "");
@@ -120,6 +123,7 @@ export async function editarSolicitacao(id: string, formData: FormData) {
       numero_diaria,
       numero_solicitacao,
       municipio_destino,
+      uf_destino,
       instituicao_destino,
       contato_destino,
       finalidade,
