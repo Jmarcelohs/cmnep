@@ -19,13 +19,21 @@ export default async function ImprimirDecretoPage({
 
   if (!decreto) notFound();
 
+  let fotoUrl: string | null = null;
+  if (decreto.foto_caminho) {
+    const { data } = await supabase.storage
+      .from("decretos-fotos")
+      .createSignedUrl(decreto.foto_caminho, 300);
+    fotoUrl = data?.signedUrl ?? null;
+  }
+
   return (
     <>
       <PrintButton
         url={`/api/decretos/${id}/pdf`}
         nomeArquivoPadrao={`decreto-titulo-honorario-${decreto.numero}-${decreto.ano}.pdf`}
       />
-      <DecretoConteudo decreto={decreto} />
+      <DecretoConteudo decreto={decreto} fotoUrl={fotoUrl} />
     </>
   );
 }

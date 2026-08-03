@@ -29,7 +29,12 @@ function AssinaturaAutor({ decreto }: { decreto: Decreto }) {
   );
 }
 
-export function DecretoConteudo({ decreto }: { decreto: Decreto }) {
+// Altura reservada pro bloco da foto (imagem + margem inferior) na primeira
+// página da justificativa, somada ao orçamento de linhas de texto — ver
+// paginarTextoCorrido em @/lib/pdf/paginacao.
+const ALTURA_BLOCO_FOTO_MM = 45;
+
+export function DecretoConteudo({ decreto, fotoUrl }: { decreto: Decreto; fotoUrl?: string | null }) {
   const artigos = artigosTituloHonorario({
     tratamento: decreto.tratamento,
     nomeHomenageado: decreto.nome_homenageado,
@@ -45,8 +50,12 @@ export function DecretoConteudo({ decreto }: { decreto: Decreto }) {
   // de uma única página fixa (que já vazou texto por cima do rodapé do
   // timbrado num teste com biografia mais longa), divide dinamicamente em
   // quantas páginas forem necessárias, só repetindo o título "JUSTIFICATIVA"
-  // na primeira e só fechando com data/assinatura na última.
-  const paginasJustificativa = paginarTextoCorrido(paragrafosJustificativa);
+  // (e a foto, se houver) na primeira, e só fechando com data/assinatura na
+  // última.
+  const paginasJustificativa = paginarTextoCorrido(
+    paragrafosJustificativa,
+    fotoUrl ? ALTURA_BLOCO_FOTO_MM : 0,
+  );
 
   return (
     <>
@@ -84,6 +93,15 @@ export function DecretoConteudo({ decreto }: { decreto: Decreto }) {
           <PaginaA4 key={indice} quebrarPagina={!ultimaPagina}>
             <div className="mx-[30mm] mt-[32mm] mb-[26mm] flex flex-1 flex-col text-[11pt] leading-relaxed">
               {primeiraPagina && <p className="text-center font-bold">JUSTIFICATIVA</p>}
+
+              {primeiraPagina && fotoUrl && (
+                // eslint-disable-next-line @next/next/no-img-element -- imagem vem de uma URL assinada do Storage, resolvida no servidor pra essa renderização do PDF
+                <img
+                  src={fotoUrl}
+                  alt={`Foto de ${decreto.nome_homenageado}`}
+                  className="mx-auto mt-3 h-[35mm] w-[28mm] rounded border border-black object-cover"
+                />
+              )}
 
               <div className={`space-y-3 ${primeiraPagina ? "mt-4" : ""}`}>
                 {paragrafos.map((paragrafo, i) => (

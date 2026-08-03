@@ -668,6 +668,7 @@ export interface Database {
           autor_partido: string | null;
           dotacao_orcamentaria: string;
           justificativa: string;
+          foto_caminho: string | null;
           criado_por: string | null;
           criado_em: string;
         };

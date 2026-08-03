@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { editarDecretoTituloHonorario } from "../../actions";
 import { DecretoForm } from "../../decreto-form";
+import { DecretoFotoForm } from "../../decreto-foto-form";
 
 export default async function EditarDecretoPage({
   params,
@@ -25,6 +26,14 @@ export default async function EditarDecretoPage({
 
   if (!decreto) notFound();
 
+  let fotoUrlAtual: string | null = null;
+  if (decreto.foto_caminho) {
+    const { data } = await supabase.storage
+      .from("decretos-fotos")
+      .createSignedUrl(decreto.foto_caminho, 300);
+    fotoUrlAtual = data?.signedUrl ?? null;
+  }
+
   return (
     <div>
       <h1 className="text-xl font-semibold text-brand-navy">
@@ -34,6 +43,10 @@ export default async function EditarDecretoPage({
       {error && (
         <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
       )}
+
+      <div className="mt-6">
+        <DecretoFotoForm decretoId={id} fotoUrlAtual={fotoUrlAtual} />
+      </div>
 
       <DecretoForm
         action={editarDecretoTituloHonorario.bind(null, id)}

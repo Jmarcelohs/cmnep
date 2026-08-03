@@ -92,7 +92,7 @@ export async function criarDecretoTituloHonorario(formData: FormData) {
   }
 
   revalidatePath("/decretos");
-  redirect("/decretos");
+  redirect(`/decretos/${decreto!.id}/editar`);
 }
 
 export async function editarDecretoTituloHonorario(id: string, formData: FormData) {

@@ -33,8 +33,12 @@ function linhasDoParagrafo(paragrafo: string): number {
 // Divide parágrafos de texto corrido (ex.: justificativa de um decreto) em
 // páginas. Reserva em toda página espaço pro bloco de data + assinatura
 // (não dá pra saber de antemão qual vai ser a última) e, só na primeira,
-// espaço extra pro título da seção.
-export function paginarTextoCorrido(paragrafos: string[]): string[][] {
+// espaço extra pro título da seção — mais o que for passado em
+// alturaExtraPrimeiraPaginaMM (ex.: uma foto acima do texto).
+export function paginarTextoCorrido(
+  paragrafos: string[],
+  alturaExtraPrimeiraPaginaMM = 0,
+): string[][] {
   const paginas: string[][] = [];
   let paginaAtual: string[] = [];
   let linhasAtual = 0;
@@ -44,7 +48,7 @@ export function paginarTextoCorrido(paragrafos: string[]): string[][] {
     const budget =
       (ALTURA_UTIL_PAGINA_MM -
         ALTURA_BLOCO_ASSINATURA_MM -
-        (primeiraPagina ? ALTURA_TITULO_MM : 0)) /
+        (primeiraPagina ? ALTURA_TITULO_MM + alturaExtraPrimeiraPaginaMM : 0)) /
       ALTURA_LINHA_MM;
     const linhas = linhasDoParagrafo(paragrafo);
 
