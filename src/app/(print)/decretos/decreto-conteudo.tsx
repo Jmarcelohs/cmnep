@@ -23,6 +23,32 @@ type Decreto = {
   justificativa: string;
 };
 
+// Deixa em negrito o prefixo "Art. N° –" e, dentro do texto do artigo,
+// o nome do homenageado (só aparece no Art. 1º, mas a função não presume
+// isso — só busca a ocorrência literal do nome).
+function ArtigoFormatado({ texto, nomeHomenageado }: { texto: string; nomeHomenageado: string }) {
+  const match = texto.match(/^(Art\.\s*\d+°\s*–\s*)([\s\S]*)$/);
+  if (!match) return <>{texto}</>;
+  const [, prefixo, resto] = match;
+
+  const partes = resto.split(nomeHomenageado);
+  const corpo =
+    partes.length === 1
+      ? resto
+      : partes.flatMap((parte, i) =>
+          i < partes.length - 1
+            ? [<span key={i}>{parte}</span>, <strong key={`${i}-nome`}>{nomeHomenageado}</strong>]
+            : [<span key={i}>{parte}</span>],
+        );
+
+  return (
+    <>
+      <strong>{prefixo}</strong>
+      {corpo}
+    </>
+  );
+}
+
 function AssinaturaAutor({ decreto }: { decreto: Decreto }) {
   return (
     <div className="mx-auto mt-[10mm] w-[90mm] text-center">
@@ -41,7 +67,9 @@ function ParecerComissao({ comissao }: { comissao: ComposicaoComissao }) {
     <div className="rounded-md border border-black p-6 text-center">
       <p className="font-bold uppercase">{comissao.titulo}</p>
       <p className="mt-6 text-slate-500">_______________ / _______________ / _______________</p>
-      <div className="mt-6 space-y-3">
+      {/* Espaço maior entre os nomes — cada um precisa de linha em branco
+          suficiente pra assinatura física por cima do nome impresso. */}
+      <div className="mt-6 space-y-10">
         {comissao.membros.map((membro) => (
           <p key={membro} className="font-semibold">
             {membro}
@@ -55,8 +83,8 @@ function ParecerComissao({ comissao }: { comissao: ComposicaoComissao }) {
 // Altura reservada pro bloco da foto (imagem + margem inferior) na primeira
 // página da justificativa, somada ao orçamento de linhas de texto — ver
 // paginarTextoCorrido em @/lib/pdf/paginacao. Precisa acompanhar a altura
-// da foto (h-[55mm]) mais uma folga de margem.
-const ALTURA_BLOCO_FOTO_MM = 70;
+// da foto (h-[120mm], meia página) mais uma folga de margem.
+const ALTURA_BLOCO_FOTO_MM = 135;
 
 export function DecretoConteudo({ decreto, fotoUrl }: { decreto: Decreto; fotoUrl?: string | null }) {
   const artigos = artigosTituloHonorario({
@@ -100,7 +128,7 @@ export function DecretoConteudo({ decreto, fotoUrl }: { decreto: Decreto; fotoUr
           <div className="mt-4 space-y-3">
             {artigos.map((artigo) => (
               <p key={artigo} className="text-justify">
-                {artigo}
+                <ArtigoFormatado texto={artigo} nomeHomenageado={decreto.nome_homenageado} />
               </p>
             ))}
           </div>
@@ -133,11 +161,11 @@ export function DecretoConteudo({ decreto, fotoUrl }: { decreto: Decreto; fotoUr
                 <img
                   src={fotoUrl}
                   alt={`Foto de ${decreto.nome_homenageado}`}
-                  className="mx-auto mt-3 h-[55mm] w-[42mm] rounded border border-black object-cover"
+                  className="mx-auto mt-3 h-[120mm] w-[80mm] rounded border border-black object-cover"
                 />
               )}
 
-              <div className={`space-y-3 ${primeiraPagina ? "mt-4" : ""}`}>
+              <div className={`space-y-1 ${primeiraPagina ? "mt-4" : ""}`}>
                 {paragrafos.map((paragrafo, i) => (
                   <p key={i} className="text-justify">
                     {paragrafo}
