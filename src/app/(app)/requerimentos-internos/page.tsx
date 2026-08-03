@@ -39,7 +39,7 @@ export default async function RequerimentosInternosPage({
 
   const { data: todos } = await supabase
     .from("requerimentos_internos")
-    .select("id, tipo, status, nome");
+    .select("id, status");
 
   const contagemStatus: Record<StatusRequerimentoInterno, number> = {
     pendente: 0,
@@ -47,18 +47,10 @@ export default async function RequerimentosInternosPage({
     deferido: 0,
     indeferido: 0,
   };
-  const contagemTipo: Record<TipoRequerimentoInterno, number> = { rh: 0, presidente: 0, geral: 0 };
-  const contagemSolicitante = new Map<string, number>();
 
   for (const r of todos ?? []) {
     contagemStatus[r.status as StatusRequerimentoInterno]++;
-    contagemTipo[r.tipo as TipoRequerimentoInterno]++;
-    contagemSolicitante.set(r.nome, (contagemSolicitante.get(r.nome) ?? 0) + 1);
   }
-
-  const ranking = Array.from(contagemSolicitante.entries())
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 8);
 
   let query = supabase
     .from("requerimentos_internos")
@@ -99,34 +91,6 @@ export default async function RequerimentosInternosPage({
             <p className="mt-1 text-2xl font-semibold text-brand-navy">{contagemStatus[s]}</p>
           </div>
         ))}
-      </div>
-
-      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
-          <p className="text-xs font-semibold uppercase text-slate-500">Por categoria</p>
-          <dl className="mt-2 space-y-1 text-sm">
-            {(Object.keys(TIPO_LABEL) as TipoRequerimentoInterno[]).map((t) => (
-              <div key={t} className="flex justify-between">
-                <dt className="text-slate-500">{TIPO_LABEL[t]}</dt>
-                <dd className="text-slate-900">{contagemTipo[t]}</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
-          <p className="text-xs font-semibold uppercase text-slate-500">
-            Solicitantes mais frequentes
-          </p>
-          <ul className="mt-2 space-y-1 text-sm">
-            {ranking.map(([nome, qtd]) => (
-              <li key={nome} className="flex justify-between">
-                <span className="text-slate-700">{nome}</span>
-                <span className="text-slate-900">{qtd}</span>
-              </li>
-            ))}
-            {ranking.length === 0 && <li className="text-slate-400">Nenhum requerimento ainda.</li>}
-          </ul>
-        </div>
       </div>
 
       <form className="mt-6 flex flex-wrap items-end gap-3 text-sm" action="/requerimentos-internos">
