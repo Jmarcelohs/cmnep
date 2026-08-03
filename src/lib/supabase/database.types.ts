@@ -57,6 +57,8 @@ export interface AvaliadorLancado {
   matricula: string | null;
 }
 
+export type Tratamento = "Sr." | "Sra.";
+
 export interface Database {
   public: {
     Tables: {
@@ -653,6 +655,30 @@ export interface Database {
             referencedColumns: ["id"];
           },
         ];
+      };
+      decretos_titulo_honorario: {
+        Row: {
+          id: string;
+          numero: string;
+          ano: number;
+          data_decreto: string;
+          tratamento: Tratamento;
+          nome_homenageado: string;
+          autor_nome: string;
+          autor_partido: string | null;
+          dotacao_orcamentaria: string;
+          justificativa: string;
+          criado_por: string | null;
+          criado_em: string;
+        };
+        Insert: Partial<Omit<Database["public"]["Tables"]["decretos_titulo_honorario"]["Row"], "id">> & {
+          numero: string;
+          ano: number;
+          nome_homenageado: string;
+          autor_nome: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["decretos_titulo_honorario"]["Row"]>;
+        Relationships: [];
       };
     };
     Views: Record<string, never>;

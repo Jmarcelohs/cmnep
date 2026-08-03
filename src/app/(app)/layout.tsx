@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { href: "/requerimentos-internos", label: "Requerimentos Internos" },
   { href: "/requerimentos", label: "Reembolso" },
   { href: "/veiculos", label: "Veículos" },
+  { href: "/decretos", label: "Decretos" },
   { href: "/pessoas", label: "Pessoas" },
   { href: "/avaliacoes", label: "Avaliações" },
 ];
