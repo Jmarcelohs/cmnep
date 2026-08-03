@@ -25,7 +25,7 @@ export default async function NovoRequerimentoInternoPage({
     <div>
       <h1 className="text-xl font-semibold text-brand-navy">Novo requerimento</h1>
       <p className="mt-1 text-sm text-slate-500">
-        Recursos Humanos, Ao Presidente ou Geral — o texto do requerimento é montado automaticamente.
+        Endereçado ao Presidente da Câmara — o texto do requerimento é montado automaticamente.
       </p>
 
       {error && (

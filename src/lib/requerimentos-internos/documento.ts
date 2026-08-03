@@ -7,10 +7,12 @@ export const NOME_CAMARA = "Câmara Municipal de Nepomuceno";
 export const UF = "MG";
 export const PRESIDENTE = PRESIDENTE_PADRAO;
 
-function destinoPorTipo(tipo: TipoRequerimentoInterno) {
-  if (tipo === "presidente") return `ao Ilmo. Presidente da ${NOME_CAMARA} – ${UF}, ${PRESIDENTE}`;
-  if (tipo === "rh") return `ao Setor de Recursos Humanos da ${NOME_CAMARA} – ${UF}`;
-  return `à ${NOME_CAMARA} – ${UF}`;
+// As 3 categorias foram unificadas: todo requerimento — de qualquer
+// assunto — passou a ser endereçado ao Presidente da Câmara, que também
+// acumula o papel de ordenador da despesa e gestor nesta Câmara. Vale
+// pra requerimentos novos e reimpressão dos antigos (rh/geral).
+function destinoPresidente() {
+  return `ao Ilmo. Presidente da ${NOME_CAMARA} – ${UF}, ${PRESIDENTE}`;
 }
 
 // Template genérico pra qualquer assunto com campos padronizados —
@@ -50,7 +52,7 @@ function bodyAssuntoEstruturado({
   return (
     `Eu, ${nome}, ${cargo}, inscrito(a) no CPF sob o nº ${cpf ?? "—"}` +
     (matricula ? `, matrícula nº ${matricula}` : "") +
-    `, venho requerer ${destinoPorTipo(tipo)}` +
+    `, venho requerer ${destinoPresidente()}` +
     (fundamento ? `, com fundamento em ${fundamento}` : "") +
     `, o seguinte: ${assunto.label}` +
     (camposTexto ? `, considerando: ${camposTexto}` : "") +
@@ -58,10 +60,10 @@ function bodyAssuntoEstruturado({
   );
 }
 
-// Cada categoria tem seu próprio template pro modo manual (assuntos sem
-// campos, incluindo "Outros" e "Personalizado").
+// Template pro modo manual (assuntos sem campos, incluindo "Outros" e
+// "Personalizado") — igual pra qualquer categoria, já que todo
+// requerimento é endereçado ao Presidente (ver destinoPorTipo acima).
 function bodyManual({
-  tipo,
   nome,
   cargo,
   cpf,
@@ -69,7 +71,6 @@ function bodyManual({
   fundamento,
   pedido,
 }: {
-  tipo: TipoRequerimentoInterno;
   nome: string;
   cargo: string;
   cpf: string | null;
@@ -81,23 +82,10 @@ function bodyManual({
   const fundamentoTxt = fundamento ? `, com fundamento em ${fundamento}` : "";
   const cpfTxt = cpf ?? "—";
 
-  if (tipo === "rh") {
-    return (
-      `Eu, ${nome}, ${cargo}, inscrito(a) no CPF sob o nº ${cpfTxt}${matriculaTxt}, venho, por meio ` +
-      `deste, requerer ao Setor de Recursos Humanos da ${NOME_CAMARA} – ${UF}${fundamentoTxt}, o ` +
-      `seguinte: ${pedido}`
-    );
-  }
-  if (tipo === "presidente") {
-    return (
-      `Eu, ${nome}, ${cargo}, inscrito(a) no CPF sob o nº ${cpfTxt}${matriculaTxt}, venho, através ` +
-      `deste, requerer ao Ilmo. Presidente da ${NOME_CAMARA} – ${UF}, ${PRESIDENTE}${fundamentoTxt}, o ` +
-      `seguinte: ${pedido}`
-    );
-  }
   return (
-    `Eu, ${nome}, ${cargo}, inscrito(a) no CPF sob o nº ${cpfTxt}${matriculaTxt}, venho, ` +
-    `respeitosamente, requerer à ${NOME_CAMARA} – ${UF}${fundamentoTxt}, o seguinte: ${pedido}`
+    `Eu, ${nome}, ${cargo}, inscrito(a) no CPF sob o nº ${cpfTxt}${matriculaTxt}, venho, através ` +
+    `deste, requerer ao Ilmo. Presidente da ${NOME_CAMARA} – ${UF}, ${PRESIDENTE}${fundamentoTxt}, o ` +
+    `seguinte: ${pedido}`
   );
 }
 
@@ -128,7 +116,6 @@ export function corpoRequerimentoInterno(params: {
   }
 
   return bodyManual({
-    tipo: params.tipo,
     nome: params.nome,
     cargo: params.cargo,
     cpf: params.cpf,

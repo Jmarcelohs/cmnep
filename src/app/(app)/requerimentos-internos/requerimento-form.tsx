@@ -3,13 +3,18 @@
 import { useMemo, useState } from "react";
 import { formatarCpfDigitado, formatarValorDigitado } from "@/lib/reembolso/mascaras";
 import { corpoRequerimentoInterno } from "@/lib/requerimentos-internos/documento";
-import { ASSUNTOS_POR_TIPO, FUNDAMENTOS_SUGERIDOS, TIPO_DESCRICAO, TIPO_LABEL } from "@/lib/requerimentos-internos/assuntos";
+import { ASSUNTOS_POR_TIPO, FUNDAMENTOS_SUGERIDOS } from "@/lib/requerimentos-internos/assuntos";
 import { valorPorExtenso } from "@/lib/pdf/formato";
 import type { CargoDeclarado, Categoria, TipoRequerimentoInterno } from "@/lib/supabase/database.types";
 
 type Pessoa = { id: string; nome: string; matricula: string | null; cargo: string; categoria: Categoria; cpf: string | null };
 
-const TIPOS: TipoRequerimentoInterno[] = ["rh", "presidente", "geral"];
+// As 3 categorias antigas (RH, Ao Presidente, Geral) foram unificadas —
+// todo requerimento novo é salvo como "presidente" (endereçado ao
+// Presidente da Câmara) e usa o catálogo de assuntos correspondente, que
+// já reúne os antigos assuntos de RH. Não há mais escolha de categoria
+// no formulário.
+const TIPO_UNIFICADO: TipoRequerimentoInterno = "presidente";
 const CARGOS: CargoDeclarado[] = ["Vereador(a)", "Servidor(a)", "Estagiário(a)"];
 
 function cargoPadrao(categoria?: Categoria): CargoDeclarado {
@@ -45,8 +50,6 @@ export function RequerimentoInternoForm({
   valoresIniciais?: ValoresIniciaisRequerimentoInterno;
   submitLabel?: string;
 }) {
-  const [tipo, setTipo] = useState<TipoRequerimentoInterno>(valoresIniciais?.tipo ?? "rh");
-
   const [modoCadastro, setModoCadastro] = useState(!valoresIniciais || Boolean(valoresIniciais.pessoa_id));
   const [pessoaId, setPessoaId] = useState(valoresIniciais?.pessoa_id ?? "");
   const [nome, setNome] = useState(valoresIniciais?.nome ?? "");
@@ -69,18 +72,10 @@ export function RequerimentoInternoForm({
   );
   const [valorNumero, setValorNumero] = useState(Number(valoresIniciais?.valor ?? 0));
 
-  const assuntosDaCategoria = ASSUNTOS_POR_TIPO[tipo];
+  const assuntosDaCategoria = ASSUNTOS_POR_TIPO[TIPO_UNIFICADO];
   const assuntoSelecionado = assuntosDaCategoria.find((a) => a.key === assuntoKey);
   const modoEstruturado = Boolean(assuntoSelecionado?.fields?.length);
   const ehPersonalizado = assuntosDaCategoria.length > 0 && !assuntoSelecionado;
-
-  function handleTipoChange(novoTipo: TipoRequerimentoInterno) {
-    setTipo(novoTipo);
-    setAssuntoKey("");
-    setAssuntoTitulo("");
-    setFundamento("");
-    setCampos({});
-  }
 
   function handlePessoaChange(id: string) {
     setPessoaId(id);
@@ -113,7 +108,7 @@ export function RequerimentoInternoForm({
   const previa = useMemo(
     () =>
       corpoRequerimentoInterno({
-        tipo,
+        tipo: TIPO_UNIFICADO,
         assuntoKey: assuntoKey || null,
         nome: nome || "[solicitante]",
         cargo,
@@ -123,12 +118,12 @@ export function RequerimentoInternoForm({
         campos,
         pedido,
       }),
-    [tipo, assuntoKey, nome, cargo, cpf, matricula, fundamento, campos, pedido],
+    [assuntoKey, nome, cargo, cpf, matricula, fundamento, campos, pedido],
   );
 
   return (
     <form action={action} className="mt-6 space-y-8">
-      <input type="hidden" name="tipo" value={tipo} />
+      <input type="hidden" name="tipo" value={TIPO_UNIFICADO} />
       <input type="hidden" name="pessoa_id" value={modoCadastro ? pessoaId : ""} />
       <input type="hidden" name="cpf" value={cpf} />
       <input type="hidden" name="assunto_key" value={assuntoKey} />
@@ -137,28 +132,7 @@ export function RequerimentoInternoForm({
       <input type="hidden" name="valor" value={valorNumero || ""} />
 
       <div>
-        <h2 className="text-sm font-semibold text-slate-700">1. Categoria</h2>
-        <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          {TIPOS.map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => handleTipoChange(t)}
-              className={`rounded-lg border p-3 text-left text-sm ${
-                tipo === t
-                  ? "border-brand-navy bg-brand-navy/5 ring-1 ring-brand-navy"
-                  : "border-slate-200 bg-white hover:bg-slate-50"
-              }`}
-            >
-              <p className="font-medium text-slate-900">{TIPO_LABEL[t]}</p>
-              <p className="mt-1 text-xs text-slate-500">{TIPO_DESCRICAO[t]}</p>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <h2 className="text-sm font-semibold text-slate-700">2. Solicitante</h2>
+        <h2 className="text-sm font-semibold text-slate-700">1. Solicitante</h2>
         <div className="mt-2 flex gap-2 text-xs">
           <button
             type="button"
@@ -264,7 +238,7 @@ export function RequerimentoInternoForm({
       </div>
 
       <div>
-        <h2 className="text-sm font-semibold text-slate-700">3. Detalhes do pedido</h2>
+        <h2 className="text-sm font-semibold text-slate-700">2. Detalhes do pedido</h2>
 
         {assuntosDaCategoria.length > 0 && (
           <div className="mt-2">
@@ -308,7 +282,7 @@ export function RequerimentoInternoForm({
           />
           {!assuntoSelecionado?.fundamentoFixo && (
             <div className="mt-1.5 flex flex-wrap gap-1.5">
-              {FUNDAMENTOS_SUGERIDOS[tipo].map((sugestao) => (
+              {FUNDAMENTOS_SUGERIDOS[TIPO_UNIFICADO].map((sugestao) => (
                 <button
                   key={sugestao}
                   type="button"

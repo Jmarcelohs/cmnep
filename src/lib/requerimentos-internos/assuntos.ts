@@ -118,12 +118,17 @@ const ASSUNTOS_RH: Assunto[] = [
   { key: "outros", label: "Outros" },
 ];
 
-// "Ao Presidente" já tem Reembolso de Despesas (módulo à parte); aqui
-// fica de fora — hoje essa categoria só tem o modo manual/personalizado,
-// com espaço pra crescer com novos assuntos padronizados no futuro.
-const ASSUNTOS_PRESIDENTE: Assunto[] = [];
+// As 3 categorias (RH, Ao Presidente, Geral) foram unificadas — todo
+// requerimento novo agora é endereçado ao Presidente da Câmara (que
+// também acumula o papel de ordenador da despesa e gestor nesta Câmara),
+// então o bucket "presidente" passa a herdar o catálogo de assuntos que
+// antes só existia em "rh" (férias, licenças etc. também são decididos
+// por ele). "rh" e "geral" continuam existindo só pra requerimentos
+// antigos já salvos com essas categorias continuarem funcionando.
+const ASSUNTOS_PRESIDENTE: Assunto[] = ASSUNTOS_RH;
 
-// "Geral" ainda não tem nenhum assunto pré-cadastrado — só modo manual.
+// "Geral" não tinha assunto pré-cadastrado — só modo manual; mantido por
+// compatibilidade com requerimentos antigos.
 const ASSUNTOS_GERAL: Assunto[] = [];
 
 export const ASSUNTOS_POR_TIPO: Record<TipoRequerimentoInterno, Assunto[]> = {
@@ -136,8 +141,25 @@ export function getAssunto(tipo: TipoRequerimentoInterno, key: string): Assunto 
   return ASSUNTOS_POR_TIPO[tipo]?.find((a) => a.key === key);
 }
 
+const FUNDAMENTOS_RH = [
+  "Lei Municipal nº 629/2017",
+  "Regimento Interno (Resolução nº 35/2022)",
+  "Estatuto dos Servidores Públicos do Município",
+];
+const FUNDAMENTOS_PRESIDENTE_ANTIGO = [
+  "Resolução nº 40/2023",
+  "Resolução nº 44/2023",
+  "Portaria nº 021/2026",
+  "Jurisprudência TCE/MG",
+];
+const FUNDAMENTOS_GERAL = ["Regimento Interno (Resolução nº 35/2022)", "Lei Orgânica Municipal nº 01/2019"];
+
 export const FUNDAMENTOS_SUGERIDOS: Record<TipoRequerimentoInterno, string[]> = {
-  rh: ["Lei Municipal nº 629/2017", "Regimento Interno (Resolução nº 35/2022)", "Estatuto dos Servidores Públicos do Município"],
-  presidente: ["Resolução nº 40/2023", "Resolução nº 44/2023", "Portaria nº 021/2026", "Jurisprudência TCE/MG"],
-  geral: ["Regimento Interno (Resolução nº 35/2022)", "Lei Orgânica Municipal nº 01/2019"],
+  rh: FUNDAMENTOS_RH,
+  // União das sugestões das 3 categorias antigas, sem repetir — mesmo
+  // motivo do catálogo de assuntos acima.
+  presidente: Array.from(
+    new Set([...FUNDAMENTOS_PRESIDENTE_ANTIGO, ...FUNDAMENTOS_RH, ...FUNDAMENTOS_GERAL]),
+  ),
+  geral: FUNDAMENTOS_GERAL,
 };

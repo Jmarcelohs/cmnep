@@ -81,7 +81,7 @@ export default async function RequerimentosInternosPage({
         <div>
           <h1 className="text-xl font-semibold text-brand-navy">Requerimentos Internos</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Recursos Humanos, Ao Presidente e Geral.
+            Endereçados ao Presidente da Câmara Municipal.
           </p>
         </div>
         <Link
