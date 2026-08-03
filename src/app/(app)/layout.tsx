@@ -14,13 +14,22 @@ const NAV_ITEMS = [
 
 const NAV_ITEM_ADMIN = { href: "/usuarios", label: "Usuários" };
 
+// Abas que servidor não precisa ver — não são do dia a dia dele
+// (gestão de pessoas, avaliações e veículos são operadas por
+// ordenador da despesa/admin).
+const HREFS_OCULTOS_SERVIDOR = ["/pessoas", "/avaliacoes", "/veiculos"];
+
 export default async function AppLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const usuario = await getCurrentUsuario();
-  const navItems = [...NAV_ITEMS, ...(usuario?.papel === "admin" ? [NAV_ITEM_ADMIN] : [])];
+  const itensBase =
+    usuario?.papel === "servidor"
+      ? NAV_ITEMS.filter((item) => !HREFS_OCULTOS_SERVIDOR.includes(item.href))
+      : NAV_ITEMS;
+  const navItems = [...itensBase, ...(usuario?.papel === "admin" ? [NAV_ITEM_ADMIN] : [])];
 
   return (
     <AppShell usuario={usuario} navItems={navItems}>
