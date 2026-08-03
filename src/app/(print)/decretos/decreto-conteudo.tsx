@@ -54,8 +54,9 @@ function ParecerComissao({ comissao }: { comissao: ComposicaoComissao }) {
 
 // Altura reservada pro bloco da foto (imagem + margem inferior) na primeira
 // página da justificativa, somada ao orçamento de linhas de texto — ver
-// paginarTextoCorrido em @/lib/pdf/paginacao.
-const ALTURA_BLOCO_FOTO_MM = 45;
+// paginarTextoCorrido em @/lib/pdf/paginacao. Precisa acompanhar a altura
+// da foto (h-[55mm]) mais uma folga de margem.
+const ALTURA_BLOCO_FOTO_MM = 70;
 
 export function DecretoConteudo({ decreto, fotoUrl }: { decreto: Decreto; fotoUrl?: string | null }) {
   const artigos = artigosTituloHonorario({
@@ -87,7 +88,10 @@ export function DecretoConteudo({ decreto, fotoUrl }: { decreto: Decreto; fotoUr
           <p className="text-center font-bold">
             {tituloProjetoDecreto({ numero: decreto.numero, dataDecreto: decreto.data_decreto })}
           </p>
-          <p className="mt-1 text-center font-bold uppercase">{SUBTITULO_TITULO_HONORARIO}</p>
+          {/* Ementa: recuada à direita (mesmo recuo do modelo original,
+              ~80mm a partir da margem) e com o parágrafo justificado — não
+              centralizada, convenção de redação legislativa. */}
+          <p className="mt-1 ml-[80mm] text-justify font-bold uppercase">{SUBTITULO_TITULO_HONORARIO}</p>
 
           <p className="mt-6 text-justify">
             A {NOME_CAMARA} de Minas Gerais, aprova e eu, promulgo o seguinte Decreto Legislativo:
@@ -129,7 +133,7 @@ export function DecretoConteudo({ decreto, fotoUrl }: { decreto: Decreto; fotoUr
                 <img
                   src={fotoUrl}
                   alt={`Foto de ${decreto.nome_homenageado}`}
-                  className="mx-auto mt-3 h-[35mm] w-[28mm] rounded border border-black object-cover"
+                  className="mx-auto mt-3 h-[55mm] w-[42mm] rounded border border-black object-cover"
                 />
               )}
 
