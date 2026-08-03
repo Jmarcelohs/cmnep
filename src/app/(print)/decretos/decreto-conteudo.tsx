@@ -2,9 +2,12 @@ import { PaginaA4 } from "../celula";
 import { dataPorExtenso } from "@/lib/pdf/formato";
 import {
   artigosTituloHonorario,
+  COMISSAO_CCJ,
+  COMISSAO_FINANCAS,
   NOME_CAMARA,
   SUBTITULO_TITULO_HONORARIO,
   tituloProjetoDecreto,
+  type ComposicaoComissao,
 } from "@/lib/decretos/documento";
 import { paginarTextoCorrido } from "@/lib/pdf/paginacao";
 import type { Tratamento } from "@/lib/supabase/database.types";
@@ -25,6 +28,26 @@ function AssinaturaAutor({ decreto }: { decreto: Decreto }) {
     <div className="mx-auto mt-[10mm] w-[90mm] text-center">
       <p className="font-bold">{decreto.autor_nome}</p>
       <p>Vereador(a){decreto.autor_partido ? ` – ${decreto.autor_partido}` : ""}</p>
+    </div>
+  );
+}
+
+// Parecer de comissão permanente — página fixa entre o texto do decreto e
+// a justificativa, reproduzindo os carimbos de CCJ e Finanças que já
+// acompanham todo Projeto de Decreto real da Câmara (linha em branco pra
+// data e assinatura preenchidas à mão após a reunião da comissão).
+function ParecerComissao({ comissao }: { comissao: ComposicaoComissao }) {
+  return (
+    <div className="rounded-md border border-black p-6 text-center">
+      <p className="font-bold uppercase">{comissao.titulo}</p>
+      <p className="mt-6 text-slate-500">_______________ / _______________ / _______________</p>
+      <div className="mt-6 space-y-3">
+        {comissao.membros.map((membro) => (
+          <p key={membro} className="font-semibold">
+            {membro}
+          </p>
+        ))}
+      </div>
     </div>
   );
 }
@@ -83,6 +106,13 @@ export function DecretoConteudo({ decreto, fotoUrl }: { decreto: Decreto; fotoUr
           </p>
 
           <AssinaturaAutor decreto={decreto} />
+        </div>
+      </PaginaA4>
+
+      <PaginaA4>
+        <div className="mx-[30mm] mt-[32mm] mb-[26mm] flex flex-1 flex-col justify-center gap-[16mm] text-[10pt]">
+          <ParecerComissao comissao={COMISSAO_CCJ} />
+          <ParecerComissao comissao={COMISSAO_FINANCAS} />
         </div>
       </PaginaA4>
 

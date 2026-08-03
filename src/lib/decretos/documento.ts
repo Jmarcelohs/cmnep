@@ -9,6 +9,31 @@ export const SUBTITULO_TITULO_HONORARIO =
 
 export const DOTACAO_ORCAMENTARIA_PADRAO = "01.01.031.0001.2002.339031";
 
+// Pareceres das comissões permanentes que todo Projeto de Decreto
+// Legislativo passa antes de ir a plenário — página fixa do modelo (não
+// depende do homenageado), com espaço em branco pra data e assinatura
+// preenchidas à mão. Composição das comissões da legislatura atual; se a
+// composição mudar, atualizar aqui.
+export type ComposicaoComissao = { titulo: string; membros: string[] };
+
+export const COMISSAO_CCJ: ComposicaoComissao = {
+  titulo: "Comissão de Constituição e Justiça",
+  membros: [
+    "Thuler Adriano Spuri – Presidente (Avante)",
+    "Marcos Memento – (PT)",
+    "Mário Cezar Batista Leandro – (PL)",
+  ],
+};
+
+export const COMISSAO_FINANCAS: ComposicaoComissao = {
+  titulo: "Comissão de Finanças, Orçamento e Tomada de Contas",
+  membros: [
+    "Marcos Memento – Presidente (PT)",
+    "Rogério de Paula Pedroso – (PL)",
+    "Thuler Adriano Spuri – (Avante)",
+  ],
+};
+
 export function tituloProjetoDecreto({ numero, dataDecreto }: { numero: string; dataDecreto: string }) {
   return `PROJETO DE DECRETO LEGISLATIVO Nº ${numero}, de ${dataPorExtenso(dataDecreto)}.`;
 }
