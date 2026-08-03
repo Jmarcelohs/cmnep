@@ -23,7 +23,7 @@ export default async function DashboardPage() {
   const { data: solicitacoes } = await supabase
     .from("diarias_solicitacoes")
     .select(
-      "id, status, total, municipio_destino, pessoas(nome), diarias_prestacoes_contas(id, parecer)",
+      "id, status, total, municipio_destino, data_solicitacao, pessoas(nome), diarias_prestacoes_contas(id, parecer)",
     );
 
   const lista = solicitacoes ?? [];
@@ -47,21 +47,36 @@ export default async function DashboardPage() {
 
   const porSolicitante = new Map<
     string,
-    { total: number; autorizadas: number; valorAutorizado: number }
+    { total: number; autorizadas: number; valorAutorizado: number; ultimaSolicitacao: string | null }
   >();
 
   for (const s of lista) {
     const nome = (s.pessoas as unknown as { nome: string } | null)?.nome ?? "—";
-    const atual = porSolicitante.get(nome) ?? { total: 0, autorizadas: 0, valorAutorizado: 0 };
+    const atual = porSolicitante.get(nome) ?? {
+      total: 0,
+      autorizadas: 0,
+      valorAutorizado: 0,
+      ultimaSolicitacao: null,
+    };
     atual.total += 1;
     if (s.status === "Autorizado") {
       atual.autorizadas += 1;
       atual.valorAutorizado += Number(s.total ?? 0);
     }
+    if (!atual.ultimaSolicitacao || (s.data_solicitacao && s.data_solicitacao > atual.ultimaSolicitacao)) {
+      atual.ultimaSolicitacao = s.data_solicitacao;
+    }
     porSolicitante.set(nome, atual);
   }
 
-  const ranking = Array.from(porSolicitante.entries()).sort((a, b) => b[1].total - a[1].total);
+  // Ordenado pela solicitação de diária mais recente de cada solicitante
+  // (não pelo total de diárias) — quem pediu mais recentemente aparece
+  // primeiro.
+  const ranking = Array.from(porSolicitante.entries()).sort((a, b) => {
+    const dataA = a[1].ultimaSolicitacao ?? "";
+    const dataB = b[1].ultimaSolicitacao ?? "";
+    return dataB.localeCompare(dataA);
+  });
 
   const { data: requerimentosInternos } = await supabase
     .from("requerimentos_internos")
@@ -119,6 +134,7 @@ export default async function DashboardPage() {
           <thead className="bg-brand-navy/5">
             <tr>
               <th className="px-4 py-2 text-left font-medium text-slate-500">Solicitante</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-500">Última solicitação</th>
               <th className="px-4 py-2 text-left font-medium text-slate-500">Total de diárias</th>
               <th className="px-4 py-2 text-left font-medium text-slate-500">Autorizadas</th>
               <th className="px-4 py-2 text-left font-medium text-slate-500">Valor autorizado</th>
@@ -128,6 +144,7 @@ export default async function DashboardPage() {
             {ranking.map(([nome, dados]) => (
               <tr key={nome}>
                 <td className="px-4 py-2 text-slate-900">{nome}</td>
+                <td className="px-4 py-2 text-slate-700">{formatarData(dados.ultimaSolicitacao)}</td>
                 <td className="px-4 py-2 text-slate-700">{dados.total}</td>
                 <td className="px-4 py-2 text-slate-700">{dados.autorizadas}</td>
                 <td className="px-4 py-2 text-slate-700">{formatarMoeda(dados.valorAutorizado)}</td>
@@ -135,7 +152,7 @@ export default async function DashboardPage() {
             ))}
             {ranking.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-slate-400">
+                <td colSpan={5} className="px-4 py-6 text-center text-slate-400">
                   Nenhuma solicitação encontrada.
                 </td>
               </tr>
