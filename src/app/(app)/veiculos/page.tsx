@@ -5,14 +5,16 @@ import { formatarData, formatarMoeda } from "@/lib/pdf/formato";
 import { DownloadPdfButton } from "@/components/download-pdf-button";
 import { ExcluirSolicitacaoButton } from "@/components/excluir-solicitacao-button";
 import { MenuAcoes } from "@/components/menu-acoes";
+import { Paginacao } from "@/components/paginacao";
+import { calcularPagina, totalDePaginas } from "@/lib/paginacao";
 import { excluirLocacao } from "./actions";
 
 export default async function VeiculosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ano?: string; solicitante?: string; error?: string }>;
+  searchParams: Promise<{ ano?: string; solicitante?: string; pagina?: string; error?: string }>;
 }) {
-  const { ano, solicitante, error: errorMsg } = await searchParams;
+  const { ano, solicitante, pagina: paginaStr, error: errorMsg } = await searchParams;
   const usuario = await getCurrentUsuario();
   const podeGerenciar =
     usuario?.papel === "admin" ||
@@ -20,17 +22,22 @@ export default async function VeiculosPage({
     usuario?.papel === "gestor_diarias";
 
   const supabase = await createClient();
+  const { pagina, de, ate } = calcularPagina(paginaStr);
 
   let query = supabase
     .from("veiculos_locacao_solicitacoes")
-    .select("id, numero, ano, data_pedido, solicitante_nome, condutor_nome, veiculo_descricao, valor_total, locadora")
+    .select(
+      "id, numero, ano, data_pedido, solicitante_nome, condutor_nome, veiculo_descricao, valor_total, locadora",
+      { count: "exact" },
+    )
     .order("ano", { ascending: false })
-    .order("numero", { ascending: false });
+    .order("numero", { ascending: false })
+    .range(de, ate);
 
   if (ano) query = query.eq("ano", Number(ano));
   if (solicitante) query = query.ilike("solicitante_nome", `%${solicitante}%`);
 
-  const { data: locacoes, error } = await query;
+  const { data: locacoes, error, count } = await query;
 
   const { data: todosAnos } = await supabase
     .from("veiculos_locacao_solicitacoes")
@@ -38,7 +45,17 @@ export default async function VeiculosPage({
     .order("ano", { ascending: false });
   const anosDisponiveis = Array.from(new Set((todosAnos ?? []).map((a) => a.ano)));
 
-  const total = (locacoes ?? []).reduce((acc, l) => acc + Number(l.valor_total), 0);
+  const paramsBase = new URLSearchParams({
+    ...(ano ? { ano } : {}),
+    ...(solicitante ? { solicitante } : {}),
+  });
+
+  // Soma de todo o filtro (não só da página atual) — consulta separada, só a coluna de valor.
+  let queryTotal = supabase.from("veiculos_locacao_solicitacoes").select("valor_total");
+  if (ano) queryTotal = queryTotal.eq("ano", Number(ano));
+  if (solicitante) queryTotal = queryTotal.ilike("solicitante_nome", `%${solicitante}%`);
+  const { data: todosDoFiltro } = await queryTotal;
+  const total = (todosDoFiltro ?? []).reduce((acc, l) => acc + Number(l.valor_total), 0);
 
   return (
     <div>
@@ -179,6 +196,14 @@ export default async function VeiculosPage({
           </tbody>
         </table>
       </div>
+
+      <Paginacao
+        pagina={pagina}
+        totalPaginas={totalDePaginas(count)}
+        count={count}
+        baseHref="/veiculos"
+        paramsBase={paramsBase}
+      />
     </div>
   );
 }

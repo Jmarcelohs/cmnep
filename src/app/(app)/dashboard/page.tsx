@@ -2,6 +2,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { formatarData } from "@/lib/pdf/formato";
+import { calcularRankingSolicitantes } from "@/lib/dashboard/ranking";
+import { DownloadPdfButton } from "@/components/download-pdf-button";
 import type { StatusRequerimentoInterno } from "@/lib/supabase/database.types";
 
 const STATUS_INTERNO_LABEL: Record<StatusRequerimentoInterno, string> = {
@@ -44,38 +46,7 @@ export default async function DashboardPage() {
     .filter((s) => s.status === "Autorizado")
     .reduce((acc, s) => acc + Number(s.total ?? 0), 0);
 
-  const porSolicitante = new Map<
-    string,
-    { total: number; autorizadas: number; valorAutorizado: number; ultimaSolicitacao: string | null }
-  >();
-
-  for (const s of lista) {
-    const nome = (s.pessoas as unknown as { nome: string } | null)?.nome ?? "—";
-    const atual = porSolicitante.get(nome) ?? {
-      total: 0,
-      autorizadas: 0,
-      valorAutorizado: 0,
-      ultimaSolicitacao: null,
-    };
-    atual.total += 1;
-    if (s.status === "Autorizado") {
-      atual.autorizadas += 1;
-      atual.valorAutorizado += Number(s.total ?? 0);
-    }
-    if (!atual.ultimaSolicitacao || (s.data_solicitacao && s.data_solicitacao > atual.ultimaSolicitacao)) {
-      atual.ultimaSolicitacao = s.data_solicitacao;
-    }
-    porSolicitante.set(nome, atual);
-  }
-
-  // Ordenado pela solicitação de diária mais recente de cada solicitante
-  // (não pelo total de diárias) — quem pediu mais recentemente aparece
-  // primeiro.
-  const ranking = Array.from(porSolicitante.entries()).sort((a, b) => {
-    const dataA = a[1].ultimaSolicitacao ?? "";
-    const dataB = b[1].ultimaSolicitacao ?? "";
-    return dataB.localeCompare(dataA);
-  });
+  const ranking = await calcularRankingSolicitantes(supabase);
 
   const { data: requerimentosInternos } = await supabase
     .from("requerimentos_internos")
@@ -124,7 +95,22 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <h2 className="mt-8 text-base font-semibold text-slate-900">Diárias por solicitante</h2>
+      <div className="mt-8 flex items-center justify-between">
+        <h2 className="text-base font-semibold text-slate-900">Diárias por solicitante</h2>
+        <div className="flex gap-2">
+          <a
+            href="/api/dashboard/ranking-csv"
+            className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+          >
+            Exportar CSV
+          </a>
+          <DownloadPdfButton
+            url="/api/dashboard/pdf"
+            nomeArquivoPadrao="relatorio-painel.pdf"
+            label="Exportar PDF"
+          />
+        </div>
+      </div>
       <div className="mt-3 overflow-x-auto rounded-lg border border-slate-200 bg-white">
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-brand-navy/5">
@@ -137,9 +123,9 @@ export default async function DashboardPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {ranking.map(([nome, dados]) => (
-              <tr key={nome}>
-                <td className="px-4 py-2 text-slate-900">{nome}</td>
+            {ranking.map((dados) => (
+              <tr key={dados.nome}>
+                <td className="px-4 py-2 text-slate-900">{dados.nome}</td>
                 <td className="px-4 py-2 text-slate-700">{formatarData(dados.ultimaSolicitacao)}</td>
                 <td className="px-4 py-2 text-slate-700">{dados.total}</td>
                 <td className="px-4 py-2 text-slate-700">{dados.autorizadas}</td>

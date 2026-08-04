@@ -4,21 +4,36 @@ import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { alternarAtivoPessoa, excluirPessoa } from "./actions";
 import { ExcluirSolicitacaoButton } from "@/components/excluir-solicitacao-button";
 import { MenuAcoes } from "@/components/menu-acoes";
+import { CampoBusca } from "@/components/campo-busca";
+import { Paginacao } from "@/components/paginacao";
+import { construirFiltroBusca } from "@/lib/busca";
+import { calcularPagina, totalDePaginas } from "@/lib/paginacao";
 
 export default async function PessoasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ busca?: string; pagina?: string; error?: string }>;
 }) {
-  const { error: errorMsg } = await searchParams;
+  const { busca, pagina: paginaStr, error: errorMsg } = await searchParams;
   const usuario = await getCurrentUsuario();
   const ehAdmin = usuario?.papel === "admin";
 
   const supabase = await createClient();
-  const { data: pessoas, error } = await supabase
+  const { pagina, de, ate } = calcularPagina(paginaStr);
+
+  let query = supabase
     .from("pessoas")
-    .select("id, matricula, nome, cargo, categoria, ativo")
-    .order("nome");
+    .select("id, matricula, nome, cargo, categoria, ativo", { count: "exact" })
+    .order("nome")
+    .range(de, ate);
+
+  if (busca) query = query.or(construirFiltroBusca(busca, ["nome", "matricula", "cargo"]));
+
+  const { data: pessoas, error, count } = await query;
+
+  const paramsBase = new URLSearchParams({
+    ...(busca ? { busca } : {}),
+  });
 
   return (
     <div>
@@ -38,6 +53,16 @@ export default async function PessoasPage({
           </Link>
         )}
       </div>
+
+      <form className="mt-4 flex flex-wrap items-end gap-3 text-sm" action="/pessoas">
+        <CampoBusca defaultValue={busca} placeholder="Nome, matrícula ou cargo" />
+        <button
+          type="submit"
+          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        >
+          Filtrar
+        </button>
+      </form>
 
       {error && (
         <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -109,6 +134,14 @@ export default async function PessoasPage({
           </tbody>
         </table>
       </div>
+
+      <Paginacao
+        pagina={pagina}
+        totalPaginas={totalDePaginas(count)}
+        count={count}
+        baseHref="/pessoas"
+        paramsBase={paramsBase}
+      />
     </div>
   );
 }
