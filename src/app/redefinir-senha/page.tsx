@@ -1,14 +1,13 @@
 import Image from "next/image";
-import Link from "next/link";
-import { signIn } from "./actions";
+import { atualizarSenha } from "./actions";
 import { BotaoSuporteWhatsapp } from "@/components/botao-suporte-whatsapp";
 
-export default async function LoginPage({
+export default async function RedefinirSenhaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; redirect?: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
-  const { error, redirect: redirectTo } = await searchParams;
+  const { error } = await searchParams;
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
@@ -23,41 +22,38 @@ export default async function LoginPage({
             priority
             className="h-12 w-auto"
           />
-          <p className="mt-4 text-sm text-slate-500">
-            Entre com seu e-mail institucional.
-          </p>
+          <p className="mt-4 text-sm text-slate-500">Escolha uma nova senha.</p>
 
           {error && (
-            <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-              {error}
-            </p>
+            <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
           )}
 
-          <form action={signIn} className="mt-6 space-y-4">
-            <input type="hidden" name="redirectTo" value={redirectTo ?? "/dashboard"} />
+          <form action={atualizarSenha} className="mt-6 space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-700">
-                E-mail
+              <label htmlFor="senha" className="block text-sm font-medium text-slate-700">
+                Nova senha
               </label>
               <input
-                id="email"
-                name="email"
-                type="email"
+                id="senha"
+                name="senha"
+                type="password"
                 required
-                autoComplete="email"
+                minLength={8}
+                autoComplete="new-password"
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-navy focus:outline-none"
               />
             </div>
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-700">
-                Senha
+              <label htmlFor="confirmarSenha" className="block text-sm font-medium text-slate-700">
+                Confirmar nova senha
               </label>
               <input
-                id="password"
-                name="password"
+                id="confirmarSenha"
+                name="confirmarSenha"
                 type="password"
                 required
-                autoComplete="current-password"
+                minLength={8}
+                autoComplete="new-password"
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-navy focus:outline-none"
               />
             </div>
@@ -65,16 +61,9 @@ export default async function LoginPage({
               type="submit"
               className="w-full rounded-md bg-brand-navy px-3 py-2 text-sm font-medium text-white hover:bg-brand-navy-light"
             >
-              Entrar
+              Salvar nova senha
             </button>
           </form>
-
-          <Link
-            href="/esqueci-senha"
-            className="mt-4 block text-center text-sm text-brand-navy hover:underline"
-          >
-            Esqueci minha senha
-          </Link>
         </div>
       </div>
 
