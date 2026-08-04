@@ -65,7 +65,10 @@ export default async function PrestacaoContasPage({
     .maybeSingle();
 
   if (!prestacao) {
-    const podeCriar = usuario?.papel === "admin" || Boolean(minhaPessoa?.id);
+    const podeCriar =
+      usuario?.papel === "admin" ||
+      usuario?.papel === "gestor_diarias" ||
+      Boolean(minhaPessoa?.id);
     // (checagem fina de dono é feita pela policy de RLS no insert)
 
     // Requerimentos de reembolso autorizados e vinculados a essa diária
@@ -165,14 +168,25 @@ export default async function PrestacaoContasPage({
     .select("id", { count: "exact", head: true })
     .eq("solicitacao_diaria_id", id);
 
-  const podeAnexar = usuario?.papel === "admin" || minhaPessoa?.id === prestacao.pessoa_id;
+  const podeAnexar =
+    usuario?.papel === "admin" ||
+    usuario?.papel === "gestor_diarias" ||
+    minhaPessoa?.id === prestacao.pessoa_id;
 
   const podeAprovarOrdenador =
-    (usuario?.papel === "ordenador_despesa" || usuario?.papel === "admin") &&
+    (usuario?.papel === "ordenador_despesa" ||
+      usuario?.papel === "admin" ||
+      usuario?.papel === "gestor_diarias") &&
     !prestacao.data_aprovacao_ordenador;
-  const podeDarBaixa = usuario?.papel === "tesoureiro" || usuario?.papel === "admin";
+  const podeDarBaixa =
+    usuario?.papel === "tesoureiro" ||
+    usuario?.papel === "admin" ||
+    usuario?.papel === "gestor_diarias";
   const podeEmitirParecer =
-    (usuario?.papel === "controle_interno" || usuario?.papel === "admin") && !prestacao.parecer;
+    (usuario?.papel === "controle_interno" ||
+      usuario?.papel === "admin" ||
+      usuario?.papel === "gestor_diarias") &&
+    !prestacao.parecer;
 
   return (
     <div>

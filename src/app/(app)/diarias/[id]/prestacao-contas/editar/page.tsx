@@ -28,7 +28,10 @@ export default async function EditarPrestacaoContasPage({
     ? await supabase.from("pessoas").select("id").eq("usuario_id", usuario.id).maybeSingle()
     : { data: null };
 
-  const podeEditar = usuario?.papel === "admin" || minhaPessoa?.id === prestacao.pessoa_id;
+  const podeEditar =
+    usuario?.papel === "admin" ||
+    usuario?.papel === "gestor_diarias" ||
+    minhaPessoa?.id === prestacao.pessoa_id;
   if (!podeEditar) redirect(`/diarias/${id}/prestacao-contas`);
 
   const pessoa = prestacao.pessoas as unknown as { nome: string; cargo: string } | null;

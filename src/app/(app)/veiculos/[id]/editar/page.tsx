@@ -14,7 +14,12 @@ export default async function EditarLocacaoPage({
   const { id } = await params;
   const { error } = await searchParams;
   const usuario = await getCurrentUsuario();
-  if (usuario?.papel !== "admin" && usuario?.papel !== "ordenador_despesa") redirect("/veiculos");
+  if (
+    usuario?.papel !== "admin" &&
+    usuario?.papel !== "ordenador_despesa" &&
+    usuario?.papel !== "gestor_diarias"
+  )
+    redirect("/veiculos");
 
   const supabase = await createClient();
   const { data: locacao } = await supabase

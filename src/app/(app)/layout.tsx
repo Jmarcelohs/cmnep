@@ -19,8 +19,14 @@ const NAV_ITEMS_ADMIN = [
 
 // Abas que servidor não precisa ver — não são do dia a dia dele
 // (gestão de pessoas, avaliações e veículos são operadas por
-// ordenador da despesa/admin).
+// ordenador da despesa/admin/gestor de diárias).
 const HREFS_OCULTOS_SERVIDOR = ["/pessoas", "/avaliacoes", "/veiculos"];
+
+// Gestor de Diárias é um servidor comum "elevado" só em Diárias,
+// Reembolso e Veículos — por isso continua sem ver Pessoas/Avaliações,
+// mas Veículos (que é justamente um dos 3 módulos elevados) não entra
+// na lista de ocultos dele.
+const HREFS_OCULTOS_GESTOR_DIARIAS = ["/pessoas", "/avaliacoes"];
 
 export default async function AppLayout({
   children,
@@ -28,10 +34,13 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   const usuario = await getCurrentUsuario();
-  const itensBase =
+  const hrefsOcultos =
     usuario?.papel === "servidor"
-      ? NAV_ITEMS.filter((item) => !HREFS_OCULTOS_SERVIDOR.includes(item.href))
-      : NAV_ITEMS;
+      ? HREFS_OCULTOS_SERVIDOR
+      : usuario?.papel === "gestor_diarias"
+        ? HREFS_OCULTOS_GESTOR_DIARIAS
+        : [];
+  const itensBase = NAV_ITEMS.filter((item) => !hrefsOcultos.includes(item.href));
   const navItems = [...itensBase, ...(usuario?.papel === "admin" ? NAV_ITEMS_ADMIN : [])];
 
   return (

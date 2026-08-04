@@ -56,9 +56,14 @@ export default async function DetalheReembolsoPage({
     veiculo_descricao: string;
   } | null;
 
-  const podeGerenciar = usuario?.papel === "admin" || minhaPessoa?.id === requerimento.pessoa_id;
+  const podeGerenciar =
+    usuario?.papel === "admin" ||
+    usuario?.papel === "gestor_diarias" ||
+    minhaPessoa?.id === requerimento.pessoa_id;
   const podeDecidir =
-    (usuario?.papel === "ordenador_despesa" || usuario?.papel === "admin") &&
+    (usuario?.papel === "ordenador_despesa" ||
+      usuario?.papel === "admin" ||
+      usuario?.papel === "gestor_diarias") &&
     requerimento.status !== "deferido" &&
     requerimento.status !== "indeferido";
 

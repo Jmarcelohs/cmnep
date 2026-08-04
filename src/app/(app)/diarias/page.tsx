@@ -27,7 +27,10 @@ export default async function DiariasPage({
     ? await supabase.from("pessoas").select("id").eq("usuario_id", usuario.id).maybeSingle()
     : { data: null };
 
-  const podeEditarSempre = usuario?.papel === "admin" || usuario?.papel === "ordenador_despesa";
+  const podeEditarSempre =
+    usuario?.papel === "admin" ||
+    usuario?.papel === "ordenador_despesa" ||
+    usuario?.papel === "gestor_diarias";
 
   let query = supabase
     .from("diarias_solicitacoes")
@@ -120,7 +123,9 @@ export default async function DiariasPage({
               const prestacaoDaLinha = (s.diarias_prestacoes_contas ?? [])[0];
               const temPrestacao = Boolean(prestacaoDaLinha);
               const podeGerenciarPrestacao =
-                usuario?.papel === "admin" || minhaPessoa?.id === s.pessoa_id;
+                usuario?.papel === "admin" ||
+                usuario?.papel === "gestor_diarias" ||
+                minhaPessoa?.id === s.pessoa_id;
               return (
                 <tr key={s.id} className="hover:bg-slate-50">
                   <td className="px-4 py-2">

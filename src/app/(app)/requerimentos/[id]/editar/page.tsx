@@ -29,7 +29,10 @@ export default async function EditarReembolsoPage({
     ? await supabase.from("pessoas").select("id").eq("usuario_id", usuario.id).maybeSingle()
     : { data: null };
 
-  const podeEditar = usuario?.papel === "admin" || minhaPessoa?.id === requerimento.pessoa_id;
+  const podeEditar =
+    usuario?.papel === "admin" ||
+    usuario?.papel === "gestor_diarias" ||
+    minhaPessoa?.id === requerimento.pessoa_id;
   if (!podeEditar) redirect(`/requerimentos/${id}`);
 
   const [{ data: pessoas }, { data: sensiveis }, { data: diarias }, { data: veiculos }] = await Promise.all([

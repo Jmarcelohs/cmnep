@@ -7,7 +7,11 @@ import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 
 async function exigirOrdenadorOuAdmin(redirectPath: string) {
   const usuario = await getCurrentUsuario();
-  if (usuario?.papel !== "admin" && usuario?.papel !== "ordenador_despesa") {
+  if (
+    usuario?.papel !== "admin" &&
+    usuario?.papel !== "ordenador_despesa" &&
+    usuario?.papel !== "gestor_diarias"
+  ) {
     redirect(redirectPath);
   }
   return usuario;

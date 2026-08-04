@@ -14,7 +14,10 @@ export default async function VeiculosPage({
 }) {
   const { ano, solicitante, error: errorMsg } = await searchParams;
   const usuario = await getCurrentUsuario();
-  const podeGerenciar = usuario?.papel === "admin" || usuario?.papel === "ordenador_despesa";
+  const podeGerenciar =
+    usuario?.papel === "admin" ||
+    usuario?.papel === "ordenador_despesa" ||
+    usuario?.papel === "gestor_diarias";
 
   const supabase = await createClient();
 

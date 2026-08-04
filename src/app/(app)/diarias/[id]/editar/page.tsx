@@ -37,6 +37,7 @@ export default async function EditarSolicitacaoPage({
   const podeEditar =
     usuario?.papel === "admin" ||
     usuario?.papel === "ordenador_despesa" ||
+    usuario?.papel === "gestor_diarias" ||
     minhaPessoa?.id === solicitacao.pessoa_id;
 
   if (!podeEditar) redirect(`/diarias/${id}`);

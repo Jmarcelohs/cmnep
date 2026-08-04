@@ -11,7 +11,12 @@ export default async function NovaLocacaoPage({
 }) {
   const { error } = await searchParams;
   const usuario = await getCurrentUsuario();
-  if (usuario?.papel !== "admin" && usuario?.papel !== "ordenador_despesa") redirect("/veiculos");
+  if (
+    usuario?.papel !== "admin" &&
+    usuario?.papel !== "ordenador_despesa" &&
+    usuario?.papel !== "gestor_diarias"
+  )
+    redirect("/veiculos");
 
   const supabase = await createClient();
   const [{ data: pessoas }, { data: itens }] = await Promise.all([

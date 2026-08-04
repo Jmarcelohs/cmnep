@@ -12,6 +12,7 @@ const PAPEL_LABEL: Record<string, string> = {
   ordenador_despesa: "Ordenador da despesa",
   tesoureiro: "Tesoureiro",
   controle_interno: "Controle interno",
+  gestor_diarias: "Gestor de Diárias",
 };
 
 export default async function UsuariosPage({

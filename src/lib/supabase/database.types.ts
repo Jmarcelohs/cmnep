@@ -7,7 +7,8 @@ export type Papel =
   | "servidor"
   | "ordenador_despesa"
   | "tesoureiro"
-  | "controle_interno";
+  | "controle_interno"
+  | "gestor_diarias";
 
 export type Categoria = "Efetivo" | "Comissionado" | "Vereador";
 

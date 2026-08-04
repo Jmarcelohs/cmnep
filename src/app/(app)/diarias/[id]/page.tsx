@@ -42,7 +42,9 @@ export default async function DetalheSolicitacaoPage({
 
   const podeAutorizar =
     solicitacao.status === "Solicitado" &&
-    (usuario?.papel === "ordenador_despesa" || usuario?.papel === "admin");
+    (usuario?.papel === "ordenador_despesa" ||
+      usuario?.papel === "admin" ||
+      usuario?.papel === "gestor_diarias");
 
   const { data: minhaPessoa } = usuario
     ? await supabase.from("pessoas").select("id").eq("usuario_id", usuario.id).maybeSingle()
@@ -51,6 +53,7 @@ export default async function DetalheSolicitacaoPage({
   const podeEditar =
     usuario?.papel === "admin" ||
     usuario?.papel === "ordenador_despesa" ||
+    usuario?.papel === "gestor_diarias" ||
     minhaPessoa?.id === solicitacao.pessoa_id;
 
   const pessoa = solicitacao.pessoas as unknown as {

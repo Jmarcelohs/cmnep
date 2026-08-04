@@ -35,7 +35,10 @@ export default async function RequerimentosPage({
     ? await supabase.from("pessoas").select("id").eq("usuario_id", usuario.id).maybeSingle()
     : { data: null };
 
-  const podeGerenciarSempre = usuario?.papel === "admin" || usuario?.papel === "ordenador_despesa";
+  const podeGerenciarSempre =
+    usuario?.papel === "admin" ||
+    usuario?.papel === "ordenador_despesa" ||
+    usuario?.papel === "gestor_diarias";
 
   const { data: requerimentos, error } = await supabase
     .from("requerimentos_reembolso")
