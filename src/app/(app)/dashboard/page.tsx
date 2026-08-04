@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
-import { TIPO_LABEL } from "@/lib/requerimentos-internos/assuntos";
 import { formatarData } from "@/lib/pdf/formato";
-import type { StatusRequerimentoInterno, TipoRequerimentoInterno } from "@/lib/supabase/database.types";
+import type { StatusRequerimentoInterno } from "@/lib/supabase/database.types";
 
 const STATUS_INTERNO_LABEL: Record<StatusRequerimentoInterno, string> = {
   pendente: "Pendente",
@@ -90,13 +89,10 @@ export default async function DashboardPage() {
     deferido: 0,
     indeferido: 0,
   };
-  const contagemTipoInterno: Record<TipoRequerimentoInterno, number> = { rh: 0, presidente: 0, geral: 0 };
   for (const r of listaInternos) {
     contagemStatusInterno[r.status as StatusRequerimentoInterno]++;
-    contagemTipoInterno[r.tipo as TipoRequerimentoInterno]++;
   }
   const recentesInternos = listaInternos.slice(0, 6);
-  const totalInternos = listaInternos.length;
 
   return (
     <div>
@@ -219,45 +215,24 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
-          <p className="text-xs font-semibold uppercase text-slate-500">Por categoria</p>
-          <dl className="mt-2 space-y-2 text-sm">
-            {(Object.keys(TIPO_LABEL) as TipoRequerimentoInterno[]).map((t) => {
-              const pct = totalInternos > 0 ? Math.round((contagemTipoInterno[t] / totalInternos) * 100) : 0;
-              return (
-                <div key={t}>
-                  <div className="flex justify-between">
-                    <dt className="text-slate-500">{TIPO_LABEL[t]}</dt>
-                    <dd className="text-slate-900">{contagemTipoInterno[t]}</dd>
-                  </div>
-                  <div className="mt-1 h-1.5 w-full rounded-full bg-slate-100">
-                    <div className="h-1.5 rounded-full bg-brand-navy" style={{ width: `${pct}%` }} />
-                  </div>
-                </div>
-              );
-            })}
-          </dl>
-        </div>
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
-          <p className="text-xs font-semibold uppercase text-slate-500">Mais recentes</p>
-          <ul className="mt-2 space-y-2 text-sm">
-            {recentesInternos.map((r) => (
-              <li key={r.id}>
-                <Link href={`/requerimentos-internos/${r.id}`} className="text-slate-900 hover:underline">
-                  {r.numero}/{r.ano} — {r.nome}
-                </Link>
-                <span className="text-slate-500">
-                  {" "}
-                  — {r.assunto} ({formatarData(r.criado_em.slice(0, 10))})
-                </span>
-              </li>
-            ))}
-            {recentesInternos.length === 0 && (
-              <li className="text-slate-400">Nenhum requerimento ainda.</li>
-            )}
-          </ul>
-        </div>
+      <div className="mt-4 rounded-lg border border-slate-200 bg-white p-4">
+        <p className="text-xs font-semibold uppercase text-slate-500">Mais recentes</p>
+        <ul className="mt-2 space-y-2 text-sm">
+          {recentesInternos.map((r) => (
+            <li key={r.id}>
+              <Link href={`/requerimentos-internos/${r.id}`} className="text-slate-900 hover:underline">
+                {r.numero}/{r.ano} — {r.nome}
+              </Link>
+              <span className="text-slate-500">
+                {" "}
+                — {r.assunto} ({formatarData(r.criado_em.slice(0, 10))})
+              </span>
+            </li>
+          ))}
+          {recentesInternos.length === 0 && (
+            <li className="text-slate-400">Nenhum requerimento ainda.</li>
+          )}
+        </ul>
       </div>
     </div>
   );
