@@ -51,10 +51,10 @@ export default async function AvaliadoresPage({
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-brand-navy/5">
             <tr>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Nome</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Matrícula</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Situação</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Ações</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Nome</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Matrícula</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Situação</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Ações</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">

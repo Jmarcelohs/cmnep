@@ -124,8 +124,9 @@ export function ReembolsoForm({
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label className="block text-sm font-medium text-slate-700">Protocolo</label>
+          <label htmlFor="protocolo" className="block text-sm font-medium text-slate-700">Protocolo</label>
           <input
+            id="protocolo"
             name="protocolo"
             required
             defaultValue={valoresIniciais?.protocolo ?? ""}
@@ -138,8 +139,9 @@ export function ReembolsoForm({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">Data do requerimento</label>
+          <label htmlFor="data_requerimento" className="block text-sm font-medium text-slate-700">Data do requerimento</label>
           <input
+            id="data_requerimento"
             type="date"
             name="data_requerimento"
             required
@@ -149,7 +151,7 @@ export function ReembolsoForm({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">Solicitante</label>
+          <label htmlFor="pessoa_id" className="block text-sm font-medium text-slate-700">Solicitante</label>
           {pessoaFixaId ? (
             <>
               <input type="hidden" name="pessoa_id" value={pessoaFixaId} />
@@ -159,6 +161,7 @@ export function ReembolsoForm({
             </>
           ) : (
             <select
+              id="pessoa_id"
               name="pessoa_id"
               required
               value={pessoaId}
@@ -179,8 +182,9 @@ export function ReembolsoForm({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">CPF do solicitante</label>
+          <label htmlFor="cpf" className="block text-sm font-medium text-slate-700">CPF do solicitante</label>
           <input
+            id="cpf"
             name="cpf"
             inputMode="numeric"
             value={cpf}
@@ -194,8 +198,9 @@ export function ReembolsoForm({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">Cargo declarado</label>
+          <label htmlFor="cargo_declarado" className="block text-sm font-medium text-slate-700">Cargo declarado</label>
           <select
+            id="cargo_declarado"
             name="cargo_declarado"
             required
             value={cargoDeclarado}
@@ -211,8 +216,9 @@ export function ReembolsoForm({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">Sub-assunto</label>
+          <label htmlFor="subassunto" className="block text-sm font-medium text-slate-700">Sub-assunto</label>
           <select
+            id="subassunto"
             name="subassunto"
             required
             value={subassunto}
@@ -228,8 +234,9 @@ export function ReembolsoForm({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">Valor (R$)</label>
+          <label htmlFor="valor_texto" className="block text-sm font-medium text-slate-700">Valor (R$)</label>
           <input
+            id="valor_texto"
             inputMode="numeric"
             value={valorTexto}
             onChange={(e) => handleValorChange(e.target.value)}
@@ -239,8 +246,9 @@ export function ReembolsoForm({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">Data de ida</label>
+          <label htmlFor="data_ida" className="block text-sm font-medium text-slate-700">Data de ida</label>
           <input
+            id="data_ida"
             type="date"
             name="data_ida"
             required
@@ -251,8 +259,9 @@ export function ReembolsoForm({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">Data de volta</label>
+          <label htmlFor="data_volta" className="block text-sm font-medium text-slate-700">Data de volta</label>
           <input
+            id="data_volta"
             type="date"
             name="data_volta"
             required
@@ -263,8 +272,9 @@ export function ReembolsoForm({
         </div>
 
         <div className="sm:col-span-2">
-          <label className="block text-sm font-medium text-slate-700">Município</label>
+          <label htmlFor="municipio" className="block text-sm font-medium text-slate-700">Município</label>
           <input
+            id="municipio"
             name="municipio"
             required
             value={municipio}
@@ -274,10 +284,11 @@ export function ReembolsoForm({
         </div>
 
         <div className="sm:col-span-2">
-          <label className="block text-sm font-medium text-slate-700">
+          <label htmlFor="solicitacao_diaria_id" className="block text-sm font-medium text-slate-700">
             Vincular a uma diária de viagem (opcional)
           </label>
           <select
+            id="solicitacao_diaria_id"
             name="solicitacao_diaria_id"
             value={solicitacaoDiariaId}
             onChange={(e) => setSolicitacaoDiariaId(e.target.value)}
@@ -300,10 +311,11 @@ export function ReembolsoForm({
         {subassunto === "combustivel" && (
           <>
             <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-slate-700">
+              <label htmlFor="solicitacao_veiculo_id" className="block text-sm font-medium text-slate-700">
                 Vincular a uma locação de veículo (opcional)
               </label>
               <select
+                id="solicitacao_veiculo_id"
                 name="solicitacao_veiculo_id"
                 value={solicitacaoVeiculoId}
                 onChange={(e) => setSolicitacaoVeiculoId(e.target.value)}
@@ -322,8 +334,9 @@ export function ReembolsoForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700">Placa do veículo</label>
+              <label htmlFor="placa_veiculo" className="block text-sm font-medium text-slate-700">Placa do veículo</label>
               <input
+                id="placa_veiculo"
                 name="placa_veiculo"
                 required
                 value={placaVeiculo}
@@ -334,8 +347,9 @@ export function ReembolsoForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700">Modelo do veículo</label>
+              <label htmlFor="modelo_veiculo" className="block text-sm font-medium text-slate-700">Modelo do veículo</label>
               <input
+                id="modelo_veiculo"
                 name="modelo_veiculo"
                 required
                 value={modeloVeiculo}

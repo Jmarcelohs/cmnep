@@ -25,8 +25,9 @@ export function PessoaForm({
   return (
     <form action={action} className="mt-6 max-w-lg space-y-4">
       <div>
-        <label className="block text-sm font-medium text-slate-700">Matrícula</label>
+        <label htmlFor="matricula" className="block text-sm font-medium text-slate-700">Matrícula</label>
         <input
+          id="matricula"
           name="matricula"
           defaultValue={valoresIniciais?.matricula}
           placeholder="ex.: 1106 (deixe em branco se não houver)"
@@ -34,8 +35,9 @@ export function PessoaForm({
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-slate-700">CPF</label>
+        <label htmlFor="cpf" className="block text-sm font-medium text-slate-700">CPF</label>
         <input
+          id="cpf"
           name="cpf"
           value={cpf}
           onChange={(e) => setCpf(formatarCpfDigitado(e.target.value))}
@@ -49,8 +51,9 @@ export function PessoaForm({
         </p>
       </div>
       <div>
-        <label className="block text-sm font-medium text-slate-700">Nome</label>
+        <label htmlFor="nome" className="block text-sm font-medium text-slate-700">Nome</label>
         <input
+          id="nome"
           name="nome"
           required
           defaultValue={valoresIniciais?.nome}
@@ -58,8 +61,9 @@ export function PessoaForm({
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-slate-700">Cargo</label>
+        <label htmlFor="cargo" className="block text-sm font-medium text-slate-700">Cargo</label>
         <input
+          id="cargo"
           name="cargo"
           required
           defaultValue={valoresIniciais?.cargo}
@@ -68,8 +72,9 @@ export function PessoaForm({
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-slate-700">Categoria</label>
+        <label htmlFor="categoria" className="block text-sm font-medium text-slate-700">Categoria</label>
         <select
+          id="categoria"
           name="categoria"
           required
           defaultValue={valoresIniciais?.categoria ?? ""}

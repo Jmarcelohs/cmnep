@@ -17,8 +17,9 @@ export function AvaliadorForm({
   return (
     <form action={action} className="mt-6 max-w-lg space-y-4">
       <div>
-        <label className="block text-sm font-medium text-slate-700">Nome</label>
+        <label htmlFor="avaliador-nome" className="block text-sm font-medium text-slate-700">Nome</label>
         <input
+          id="avaliador-nome"
           name="nome"
           required
           defaultValue={valoresIniciais?.nome}
@@ -26,8 +27,9 @@ export function AvaliadorForm({
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-slate-700">Matrícula</label>
+        <label htmlFor="avaliador-matricula" className="block text-sm font-medium text-slate-700">Matrícula</label>
         <input
+          id="avaliador-matricula"
           name="matricula"
           defaultValue={valoresIniciais?.matricula}
           placeholder="deixe em branco se não houver"

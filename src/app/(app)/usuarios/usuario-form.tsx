@@ -34,8 +34,9 @@ export function UsuarioForm({
   return (
     <form action={action} className="mt-6 max-w-lg space-y-4">
       <div>
-        <label className="block text-sm font-medium text-slate-700">Nome</label>
+        <label htmlFor="nome" className="block text-sm font-medium text-slate-700">Nome</label>
         <input
+          id="nome"
           name="nome"
           required
           defaultValue={valoresIniciais?.nome}
@@ -43,8 +44,9 @@ export function UsuarioForm({
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-slate-700">E-mail</label>
+        <label htmlFor="email" className="block text-sm font-medium text-slate-700">E-mail</label>
         <input
+          id="email"
           name="email"
           type="email"
           required
@@ -54,8 +56,9 @@ export function UsuarioForm({
       </div>
       {pedirSenha && (
         <div>
-          <label className="block text-sm font-medium text-slate-700">Senha provisória</label>
+          <label htmlFor="senha" className="block text-sm font-medium text-slate-700">Senha provisória</label>
           <input
+            id="senha"
             name="senha"
             type="text"
             required
@@ -69,8 +72,9 @@ export function UsuarioForm({
         </div>
       )}
       <div>
-        <label className="block text-sm font-medium text-slate-700">Papel</label>
+        <label htmlFor="papel" className="block text-sm font-medium text-slate-700">Papel</label>
         <select
+          id="papel"
           name="papel"
           required
           defaultValue={valoresIniciais?.papel ?? ""}
@@ -85,10 +89,11 @@ export function UsuarioForm({
         </select>
       </div>
       <div>
-        <label className="block text-sm font-medium text-slate-700">
+        <label htmlFor="pessoa_id" className="block text-sm font-medium text-slate-700">
           Pessoa vinculada (opcional)
         </label>
         <select
+          id="pessoa_id"
           name="pessoa_id"
           defaultValue={valoresIniciais?.pessoa_id ?? ""}
           className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"

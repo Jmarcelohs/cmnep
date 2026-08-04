@@ -58,8 +58,9 @@ export default async function AuditoriaPage({
 
       <form className="mt-6 flex flex-wrap items-end gap-3 text-sm" action="/auditoria">
         <div>
-          <label className="block text-xs font-medium text-slate-500">Módulo</label>
+          <label htmlFor="filtro-tabela" className="block text-xs font-medium text-slate-500">Módulo</label>
           <select
+            id="filtro-tabela"
             name="tabela"
             defaultValue={tabela ?? ""}
             className="mt-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
@@ -73,8 +74,9 @@ export default async function AuditoriaPage({
           </select>
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-500">Operação</label>
+          <label htmlFor="filtro-operacao" className="block text-xs font-medium text-slate-500">Operação</label>
           <select
+            id="filtro-operacao"
             name="operacao"
             defaultValue={operacao ?? ""}
             className="mt-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
@@ -108,12 +110,12 @@ export default async function AuditoriaPage({
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-brand-navy/5">
             <tr>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Quando</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Quem</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Módulo</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Registro</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Operação</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Detalhes</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Quando</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Quem</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Módulo</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Registro</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Operação</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Detalhes</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">

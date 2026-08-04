@@ -115,13 +115,13 @@ export default async function DashboardPage() {
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-brand-navy/5">
             <tr>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Solicitante</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Nº diária</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Nº solicitação</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Última solicitação</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Total de diárias</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Autorizadas</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Valor autorizado</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Solicitante</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Nº diária</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Nº solicitação</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Última solicitação</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Total de diárias</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Autorizadas</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Valor autorizado</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">

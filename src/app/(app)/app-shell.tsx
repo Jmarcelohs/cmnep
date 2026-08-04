@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LogoutButton } from "@/components/logout-button";
 import { BotaoSuporteWhatsapp } from "@/components/botao-suporte-whatsapp";
 import type { NavEntry } from "./layout";
@@ -55,11 +55,14 @@ function NavLinks({
         if (ehGrupo(item)) {
           const aberto = gruposAbertos.has(item.label);
           const grupoAtivo = item.items.some((sub) => ativoPara(sub.href, pathname));
+          const idGrupo = `grupo-nav-${item.label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
           return (
             <div key={item.label}>
               <button
                 type="button"
                 onClick={() => alternarGrupo(item.label)}
+                aria-expanded={aberto}
+                aria-controls={idGrupo}
                 className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                   grupoAtivo ? "text-white" : "text-white/70 hover:text-white"
                 }`}
@@ -82,7 +85,7 @@ function NavLinks({
                 </svg>
               </button>
               {aberto && (
-                <div className="mt-1 ml-2 flex flex-col gap-1 border-l border-white/10 pl-3">
+                <div id={idGrupo} className="mt-1 ml-2 flex flex-col gap-1 border-l border-white/10 pl-3">
                   {item.items.map((sub) => {
                     const ativo = ativoPara(sub.href, pathname);
                     return (
@@ -163,6 +166,21 @@ export function AppShell({
 }) {
   const [aberto, setAberto] = useState(false);
   const pathname = usePathname();
+  const botaoFecharRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!aberto) return;
+
+    // Move o foco pro drawer ao abrir (senão fica preso no botão de
+    // hambúrguer, que agora está fora da tela) e fecha com Escape.
+    botaoFecharRef.current?.focus();
+
+    function aoTeclar(evento: KeyboardEvent) {
+      if (evento.key === "Escape") setAberto(false);
+    }
+    document.addEventListener("keydown", aoTeclar);
+    return () => document.removeEventListener("keydown", aoTeclar);
+  }, [aberto]);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -176,7 +194,7 @@ export function AppShell({
       </aside>
 
       {/* Barra superior (telas pequenas) */}
-      <div className="flex items-center justify-between bg-brand-navy px-4 py-3 lg:hidden">
+      <header className="flex items-center justify-between bg-brand-navy px-4 py-3 lg:hidden">
         <button
           type="button"
           onClick={() => setAberto(true)}
@@ -189,7 +207,7 @@ export function AppShell({
         </button>
         <Logo className="h-8 w-auto rounded bg-white p-1" />
         <span className="w-6" />
-      </div>
+      </header>
 
       {/* Menu deslizante (telas pequenas) */}
       {aberto && (
@@ -201,6 +219,7 @@ export function AppShell({
                 <Logo />
               </div>
               <button
+                ref={botaoFecharRef}
                 type="button"
                 onClick={() => setAberto(false)}
                 aria-label="Fechar menu"

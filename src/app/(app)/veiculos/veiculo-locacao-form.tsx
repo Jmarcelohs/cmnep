@@ -288,8 +288,9 @@ export function VeiculoLocacaoForm({
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label className="block text-sm font-medium text-slate-700">Número</label>
+          <label htmlFor="numero" className="block text-sm font-medium text-slate-700">Número</label>
           <input
+            id="numero"
             name="numero"
             defaultValue={valoresIniciais?.numero ?? ""}
             required={Boolean(valoresIniciais)}
@@ -298,8 +299,9 @@ export function VeiculoLocacaoForm({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700">Data do pedido</label>
+          <label htmlFor="data_pedido" className="block text-sm font-medium text-slate-700">Data do pedido</label>
           <input
+            id="data_pedido"
             type="date"
             name="data_pedido"
             required
@@ -385,8 +387,9 @@ export function VeiculoLocacaoForm({
         </div>
         <div className="mt-3 grid grid-cols-2 gap-3 sm:w-1/2">
           <div>
-            <label className="block text-xs font-medium text-slate-500">Valor da diária (R$)</label>
+            <label htmlFor="valor_diaria_texto" className="block text-xs font-medium text-slate-500">Valor da diária (R$)</label>
             <input
+              id="valor_diaria_texto"
               inputMode="numeric"
               value={valorDiariaTexto}
               onChange={(e) => handleValorChange(e.target.value)}
@@ -395,8 +398,9 @@ export function VeiculoLocacaoForm({
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-500">Qtd. diárias</label>
+            <label htmlFor="qtd_diarias" className="block text-xs font-medium text-slate-500">Qtd. diárias</label>
             <input
+              id="qtd_diarias"
               type="number"
               name="qtd_diarias"
               min={1}
@@ -415,8 +419,9 @@ export function VeiculoLocacaoForm({
         <div className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
           <p className="text-xs font-semibold uppercase text-slate-500">Retirada</p>
           <div>
-            <label className="block text-xs font-medium text-slate-500">Data</label>
+            <label htmlFor="data_retirada" className="block text-xs font-medium text-slate-500">Data</label>
             <input
+              id="data_retirada"
               type="date"
               name="data_retirada"
               required
@@ -426,8 +431,9 @@ export function VeiculoLocacaoForm({
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-500">Hora</label>
+            <label htmlFor="hora_retirada" className="block text-xs font-medium text-slate-500">Hora</label>
             <input
+              id="hora_retirada"
               type="time"
               name="hora_retirada"
               value={horaRetirada}
@@ -436,8 +442,9 @@ export function VeiculoLocacaoForm({
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-500">Local</label>
+            <label htmlFor="local_retirada" className="block text-xs font-medium text-slate-500">Local</label>
             <input
+              id="local_retirada"
               name="local_retirada"
               value={localRetirada}
               onChange={(e) => setLocalRetirada(e.target.value)}
@@ -448,8 +455,9 @@ export function VeiculoLocacaoForm({
         <div className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
           <p className="text-xs font-semibold uppercase text-slate-500">Devolução</p>
           <div>
-            <label className="block text-xs font-medium text-slate-500">Data</label>
+            <label htmlFor="data_devolucao" className="block text-xs font-medium text-slate-500">Data</label>
             <input
+              id="data_devolucao"
               type="date"
               name="data_devolucao"
               required
@@ -459,8 +467,9 @@ export function VeiculoLocacaoForm({
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-500">Hora</label>
+            <label htmlFor="hora_devolucao" className="block text-xs font-medium text-slate-500">Hora</label>
             <input
+              id="hora_devolucao"
               type="time"
               name="hora_devolucao"
               value={horaDevolucao}
@@ -469,8 +478,9 @@ export function VeiculoLocacaoForm({
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-500">Local</label>
+            <label htmlFor="local_devolucao" className="block text-xs font-medium text-slate-500">Local</label>
             <input
+              id="local_devolucao"
               name="local_devolucao"
               value={localDevolucao}
               onChange={(e) => setLocalDevolucao(e.target.value)}
@@ -481,8 +491,9 @@ export function VeiculoLocacaoForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700">Observações (opcional)</label>
+        <label htmlFor="observacoes" className="block text-sm font-medium text-slate-700">Observações (opcional)</label>
         <textarea
+          id="observacoes"
           name="observacoes"
           rows={2}
           value={observacoes}

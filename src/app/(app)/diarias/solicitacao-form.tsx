@@ -141,7 +141,7 @@ export function SolicitacaoForm({
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label className="block text-sm font-medium text-slate-700">Solicitante</label>
+          <label htmlFor="pessoa_id" className="block text-sm font-medium text-slate-700">Solicitante</label>
           {pessoaFixaId ? (
             <>
               <input
@@ -155,6 +155,7 @@ export function SolicitacaoForm({
             </>
           ) : (
             <select
+              id="pessoa_id"
               name="pessoa_id"
               required
               value={pessoaId}
@@ -171,8 +172,9 @@ export function SolicitacaoForm({
           )}
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700">Número da diária</label>
+          <label htmlFor="numero_diaria" className="block text-sm font-medium text-slate-700">Número da diária</label>
           <input
+            id="numero_diaria"
             name="numero_diaria"
             defaultValue={valoresIniciais?.numero_diaria}
             placeholder="ex.: 161"
@@ -180,8 +182,9 @@ export function SolicitacaoForm({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700">Número da solicitação</label>
+          <label htmlFor="numero_solicitacao" className="block text-sm font-medium text-slate-700">Número da solicitação</label>
           <input
+            id="numero_solicitacao"
             name="numero_solicitacao"
             defaultValue={valoresIniciais?.numero_solicitacao}
             placeholder="ex.: 020/2026"
@@ -189,8 +192,9 @@ export function SolicitacaoForm({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700">Data da solicitação</label>
+          <label htmlFor="data_solicitacao" className="block text-sm font-medium text-slate-700">Data da solicitação</label>
           <input
+            id="data_solicitacao"
             type="date"
             name="data_solicitacao"
             required
@@ -199,8 +203,9 @@ export function SolicitacaoForm({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700">Município/destino</label>
+          <label htmlFor="municipio_destino" className="block text-sm font-medium text-slate-700">Município/destino</label>
           <input
+            id="municipio_destino"
             name="municipio_destino"
             required
             defaultValue={valoresIniciais?.municipio_destino}
@@ -208,8 +213,9 @@ export function SolicitacaoForm({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700">UF de destino</label>
+          <label htmlFor="uf_destino" className="block text-sm font-medium text-slate-700">UF de destino</label>
           <select
+            id="uf_destino"
             name="uf_destino"
             required
             defaultValue={valoresIniciais?.uf_destino ?? "MG"}
@@ -223,24 +229,27 @@ export function SolicitacaoForm({
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700">Instituição de destino</label>
+          <label htmlFor="instituicao_destino" className="block text-sm font-medium text-slate-700">Instituição de destino</label>
           <input
+            id="instituicao_destino"
             name="instituicao_destino"
             defaultValue={valoresIniciais?.instituicao_destino}
             className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700">Contato no destino</label>
+          <label htmlFor="contato_destino" className="block text-sm font-medium text-slate-700">Contato no destino</label>
           <input
+            id="contato_destino"
             name="contato_destino"
             defaultValue={valoresIniciais?.contato_destino}
             className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700">Data de partida</label>
+          <label htmlFor="data_partida" className="block text-sm font-medium text-slate-700">Data de partida</label>
           <input
+            id="data_partida"
             type="date"
             name="data_partida"
             defaultValue={valoresIniciais?.data_partida}
@@ -248,8 +257,9 @@ export function SolicitacaoForm({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700">Data de chegada</label>
+          <label htmlFor="data_chegada" className="block text-sm font-medium text-slate-700">Data de chegada</label>
           <input
+            id="data_chegada"
             type="date"
             name="data_chegada"
             defaultValue={valoresIniciais?.data_chegada}
@@ -258,8 +268,9 @@ export function SolicitacaoForm({
         </div>
         {valoresIniciais && (
           <div>
-            <label className="block text-sm font-medium text-slate-700">Data de autorização</label>
+            <label htmlFor="data_autorizacao" className="block text-sm font-medium text-slate-700">Data de autorização</label>
             <input
+              id="data_autorizacao"
               type="date"
               name="data_autorizacao"
               defaultValue={valoresIniciais.data_autorizacao}
@@ -271,8 +282,9 @@ export function SolicitacaoForm({
           </div>
         )}
         <div className="sm:col-span-2">
-          <label className="block text-sm font-medium text-slate-700">Finalidade</label>
+          <label htmlFor="finalidade" className="block text-sm font-medium text-slate-700">Finalidade</label>
           <textarea
+            id="finalidade"
             name="finalidade"
             required
             rows={3}
@@ -299,8 +311,9 @@ export function SolicitacaoForm({
             <div key={index} className="rounded-lg border border-slate-200 bg-white p-4">
               <div className="flex flex-wrap items-end gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-500">Modo</label>
+                  <label htmlFor={`item-${index}-modo`} className="block text-xs font-medium text-slate-500">Modo</label>
                   <select
+                    id={`item-${index}-modo`}
                     value={item.modo}
                     onChange={(e) => atualizarItem(index, { modo: e.target.value as Item["modo"] })}
                     className="mt-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
@@ -313,8 +326,9 @@ export function SolicitacaoForm({
                 {item.modo === "tabela" ? (
                   <>
                     <div>
-                      <label className="block text-xs font-medium text-slate-500">Tipo</label>
+                      <label htmlFor={`item-${index}-tipo`} className="block text-xs font-medium text-slate-500">Tipo</label>
                       <select
+                        id={`item-${index}-tipo`}
                         value={item.tipo}
                         onChange={(e) =>
                           atualizarItem(index, { tipo: e.target.value, faixa: "" })
@@ -329,8 +343,9 @@ export function SolicitacaoForm({
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-slate-500">Faixa/destino</label>
+                      <label htmlFor={`item-${index}-faixa`} className="block text-xs font-medium text-slate-500">Faixa/destino</label>
                       <select
+                        id={`item-${index}-faixa`}
                         value={item.faixa}
                         onChange={(e) => atualizarItem(index, { faixa: e.target.value })}
                         className="mt-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
@@ -347,7 +362,7 @@ export function SolicitacaoForm({
                 ) : (
                   <div className="min-w-[240px] flex-1">
                     <div className="flex items-center justify-between gap-2">
-                      <label className="block text-xs font-medium text-slate-500">Descrição</label>
+                      <label htmlFor={`item-${index}-descricao`} className="block text-xs font-medium text-slate-500">Descrição</label>
                       <div className="flex gap-2">
                         <button
                           type="button"
@@ -366,6 +381,7 @@ export function SolicitacaoForm({
                       </div>
                     </div>
                     <input
+                      id={`item-${index}-descricao`}
                       value={item.descricao_manual}
                       onChange={(e) => atualizarItem(index, { descricao_manual: e.target.value })}
                       placeholder="ex.: Diária internacional (art. 8º-A)"
@@ -375,8 +391,9 @@ export function SolicitacaoForm({
                 )}
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-500">Qtd.</label>
+                  <label htmlFor={`item-${index}-quantidade`} className="block text-xs font-medium text-slate-500">Qtd.</label>
                   <input
+                    id={`item-${index}-quantidade`}
                     type="number"
                     min={1}
                     value={item.quantidade}
@@ -388,8 +405,9 @@ export function SolicitacaoForm({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-500">Valor unitário (R$)</label>
+                  <label htmlFor={`item-${index}-valor`} className="block text-xs font-medium text-slate-500">Valor unitário (R$)</label>
                   <input
+                    id={`item-${index}-valor`}
                     type="number"
                     step="0.01"
                     min={0}

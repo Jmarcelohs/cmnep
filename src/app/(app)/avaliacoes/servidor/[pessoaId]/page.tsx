@@ -54,9 +54,9 @@ export default async function HistoricoServidorPage({
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-brand-navy/5">
             <tr>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Ano</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Ano</th>
               {PERIODOS.map((p) => (
-                <th key={p.value} className="px-4 py-2 text-left font-medium text-slate-500">
+                <th key={p.value} className="px-4 py-2 text-left font-medium text-slate-600">
                   {p.label}
                 </th>
               ))}

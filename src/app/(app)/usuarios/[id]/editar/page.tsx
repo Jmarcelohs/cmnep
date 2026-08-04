@@ -69,8 +69,9 @@ export default async function EditarUsuarioPage({
         </p>
         <form action={redefinirSenhaUsuario.bind(null, id)} className="mt-3 flex items-end gap-2">
           <div className="flex-1">
-            <label className="block text-xs font-medium text-slate-500">Nova senha</label>
+            <label htmlFor="nova_senha" className="block text-xs font-medium text-slate-500">Nova senha</label>
             <input
+              id="nova_senha"
               name="nova_senha"
               type="text"
               required

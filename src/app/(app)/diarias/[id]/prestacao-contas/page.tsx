@@ -355,15 +355,17 @@ export default async function PrestacaoContasPage({
               className="mt-3 flex flex-wrap items-end gap-2"
             >
               <div>
-                <label className="block text-xs font-medium text-slate-500">Nº do processo</label>
+                <label htmlFor="baixa-numero-processo" className="block text-xs font-medium text-slate-500">Nº do processo</label>
                 <input
+                  id="baixa-numero-processo"
                   name="numero_processo"
                   className="mt-1 w-32 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-500">Valor (R$)</label>
+                <label htmlFor="baixa-valor" className="block text-xs font-medium text-slate-500">Valor (R$)</label>
                 <input
+                  id="baixa-valor"
                   type="number"
                   step="0.01"
                   min={0}
@@ -409,8 +411,9 @@ export default async function PrestacaoContasPage({
               ))}
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-500">Observação</label>
+              <label htmlFor="parecer_observacao" className="block text-xs font-medium text-slate-500">Observação</label>
               <textarea
+                id="parecer_observacao"
                 name="parecer_observacao"
                 rows={2}
                 className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"

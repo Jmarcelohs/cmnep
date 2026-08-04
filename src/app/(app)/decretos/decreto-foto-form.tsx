@@ -69,7 +69,7 @@ export function DecretoFotoForm({
 
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-4">
-      <label className="block text-sm font-medium text-slate-700">Foto do homenageado (opcional)</label>
+      <label htmlFor="decreto-foto" className="block text-sm font-medium text-slate-700">Foto do homenageado (opcional)</label>
       <p className="mt-1 text-xs text-slate-500">
         Aparece na página da justificativa do PDF. JPG, PNG ou WEBP, até 5MB.
       </p>
@@ -85,6 +85,7 @@ export function DecretoFotoForm({
 
       <div className="mt-3 flex items-center gap-3">
         <input
+          id="decreto-foto"
           type="file"
           accept="image/jpeg,image/png,image/webp"
           onChange={handleUpload}

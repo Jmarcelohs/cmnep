@@ -13,8 +13,9 @@ function CampoNumero({
 }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-slate-500">{label}</label>
+      <label htmlFor={name} className="block text-xs font-medium text-slate-500">{label}</label>
       <input
+        id={name}
         type="number"
         step="0.01"
         min={0}
@@ -57,10 +58,11 @@ export function NovaPrestacaoForm({
   return (
     <form action={action} onSubmit={() => setEnviando(true)} className="mt-6 space-y-6">
       <div>
-        <label className="block text-sm font-medium text-slate-700">
+        <label htmlFor="relatorio_resultado" className="block text-sm font-medium text-slate-700">
           Relatório do resultado da viagem — com ênfase no interesse público defendido
         </label>
         <textarea
+          id="relatorio_resultado"
           name="relatorio_resultado"
           required
           rows={6}

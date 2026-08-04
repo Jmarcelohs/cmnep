@@ -174,10 +174,10 @@ export default async function DetalheSolicitacaoPage({
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-brand-navy/5">
             <tr>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Item</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Qtd.</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Valor unit.</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Subtotal</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Item</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Qtd.</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Valor unit.</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Subtotal</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -238,8 +238,9 @@ export default async function DetalheSolicitacaoPage({
         <div className="mt-6 flex flex-wrap items-end gap-3">
           <form action={autorizarSolicitacao.bind(null, id)} className="flex items-end gap-2">
             <div>
-              <label className="block text-xs font-medium text-slate-500">Data da autorização</label>
+              <label htmlFor="data_autorizacao" className="block text-xs font-medium text-slate-500">Data da autorização</label>
               <input
+                id="data_autorizacao"
                 type="date"
                 name="data_autorizacao"
                 required

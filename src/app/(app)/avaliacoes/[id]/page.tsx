@@ -97,7 +97,7 @@ export default async function DetalheAvaliacaoPage({ params }: { params: Promise
         <table className="mt-2 min-w-full text-sm">
           <thead>
             <tr>
-              <th className="px-2 py-1 text-left font-medium text-slate-500">Critério</th>
+              <th className="px-2 py-1 text-left font-medium text-slate-600">Critério</th>
               {template.conceitos.map((c) => (
                 <th key={c.key} className="px-2 py-1 text-center font-medium text-slate-500">
                   {c.label}

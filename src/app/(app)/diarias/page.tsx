@@ -161,8 +161,9 @@ export default async function DiariasPage({
       <form className="mt-4 flex flex-wrap items-end gap-3 text-sm" action="/diarias">
         <CampoBusca defaultValue={busca} placeholder="Solicitante, destino ou finalidade" />
         <div>
-          <label className="block text-xs font-medium text-slate-500">Ano</label>
+          <label htmlFor="filtro-ano" className="block text-xs font-medium text-slate-500">Ano</label>
           <select
+            id="filtro-ano"
             name="ano"
             defaultValue={anoParam ?? String(anoAtual)}
             className="mt-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
@@ -198,12 +199,12 @@ export default async function DiariasPage({
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-brand-navy/5">
             <tr>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Solicitante</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Destino</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Finalidade</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Total</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Status</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Ações</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Solicitante</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Destino</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Finalidade</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Total</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Status</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Ações</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">

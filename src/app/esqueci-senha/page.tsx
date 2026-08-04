@@ -13,7 +13,7 @@ export default async function EsqueciSenhaPage({
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
       <div className="h-1.5 bg-gradient-to-r from-brand-green to-brand-navy" />
-      <div className="flex flex-1 items-center justify-center px-4">
+      <main className="flex flex-1 items-center justify-center px-4">
         <div className="w-full max-w-sm rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
           <Image
             src="/timbrado/logo.png"
@@ -23,7 +23,8 @@ export default async function EsqueciSenhaPage({
             priority
             className="h-12 w-auto"
           />
-          <p className="mt-4 text-sm text-slate-500">
+          <h1 className="mt-4 text-lg font-semibold text-brand-navy">Esqueci minha senha</h1>
+          <p className="mt-1 text-sm text-slate-500">
             Informe seu e-mail institucional e enviaremos um link pra redefinir sua senha.
           </p>
 
@@ -44,7 +45,7 @@ export default async function EsqueciSenhaPage({
                   type="email"
                   required
                   autoComplete="email"
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-navy focus:outline-none"
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-navy focus:outline-2 focus:outline-brand-navy focus:outline-offset-1"
                 />
               </div>
               <button
@@ -63,7 +64,7 @@ export default async function EsqueciSenhaPage({
             Voltar para o login
           </Link>
         </div>
-      </div>
+      </main>
 
       <BotaoSuporteWhatsapp />
     </div>

@@ -152,6 +152,7 @@ export function RequerimentoInternoForm({
 
         {modoCadastro && (
           <select
+            aria-label="Selecionar pessoa cadastrada"
             value={pessoaId}
             onChange={(e) => handlePessoaChange(e.target.value)}
             className="mt-3 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -167,8 +168,9 @@ export function RequerimentoInternoForm({
 
         <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-slate-700">Nome completo (opcional)</label>
+            <label htmlFor="nome" className="block text-sm font-medium text-slate-700">Nome completo (opcional)</label>
             <input
+              id="nome"
               name="nome"
               value={nome}
               onChange={(e) => setNome(e.target.value)}
@@ -180,8 +182,9 @@ export function RequerimentoInternoForm({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700">Cargo/Função</label>
+            <label htmlFor="cargo" className="block text-sm font-medium text-slate-700">Cargo/Função</label>
             <select
+              id="cargo"
               name="cargo"
               value={cargo}
               onChange={(e) => setCargo(e.target.value as CargoDeclarado)}
@@ -195,8 +198,9 @@ export function RequerimentoInternoForm({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700">CPF</label>
+            <label htmlFor="cpf" className="block text-sm font-medium text-slate-700">CPF</label>
             <input
+              id="cpf"
               inputMode="numeric"
               value={cpf}
               onChange={(e) => setCpf(formatarCpfDigitado(e.target.value))}
@@ -205,8 +209,9 @@ export function RequerimentoInternoForm({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700">Matrícula (opcional)</label>
+            <label htmlFor="matricula" className="block text-sm font-medium text-slate-700">Matrícula (opcional)</label>
             <input
+              id="matricula"
               name="matricula"
               value={matricula}
               onChange={(e) => setMatricula(e.target.value)}
@@ -214,8 +219,9 @@ export function RequerimentoInternoForm({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700">Data do requerimento (opcional)</label>
+            <label htmlFor="data_requerimento" className="block text-sm font-medium text-slate-700">Data do requerimento (opcional)</label>
             <input
+              id="data_requerimento"
               type="date"
               name="data_requerimento"
               value={dataRequerimento}
@@ -225,8 +231,9 @@ export function RequerimentoInternoForm({
           </div>
           {valoresIniciais && (
             <div>
-              <label className="block text-sm font-medium text-slate-700">Número (opcional)</label>
+              <label htmlFor="numero" className="block text-sm font-medium text-slate-700">Número (opcional)</label>
               <input
+                id="numero"
                 name="numero"
                 defaultValue={valoresIniciais.numero}
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -241,8 +248,9 @@ export function RequerimentoInternoForm({
 
         {assuntosDaCategoria.length > 0 && (
           <div className="mt-2">
-            <label className="block text-sm font-medium text-slate-700">Assunto</label>
+            <label htmlFor="assunto_select" className="block text-sm font-medium text-slate-700">Assunto</label>
             <select
+              id="assunto_select"
               value={assuntoKey}
               onChange={(e) => handleAssuntoChange(e.target.value)}
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -259,8 +267,9 @@ export function RequerimentoInternoForm({
 
         {ehPersonalizado && (
           <div className="mt-3">
-            <label className="block text-sm font-medium text-slate-700">Título do requerimento (opcional)</label>
+            <label htmlFor="assunto_titulo" className="block text-sm font-medium text-slate-700">Título do requerimento (opcional)</label>
             <input
+              id="assunto_titulo"
               value={assuntoTitulo}
               onChange={(e) => setAssuntoTitulo(e.target.value)}
               placeholder="Ex.: Solicitação de crachá"
@@ -270,8 +279,9 @@ export function RequerimentoInternoForm({
         )}
 
         <div className="mt-3">
-          <label className="block text-sm font-medium text-slate-700">Fundamento legal (opcional)</label>
+          <label htmlFor="fundamento" className="block text-sm font-medium text-slate-700">Fundamento legal (opcional)</label>
           <input
+            id="fundamento"
             name="fundamento"
             value={fundamento}
             onChange={(e) => setFundamento(e.target.value)}
@@ -298,9 +308,10 @@ export function RequerimentoInternoForm({
           <div className="mt-4 space-y-3">
             {assuntoSelecionado!.fields!.map((f) => (
               <div key={f.key}>
-                <label className="block text-sm font-medium text-slate-700">{f.label} (opcional)</label>
+                <label htmlFor={`campo-${f.key}`} className="block text-sm font-medium text-slate-700">{f.label} (opcional)</label>
                 {f.type === "select" ? (
                   <select
+                    id={`campo-${f.key}`}
                     value={campos[f.key] ?? ""}
                     onChange={(e) => setCampos((prev) => ({ ...prev, [f.key]: e.target.value }))}
                     className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -314,6 +325,7 @@ export function RequerimentoInternoForm({
                   </select>
                 ) : (
                   <input
+                    id={`campo-${f.key}`}
                     type={f.type === "date" ? "date" : "text"}
                     value={campos[f.key] ?? ""}
                     onChange={(e) => setCampos((prev) => ({ ...prev, [f.key]: e.target.value }))}
@@ -326,8 +338,9 @@ export function RequerimentoInternoForm({
         ) : (
           <div className="mt-4 space-y-3">
             <div>
-              <label className="block text-sm font-medium text-slate-700">Descrição do pedido (opcional)</label>
+              <label htmlFor="pedido" className="block text-sm font-medium text-slate-700">Descrição do pedido (opcional)</label>
               <textarea
+                id="pedido"
                 name="pedido"
                 rows={4}
                 value={pedido}
@@ -336,8 +349,9 @@ export function RequerimentoInternoForm({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700">Referente à (opcional)</label>
+              <label htmlFor="referente_a" className="block text-sm font-medium text-slate-700">Referente à (opcional)</label>
               <textarea
+                id="referente_a"
                 name="referente_a"
                 rows={2}
                 value={referenteA}
@@ -350,8 +364,9 @@ export function RequerimentoInternoForm({
 
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-slate-700">Valor (opcional)</label>
+            <label htmlFor="valor_texto" className="block text-sm font-medium text-slate-700">Valor (opcional)</label>
             <input
+              id="valor_texto"
               inputMode="numeric"
               value={valorTexto}
               onChange={(e) => handleValorChange(e.target.value)}

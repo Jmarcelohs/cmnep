@@ -36,6 +36,13 @@ export function MenuAcoes({ children }: { children: React.ReactNode }) {
     }
     reposicionar();
 
+    // O painel é um portal no fim do <body>, fora da ordem natural do
+    // DOM — sem focar o primeiro item aqui, dar Tab a partir do botão
+    // pularia direto pro próximo elemento da página, pulando o menu
+    // inteiro (item inalcançável por teclado).
+    const focaveisSeletor = "a, button:not(:disabled), [tabindex]";
+    painelRef.current?.querySelector<HTMLElement>(focaveisSeletor)?.focus();
+
     function aoClicarFora(evento: MouseEvent) {
       const alvo = evento.target as Node;
       if (
@@ -48,11 +55,37 @@ export function MenuAcoes({ children }: { children: React.ReactNode }) {
       }
     }
 
+    function aoTeclar(evento: KeyboardEvent) {
+      if (evento.key === "Escape") {
+        setAberto(false);
+        botaoRef.current?.focus();
+        return;
+      }
+      if (evento.key !== "Tab") return;
+
+      // Prende o foco dentro do painel enquanto ele estiver aberto —
+      // Tab no último item volta pro primeiro, Shift+Tab no primeiro
+      // vai pro último, em vez de escapar pro resto da página.
+      const focaveis = painelRef.current?.querySelectorAll<HTMLElement>(focaveisSeletor);
+      if (!focaveis || focaveis.length === 0) return;
+      const primeiro = focaveis[0];
+      const ultimo = focaveis[focaveis.length - 1];
+      if (evento.shiftKey && document.activeElement === primeiro) {
+        evento.preventDefault();
+        ultimo.focus();
+      } else if (!evento.shiftKey && document.activeElement === ultimo) {
+        evento.preventDefault();
+        primeiro.focus();
+      }
+    }
+
     document.addEventListener("mousedown", aoClicarFora);
+    document.addEventListener("keydown", aoTeclar);
     window.addEventListener("resize", reposicionar);
     window.addEventListener("scroll", reposicionar, true);
     return () => {
       document.removeEventListener("mousedown", aoClicarFora);
+      document.removeEventListener("keydown", aoTeclar);
       window.removeEventListener("resize", reposicionar);
       window.removeEventListener("scroll", reposicionar, true);
     };
@@ -63,6 +96,8 @@ export function MenuAcoes({ children }: { children: React.ReactNode }) {
       <button
         ref={botaoRef}
         type="button"
+        aria-haspopup="menu"
+        aria-expanded={aberto}
         onClick={(e) => {
           e.stopPropagation();
           setAberto((v) => !v);
@@ -86,6 +121,7 @@ export function MenuAcoes({ children }: { children: React.ReactNode }) {
         createPortal(
           <div
             ref={painelRef}
+            role="menu"
             onClick={() => {
               // Fecha depois do clique atual terminar de ser processado —
               // não na hora. Um botão type="submit" só dispara o envio do

@@ -70,8 +70,9 @@ export default async function DecretosPage({
       <form className="mt-4 flex flex-wrap items-end gap-3 text-sm" action="/decretos">
         <CampoBusca defaultValue={busca} placeholder="Homenageado ou autor" />
         <div>
-          <label className="block text-xs font-medium text-slate-500">Ano</label>
+          <label htmlFor="filtro-ano" className="block text-xs font-medium text-slate-500">Ano</label>
           <select
+            id="filtro-ano"
             name="ano"
             defaultValue={ano ?? ""}
             className="mt-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
@@ -105,11 +106,11 @@ export default async function DecretosPage({
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-brand-navy/5">
             <tr>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Nº</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Data</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Homenageado</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Autor</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Ações</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Nº</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Data</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Homenageado</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Autor</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Ações</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">

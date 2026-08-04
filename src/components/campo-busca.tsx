@@ -9,8 +9,9 @@ export function CampoBusca({
 }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-slate-500">{label}</label>
+      <label htmlFor="busca" className="block text-xs font-medium text-slate-500">{label}</label>
       <input
+        id="busca"
         type="text"
         name="busca"
         defaultValue={defaultValue ?? ""}

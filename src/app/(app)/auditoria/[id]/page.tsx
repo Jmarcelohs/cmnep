@@ -56,9 +56,9 @@ export default async function DetalheAuditoriaPage({
           <table className="min-w-full divide-y divide-slate-200 text-sm">
             <thead className="bg-brand-navy/5">
               <tr>
-                <th className="px-4 py-2 text-left font-medium text-slate-500">Campo</th>
-                <th className="px-4 py-2 text-left font-medium text-slate-500">Antes</th>
-                <th className="px-4 py-2 text-left font-medium text-slate-500">Depois</th>
+                <th className="px-4 py-2 text-left font-medium text-slate-600">Campo</th>
+                <th className="px-4 py-2 text-left font-medium text-slate-600">Antes</th>
+                <th className="px-4 py-2 text-left font-medium text-slate-600">Depois</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">

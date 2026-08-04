@@ -124,8 +124,9 @@ export default async function RequerimentosInternosPage({
       <form className="mt-6 flex flex-wrap items-end gap-3 text-sm" action="/requerimentos-internos">
         <CampoBusca defaultValue={busca} placeholder="Nome ou assunto" />
         <div>
-          <label className="block text-xs font-medium text-slate-500">Categoria</label>
+          <label htmlFor="filtro-tipo" className="block text-xs font-medium text-slate-500">Categoria</label>
           <select
+            id="filtro-tipo"
             name="tipo"
             defaultValue={tipo ?? ""}
             className="mt-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
@@ -139,8 +140,9 @@ export default async function RequerimentosInternosPage({
           </select>
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-500">Status</label>
+          <label htmlFor="filtro-status" className="block text-xs font-medium text-slate-500">Status</label>
           <select
+            id="filtro-status"
             name="status"
             defaultValue={status ?? ""}
             className="mt-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
@@ -180,13 +182,13 @@ export default async function RequerimentosInternosPage({
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-brand-navy/5">
             <tr>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Nº</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Categoria</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Solicitante</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Assunto</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Data</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Status</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Ações</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Nº</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Categoria</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Solicitante</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Assunto</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Data</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Status</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Ações</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">

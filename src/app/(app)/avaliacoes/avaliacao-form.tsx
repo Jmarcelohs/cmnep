@@ -129,8 +129,9 @@ export function AvaliacaoForm({
         <h2 className="text-sm font-semibold text-slate-700">1. Identificação</h2>
         <div className="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-slate-700">Servidor(a)</label>
+            <label htmlFor="avaliacao-pessoa-id" className="block text-sm font-medium text-slate-700">Servidor(a)</label>
             <select
+              id="avaliacao-pessoa-id"
               required
               value={pessoaId}
               onChange={(e) => setPessoaId(e.target.value)}
@@ -145,8 +146,9 @@ export function AvaliacaoForm({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700">Ano</label>
+            <label htmlFor="avaliacao-ano" className="block text-sm font-medium text-slate-700">Ano</label>
             <input
+              id="avaliacao-ano"
               type="number"
               required
               value={ano}
@@ -155,8 +157,9 @@ export function AvaliacaoForm({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700">Período</label>
+            <label htmlFor="avaliacao-periodo" className="block text-sm font-medium text-slate-700">Período</label>
             <select
+              id="avaliacao-periodo"
               value={periodo}
               onChange={(e) => setPeriodo(e.target.value as PeriodoAvaliacao)}
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -169,8 +172,9 @@ export function AvaliacaoForm({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700">Data da avaliação</label>
+            <label htmlFor="avaliacao-data" className="block text-sm font-medium text-slate-700">Data da avaliação</label>
             <input
+              id="avaliacao-data"
               type="date"
               required
               value={dataAvaliacao}
@@ -249,7 +253,7 @@ export function AvaliacaoForm({
                 <table className="min-w-full text-sm">
                   <thead>
                     <tr>
-                      <th className="w-1/2 px-2 py-1 text-left font-medium text-slate-500">Item</th>
+                      <th className="w-1/2 px-2 py-1 text-left font-medium text-slate-600">Item</th>
                       {template.conceitos.map((c) => (
                         <th key={c.key} className="px-2 py-1 text-center font-medium text-slate-500">
                           {c.label}
@@ -286,8 +290,9 @@ export function AvaliacaoForm({
         <h2 className="text-sm font-semibold text-slate-700">4. Observações</h2>
         <div className="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-slate-700">Pontos a serem melhorados</label>
+            <label htmlFor="avaliacao-pontos-melhorar" className="block text-sm font-medium text-slate-700">Pontos a serem melhorados</label>
             <textarea
+              id="avaliacao-pontos-melhorar"
               rows={4}
               value={pontosMelhorar}
               onChange={(e) => setPontosMelhorar(e.target.value)}
@@ -295,8 +300,9 @@ export function AvaliacaoForm({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700">Pontos positivos</label>
+            <label htmlFor="avaliacao-pontos-positivos" className="block text-sm font-medium text-slate-700">Pontos positivos</label>
             <textarea
+              id="avaliacao-pontos-positivos"
               rows={4}
               value={pontosPositivos}
               onChange={(e) => setPontosPositivos(e.target.value)}
@@ -312,7 +318,7 @@ export function AvaliacaoForm({
           <table className="min-w-full text-sm">
             <thead>
               <tr>
-                <th className="px-2 py-1 text-left font-medium text-slate-500">Critério</th>
+                <th className="px-2 py-1 text-left font-medium text-slate-600">Critério</th>
                 {template.conceitos.map((c) => (
                   <th key={c.key} className="px-2 py-1 text-center font-medium text-slate-500">
                     {c.label}

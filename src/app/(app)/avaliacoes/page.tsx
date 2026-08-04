@@ -136,7 +136,7 @@ export default async function AvaliacoesPage({
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-brand-navy/5">
             <tr>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Servidor(a)</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Servidor(a)</th>
               {PERIODOS.map((p) => (
                 <th key={p.value} className="px-4 py-2 text-center font-medium text-slate-500">
                   {p.label}

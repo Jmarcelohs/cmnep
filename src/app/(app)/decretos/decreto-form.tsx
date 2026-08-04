@@ -54,8 +54,9 @@ export function DecretoForm({
     <form action={action} className="mt-6 space-y-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div>
-          <label className="block text-sm font-medium text-slate-700">Número</label>
+          <label htmlFor="numero" className="block text-sm font-medium text-slate-700">Número</label>
           <input
+            id="numero"
             name="numero"
             value={numero}
             onChange={(e) => setNumero(e.target.value)}
@@ -65,8 +66,9 @@ export function DecretoForm({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700">Data do decreto</label>
+          <label htmlFor="data_decreto" className="block text-sm font-medium text-slate-700">Data do decreto</label>
           <input
+            id="data_decreto"
             type="date"
             name="data_decreto"
             required
@@ -76,8 +78,9 @@ export function DecretoForm({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700">Tratamento</label>
+          <label htmlFor="tratamento" className="block text-sm font-medium text-slate-700">Tratamento</label>
           <select
+            id="tratamento"
             name="tratamento"
             value={tratamento}
             onChange={(e) => setTratamento(e.target.value as Tratamento)}
@@ -90,8 +93,9 @@ export function DecretoForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700">Nome do homenageado</label>
+        <label htmlFor="nome_homenageado" className="block text-sm font-medium text-slate-700">Nome do homenageado</label>
         <input
+          id="nome_homenageado"
           name="nome_homenageado"
           value={nomeHomenageado}
           onChange={(e) => setNomeHomenageado(e.target.value.toUpperCase())}
@@ -103,8 +107,9 @@ export function DecretoForm({
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label className="block text-sm font-medium text-slate-700">Autor (vereador proponente)</label>
+          <label htmlFor="autor_nome" className="block text-sm font-medium text-slate-700">Autor (vereador proponente)</label>
           <input
+            id="autor_nome"
             name="autor_nome"
             value={autorNome}
             onChange={(e) => setAutorNome(e.target.value)}
@@ -114,8 +119,9 @@ export function DecretoForm({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700">Partido (opcional)</label>
+          <label htmlFor="autor_partido" className="block text-sm font-medium text-slate-700">Partido (opcional)</label>
           <input
+            id="autor_partido"
             name="autor_partido"
             value={autorPartido}
             onChange={(e) => setAutorPartido(e.target.value)}
@@ -126,8 +132,9 @@ export function DecretoForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700">Dotação orçamentária (Art. 3º)</label>
+        <label htmlFor="dotacao_orcamentaria" className="block text-sm font-medium text-slate-700">Dotação orçamentária (Art. 3º)</label>
         <input
+          id="dotacao_orcamentaria"
           name="dotacao_orcamentaria"
           value={dotacao}
           onChange={(e) => setDotacao(e.target.value)}
@@ -136,8 +143,9 @@ export function DecretoForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700">Justificativa</label>
+        <label htmlFor="justificativa" className="block text-sm font-medium text-slate-700">Justificativa</label>
         <textarea
+          id="justificativa"
           name="justificativa"
           rows={10}
           value={justificativa}

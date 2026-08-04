@@ -12,7 +12,7 @@ export default async function RedefinirSenhaPage({
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
       <div className="h-1.5 bg-gradient-to-r from-brand-green to-brand-navy" />
-      <div className="flex flex-1 items-center justify-center px-4">
+      <main className="flex flex-1 items-center justify-center px-4">
         <div className="w-full max-w-sm rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
           <Image
             src="/timbrado/logo.png"
@@ -22,7 +22,8 @@ export default async function RedefinirSenhaPage({
             priority
             className="h-12 w-auto"
           />
-          <p className="mt-4 text-sm text-slate-500">Escolha uma nova senha.</p>
+          <h1 className="mt-4 text-lg font-semibold text-brand-navy">Redefinir senha</h1>
+          <p className="mt-1 text-sm text-slate-500">Escolha uma nova senha.</p>
 
           {error && (
             <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
@@ -40,7 +41,7 @@ export default async function RedefinirSenhaPage({
                 required
                 minLength={8}
                 autoComplete="new-password"
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-navy focus:outline-none"
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-navy focus:outline-2 focus:outline-brand-navy focus:outline-offset-1"
               />
             </div>
             <div>
@@ -54,7 +55,7 @@ export default async function RedefinirSenhaPage({
                 required
                 minLength={8}
                 autoComplete="new-password"
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-navy focus:outline-none"
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-navy focus:outline-2 focus:outline-brand-navy focus:outline-offset-1"
               />
             </div>
             <button
@@ -65,7 +66,7 @@ export default async function RedefinirSenhaPage({
             </button>
           </form>
         </div>
-      </div>
+      </main>
 
       <BotaoSuporteWhatsapp />
     </div>

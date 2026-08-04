@@ -85,12 +85,12 @@ export default async function UsuariosPage({
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-brand-navy/5">
             <tr>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Nome</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">E-mail</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Papel</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Pessoa vinculada</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Situação</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-500">Ações</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Nome</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">E-mail</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Papel</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Pessoa vinculada</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Situação</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Ações</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
