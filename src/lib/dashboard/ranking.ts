@@ -7,6 +7,11 @@ export type LinhaRankingSolicitante = {
   autorizadas: number;
   valorAutorizado: number;
   ultimaSolicitacao: string | null;
+  // Número da diária/solicitação referentes à última solicitação (acima) —
+  // não faz sentido resumir todos os números de quem tem mais de uma diária,
+  // então mostramos os da mais recente, junto com a data dela.
+  numeroDiaria: string | null;
+  numeroSolicitacao: string | null;
 };
 
 // Ranking de diárias por solicitante, ordenado pela solicitação mais
@@ -17,7 +22,7 @@ export async function calcularRankingSolicitantes(
 ): Promise<LinhaRankingSolicitante[]> {
   const { data: solicitacoes } = await supabase
     .from("diarias_solicitacoes")
-    .select("status, total, data_solicitacao, pessoas(nome)");
+    .select("status, total, data_solicitacao, numero_diaria, numero_solicitacao, pessoas(nome)");
 
   const porSolicitante = new Map<string, LinhaRankingSolicitante>();
 
@@ -29,6 +34,8 @@ export async function calcularRankingSolicitantes(
       autorizadas: 0,
       valorAutorizado: 0,
       ultimaSolicitacao: null,
+      numeroDiaria: null,
+      numeroSolicitacao: null,
     };
     atual.total += 1;
     if (s.status === "Autorizado") {
@@ -37,6 +44,8 @@ export async function calcularRankingSolicitantes(
     }
     if (!atual.ultimaSolicitacao || (s.data_solicitacao && s.data_solicitacao > atual.ultimaSolicitacao)) {
       atual.ultimaSolicitacao = s.data_solicitacao;
+      atual.numeroDiaria = s.numero_diaria;
+      atual.numeroSolicitacao = s.numero_solicitacao;
     }
     porSolicitante.set(nome, atual);
   }

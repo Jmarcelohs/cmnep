@@ -22,10 +22,26 @@ export async function GET() {
 
   const ranking = await calcularRankingSolicitantes(supabase);
 
-  const cabecalho = ["Solicitante", "Última solicitação", "Total de diárias", "Autorizadas", "Valor autorizado"];
+  const cabecalho = [
+    "Solicitante",
+    "Nº diária",
+    "Nº solicitação",
+    "Última solicitação",
+    "Total de diárias",
+    "Autorizadas",
+    "Valor autorizado",
+  ];
 
   const linhas = ranking.map((r) =>
-    [r.nome, formatarData(r.ultimaSolicitacao), String(r.total), String(r.autorizadas), formatarMoeda(r.valorAutorizado)]
+    [
+      r.nome,
+      r.numeroDiaria ?? "",
+      r.numeroSolicitacao ?? "",
+      formatarData(r.ultimaSolicitacao),
+      String(r.total),
+      String(r.autorizadas),
+      formatarMoeda(r.valorAutorizado),
+    ]
       .map((campo) => csvEscape(campo))
       .join(","),
   );

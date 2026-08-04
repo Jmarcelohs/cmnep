@@ -74,6 +74,8 @@ export default async function ImprimirPainelPage() {
           <thead>
             <tr className="border-b border-slate-400 text-left">
               <th className="py-1 pr-2">Solicitante</th>
+              <th className="py-1 pr-2">Nº diária</th>
+              <th className="py-1 pr-2">Nº solicitação</th>
               <th className="py-1 pr-2">Última solicitação</th>
               <th className="py-1 pr-2">Total</th>
               <th className="py-1 pr-2">Autorizadas</th>
@@ -84,6 +86,8 @@ export default async function ImprimirPainelPage() {
             {ranking.map((r) => (
               <tr key={r.nome} className="border-b border-slate-200">
                 <td className="py-1 pr-2">{r.nome}</td>
+                <td className="py-1 pr-2">{r.numeroDiaria ?? "—"}</td>
+                <td className="py-1 pr-2">{r.numeroSolicitacao ?? "—"}</td>
                 <td className="py-1 pr-2">{formatarData(r.ultimaSolicitacao)}</td>
                 <td className="py-1 pr-2">{r.total}</td>
                 <td className="py-1 pr-2">{r.autorizadas}</td>
@@ -92,7 +96,7 @@ export default async function ImprimirPainelPage() {
             ))}
             {ranking.length === 0 && (
               <tr>
-                <td colSpan={5} className="py-2 text-center text-slate-400">
+                <td colSpan={7} className="py-2 text-center text-slate-400">
                   Nenhuma solicitação encontrada.
                 </td>
               </tr>

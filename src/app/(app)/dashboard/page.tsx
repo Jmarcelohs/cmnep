@@ -116,6 +116,8 @@ export default async function DashboardPage() {
           <thead className="bg-brand-navy/5">
             <tr>
               <th className="px-4 py-2 text-left font-medium text-slate-500">Solicitante</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-500">Nº diária</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-500">Nº solicitação</th>
               <th className="px-4 py-2 text-left font-medium text-slate-500">Última solicitação</th>
               <th className="px-4 py-2 text-left font-medium text-slate-500">Total de diárias</th>
               <th className="px-4 py-2 text-left font-medium text-slate-500">Autorizadas</th>
@@ -126,6 +128,8 @@ export default async function DashboardPage() {
             {ranking.map((dados) => (
               <tr key={dados.nome}>
                 <td className="px-4 py-2 text-slate-900">{dados.nome}</td>
+                <td className="px-4 py-2 text-slate-700">{dados.numeroDiaria ?? "—"}</td>
+                <td className="px-4 py-2 text-slate-700">{dados.numeroSolicitacao ?? "—"}</td>
                 <td className="px-4 py-2 text-slate-700">{formatarData(dados.ultimaSolicitacao)}</td>
                 <td className="px-4 py-2 text-slate-700">{dados.total}</td>
                 <td className="px-4 py-2 text-slate-700">{dados.autorizadas}</td>
@@ -134,7 +138,7 @@ export default async function DashboardPage() {
             ))}
             {ranking.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-slate-400">
+                <td colSpan={7} className="px-4 py-6 text-center text-slate-400">
                   Nenhuma solicitação encontrada.
                 </td>
               </tr>
