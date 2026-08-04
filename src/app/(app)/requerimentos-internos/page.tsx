@@ -6,6 +6,10 @@ import { TIPO_LABEL } from "@/lib/requerimentos-internos/assuntos";
 import { DownloadPdfButton } from "@/components/download-pdf-button";
 import { ExcluirSolicitacaoButton } from "@/components/excluir-solicitacao-button";
 import { MenuAcoes } from "@/components/menu-acoes";
+import { CampoBusca } from "@/components/campo-busca";
+import { Paginacao } from "@/components/paginacao";
+import { construirFiltroBusca } from "@/lib/busca";
+import { calcularPagina, totalDePaginas } from "@/lib/paginacao";
 import {
   autorizarRequerimentoInterno,
   excluirRequerimentoInterno,
@@ -31,9 +35,15 @@ const STATUS_STYLES: Record<StatusRequerimentoInterno, string> = {
 export default async function RequerimentosInternosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tipo?: string; status?: string; error?: string }>;
+  searchParams: Promise<{
+    tipo?: string;
+    status?: string;
+    busca?: string;
+    pagina?: string;
+    error?: string;
+  }>;
 }) {
-  const { tipo, status, error: errorMsg } = await searchParams;
+  const { tipo, status, busca, pagina: paginaStr, error: errorMsg } = await searchParams;
   const supabase = await createClient();
   const usuario = await getCurrentUsuario();
 
@@ -58,20 +68,32 @@ export default async function RequerimentosInternosPage({
     contagemStatus[r.status as StatusRequerimentoInterno]++;
   }
 
+  const { pagina, de, ate } = calcularPagina(paginaStr);
+
   let query = supabase
     .from("requerimentos_internos")
-    .select("id, numero, ano, tipo, nome, cargo, assunto, data_requerimento, status, pessoa_id")
-    .order("criado_em", { ascending: false });
+    .select("id, numero, ano, tipo, nome, cargo, assunto, data_requerimento, status, pessoa_id", {
+      count: "exact",
+    })
+    .order("criado_em", { ascending: false })
+    .range(de, ate);
 
   if (tipo) query = query.eq("tipo", tipo as TipoRequerimentoInterno);
   if (status) query = query.eq("status", status as StatusRequerimentoInterno);
+  if (busca) query = query.or(construirFiltroBusca(busca, ["nome", "assunto"]));
 
-  const { data: requerimentos, error } = await query;
+  const { data: requerimentos, error, count } = await query;
 
   const paramsCsv = new URLSearchParams({
     ...(tipo ? { tipo } : {}),
     ...(status ? { status } : {}),
   }).toString();
+
+  const paramsBase = new URLSearchParams({
+    ...(tipo ? { tipo } : {}),
+    ...(status ? { status } : {}),
+    ...(busca ? { busca } : {}),
+  });
 
   return (
     <div>
@@ -100,6 +122,7 @@ export default async function RequerimentosInternosPage({
       </div>
 
       <form className="mt-6 flex flex-wrap items-end gap-3 text-sm" action="/requerimentos-internos">
+        <CampoBusca defaultValue={busca} placeholder="Nome ou assunto" />
         <div>
           <label className="block text-xs font-medium text-slate-500">Categoria</label>
           <select
@@ -265,6 +288,14 @@ export default async function RequerimentosInternosPage({
           </tbody>
         </table>
       </div>
+
+      <Paginacao
+        pagina={pagina}
+        totalPaginas={totalDePaginas(count)}
+        count={count}
+        baseHref="/requerimentos-internos"
+        paramsBase={paramsBase}
+      />
     </div>
   );
 }

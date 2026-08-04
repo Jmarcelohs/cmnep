@@ -15,9 +15,9 @@ const PERIODOS: { value: PeriodoAvaliacao; label: string }[] = [
 export default async function AvaliacoesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; ano?: string }>;
+  searchParams: Promise<{ error?: string; ano?: string; busca?: string }>;
 }) {
-  const { error: errorMsg, ano: anoParam } = await searchParams;
+  const { error: errorMsg, ano: anoParam, busca } = await searchParams;
   const usuario = await getCurrentUsuario();
   const ehAdmin = usuario?.papel === "admin";
   const ano = Number(anoParam) || new Date().getFullYear();
@@ -41,7 +41,7 @@ export default async function AvaliacoesPage({
 
   type LinhaPessoa = { id: string; nome: string; matricula: string | null };
 
-  const linhas: LinhaPessoa[] =
+  const todasLinhas: LinhaPessoa[] =
     pessoas ??
     Array.from(
       new Map(
@@ -52,13 +52,17 @@ export default async function AvaliacoesPage({
       ).values(),
     );
 
+  const linhas = busca
+    ? todasLinhas.filter((p) => p.nome.toLowerCase().includes(busca.toLowerCase()))
+    : todasLinhas;
+
   const porPessoaPeriodo = new Map<string, { id: string; nota_final: number | null }>();
   for (const a of avaliacoesAno ?? []) {
     porPessoaPeriodo.set(`${a.pessoa_id}-${a.periodo}`, { id: a.id, nota_final: a.nota_final });
   }
 
   const pendencias = ehAdmin
-    ? linhas.flatMap((p) =>
+    ? todasLinhas.flatMap((p) =>
         PERIODOS.filter((periodo) => !porPessoaPeriodo.has(`${p.id}-${periodo.value}`)).map((periodo) => ({
           pessoa: p,
           periodo,
@@ -102,7 +106,7 @@ export default async function AvaliacoesPage({
         <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{errorMsg}</p>
       )}
 
-      <form className="mt-6 flex items-center gap-2 text-sm">
+      <form className="mt-6 flex flex-wrap items-center gap-2 text-sm">
         <label className="font-medium text-slate-700" htmlFor="ano">
           Ano
         </label>
@@ -112,6 +116,13 @@ export default async function AvaliacoesPage({
           type="number"
           defaultValue={ano}
           className="w-28 rounded-md border border-slate-300 px-3 py-2"
+        />
+        <input
+          type="text"
+          name="busca"
+          defaultValue={busca ?? ""}
+          placeholder="Buscar por nome"
+          className="rounded-md border border-slate-300 px-3 py-2"
         />
         <button
           type="submit"

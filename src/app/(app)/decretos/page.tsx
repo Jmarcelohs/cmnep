@@ -5,34 +5,48 @@ import { formatarData } from "@/lib/pdf/formato";
 import { DownloadPdfButton } from "@/components/download-pdf-button";
 import { ExcluirSolicitacaoButton } from "@/components/excluir-solicitacao-button";
 import { MenuAcoes } from "@/components/menu-acoes";
+import { CampoBusca } from "@/components/campo-busca";
+import { Paginacao } from "@/components/paginacao";
+import { construirFiltroBusca } from "@/lib/busca";
+import { calcularPagina, totalDePaginas } from "@/lib/paginacao";
 import { excluirDecretoTituloHonorario } from "./actions";
 
 export default async function DecretosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ano?: string; error?: string }>;
+  searchParams: Promise<{ ano?: string; busca?: string; pagina?: string; error?: string }>;
 }) {
-  const { ano, error: errorMsg } = await searchParams;
+  const { ano, busca, pagina: paginaStr, error: errorMsg } = await searchParams;
   const usuario = await getCurrentUsuario();
   const podeGerenciar = usuario?.papel === "admin" || usuario?.papel === "ordenador_despesa";
 
   const supabase = await createClient();
+  const { pagina, de, ate } = calcularPagina(paginaStr);
 
   let query = supabase
     .from("decretos_titulo_honorario")
-    .select("id, numero, ano, data_decreto, nome_homenageado, autor_nome, autor_partido")
+    .select("id, numero, ano, data_decreto, nome_homenageado, autor_nome, autor_partido", {
+      count: "exact",
+    })
     .order("ano", { ascending: false })
-    .order("numero", { ascending: false });
+    .order("numero", { ascending: false })
+    .range(de, ate);
 
   if (ano) query = query.eq("ano", Number(ano));
+  if (busca) query = query.or(construirFiltroBusca(busca, ["nome_homenageado", "autor_nome"]));
 
-  const { data: decretos, error } = await query;
+  const { data: decretos, error, count } = await query;
 
   const { data: todosAnos } = await supabase
     .from("decretos_titulo_honorario")
     .select("ano")
     .order("ano", { ascending: false });
   const anosDisponiveis = Array.from(new Set((todosAnos ?? []).map((a) => a.ano)));
+
+  const paramsBase = new URLSearchParams({
+    ...(ano ? { ano } : {}),
+    ...(busca ? { busca } : {}),
+  });
 
   return (
     <div>
@@ -54,6 +68,7 @@ export default async function DecretosPage({
       </div>
 
       <form className="mt-4 flex flex-wrap items-end gap-3 text-sm" action="/decretos">
+        <CampoBusca defaultValue={busca} placeholder="Homenageado ou autor" />
         <div>
           <label className="block text-xs font-medium text-slate-500">Ano</label>
           <select
@@ -145,6 +160,14 @@ export default async function DecretosPage({
           </tbody>
         </table>
       </div>
+
+      <Paginacao
+        pagina={pagina}
+        totalPaginas={totalDePaginas(count)}
+        count={count}
+        baseHref="/decretos"
+        paramsBase={paramsBase}
+      />
     </div>
   );
 }

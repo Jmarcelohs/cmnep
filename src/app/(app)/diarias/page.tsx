@@ -5,6 +5,10 @@ import type { StatusDiaria } from "@/lib/supabase/database.types";
 import { DownloadPdfButton } from "@/components/download-pdf-button";
 import { ExcluirSolicitacaoButton } from "@/components/excluir-solicitacao-button";
 import { MenuAcoes } from "@/components/menu-acoes";
+import { CampoBusca } from "@/components/campo-busca";
+import { Paginacao } from "@/components/paginacao";
+import { buscarIdsPessoasPorNome, construirFiltroBusca } from "@/lib/busca";
+import { calcularPagina, totalDePaginas } from "@/lib/paginacao";
 import { excluirSolicitacao } from "./actions";
 import { excluirPrestacaoContas } from "./prestacao-contas-actions";
 
@@ -17,11 +21,22 @@ const STATUS_STYLES: Record<string, string> = {
 export default async function DiariasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; prestacao?: string; error?: string }>;
+  searchParams: Promise<{
+    status?: string;
+    prestacao?: string;
+    busca?: string;
+    ano?: string;
+    pagina?: string;
+    error?: string;
+  }>;
 }) {
-  const { status, prestacao, error: errorMsg } = await searchParams;
+  const { status, prestacao, busca, ano: anoParam, pagina: paginaStr, error: errorMsg } =
+    await searchParams;
   const supabase = await createClient();
   const usuario = await getCurrentUsuario();
+
+  const anoAtual = new Date().getFullYear();
+  const anoSelecionado = anoParam === "todos" ? null : Number(anoParam) || anoAtual;
 
   const { data: minhaPessoa } = usuario
     ? await supabase.from("pessoas").select("id").eq("usuario_id", usuario.id).maybeSingle()
@@ -32,25 +47,72 @@ export default async function DiariasPage({
     usuario?.papel === "ordenador_despesa" ||
     usuario?.papel === "gestor_diarias";
 
+  const { pagina, de, ate } = calcularPagina(paginaStr);
+
   let query = supabase
     .from("diarias_solicitacoes")
     .select(
       "id, pessoa_id, numero_diaria, numero_solicitacao, municipio_destino, finalidade, status, total, data_solicitacao, pessoas(nome), diarias_prestacoes_contas(id, parecer)",
+      { count: "exact" },
     )
-    .order("criado_em", { ascending: false });
+    .order("criado_em", { ascending: false })
+    .range(de, ate);
+
+  if (status) query = query.eq("status", status as StatusDiaria);
+  if (anoSelecionado) {
+    query = query
+      .gte("data_solicitacao", `${anoSelecionado}-01-01`)
+      .lt("data_solicitacao", `${anoSelecionado + 1}-01-01`);
+  }
+  if (busca) {
+    const idsPessoas = await buscarIdsPessoasPorNome(supabase, busca);
+    query = query.or(
+      construirFiltroBusca(busca, ["municipio_destino", "finalidade"], {
+        coluna: "pessoa_id",
+        ids: idsPessoas,
+      }),
+    );
+  }
 
   if (prestacao) {
     query = query.eq("status", "Autorizado");
-  } else if (status) {
-    query = query.eq("status", status as StatusDiaria);
+    const { data: prestacoes } = await supabase
+      .from("diarias_prestacoes_contas")
+      .select("solicitacao_id");
+    const idsComPrestacao = (prestacoes ?? [])
+      .map((p) => p.solicitacao_id)
+      .filter((id): id is string => Boolean(id));
+    if (prestacao === "pendente") {
+      if (idsComPrestacao.length > 0) {
+        query = query.not("id", "in", `(${idsComPrestacao.join(",")})`);
+      }
+    } else if (prestacao === "realizada") {
+      query =
+        idsComPrestacao.length > 0
+          ? query.in("id", idsComPrestacao)
+          : query.eq("id", "00000000-0000-0000-0000-000000000000");
+    }
   }
 
-  const { data: brutas, error } = await query;
+  const { data: solicitacoes, error, count } = await query;
 
-  const solicitacoes = brutas?.filter((s) => {
-    if (prestacao === "pendente") return (s.diarias_prestacoes_contas ?? []).length === 0;
-    if (prestacao === "realizada") return (s.diarias_prestacoes_contas ?? []).length > 0;
-    return true;
+  const { data: todasDatas } = await supabase.from("diarias_solicitacoes").select("data_solicitacao");
+  const anosDisponiveis = Array.from(
+    new Set([anoAtual, ...(todasDatas ?? []).map((d) => Number(d.data_solicitacao?.slice(0, 4)))]),
+  )
+    .filter(Boolean)
+    .sort((a, b) => b - a);
+
+  const paramsFiltro = new URLSearchParams({
+    ...(prestacao ? { prestacao } : {}),
+    ...(busca ? { busca } : {}),
+    ...(anoParam ? { ano: anoParam } : {}),
+  });
+  const paramsBase = new URLSearchParams({
+    ...(status ? { status } : {}),
+    ...(prestacao ? { prestacao } : {}),
+    ...(busca ? { busca } : {}),
+    ...(anoParam ? { ano: anoParam } : {}),
   });
 
   return (
@@ -69,14 +131,14 @@ export default async function DiariasPage({
         {["Solicitado", "Autorizado", "Indeferido"].map((s) => (
           <Link
             key={s}
-            href={`/diarias?status=${s}`}
+            href={`/diarias?${paramsFiltro.toString()}&status=${s}`}
             className={`rounded-full px-3 py-1 ${status === s && !prestacao ? "bg-brand-navy text-white" : "bg-slate-100 text-slate-600"}`}
           >
             {s}
           </Link>
         ))}
         <Link
-          href="/diarias"
+          href={`/diarias?${paramsFiltro.toString()}`}
           className={`rounded-full px-3 py-1 ${!status && !prestacao ? "bg-brand-navy text-white" : "bg-slate-100 text-slate-600"}`}
         >
           Todas
@@ -95,6 +157,33 @@ export default async function DiariasPage({
           Prestação de contas realizada
         </Link>
       </div>
+
+      <form className="mt-4 flex flex-wrap items-end gap-3 text-sm" action="/diarias">
+        <CampoBusca defaultValue={busca} placeholder="Solicitante, destino ou finalidade" />
+        <div>
+          <label className="block text-xs font-medium text-slate-500">Ano</label>
+          <select
+            name="ano"
+            defaultValue={anoParam ?? String(anoAtual)}
+            className="mt-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+          >
+            <option value="todos">Todos os anos</option>
+            {anosDisponiveis.map((a) => (
+              <option key={a} value={a}>
+                {a}
+              </option>
+            ))}
+          </select>
+        </div>
+        {status && <input type="hidden" name="status" value={status} />}
+        {prestacao && <input type="hidden" name="prestacao" value={prestacao} />}
+        <button
+          type="submit"
+          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        >
+          Filtrar
+        </button>
+      </form>
 
       {error && (
         <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -222,6 +311,14 @@ export default async function DiariasPage({
           </tbody>
         </table>
       </div>
+
+      <Paginacao
+        pagina={pagina}
+        totalPaginas={totalDePaginas(count)}
+        count={count}
+        baseHref="/diarias"
+        paramsBase={paramsBase}
+      />
     </div>
   );
 }

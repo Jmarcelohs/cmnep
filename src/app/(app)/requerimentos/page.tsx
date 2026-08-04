@@ -5,6 +5,10 @@ import { formatarMoeda } from "@/lib/pdf/formato";
 import { SUBASSUNTO_TITULO } from "@/lib/reembolso/documento";
 import { ExcluirSolicitacaoButton } from "@/components/excluir-solicitacao-button";
 import { MenuAcoes } from "@/components/menu-acoes";
+import { CampoBusca } from "@/components/campo-busca";
+import { Paginacao } from "@/components/paginacao";
+import { buscarIdsPessoasPorNome, construirFiltroBusca } from "@/lib/busca";
+import { calcularPagina, totalDePaginas } from "@/lib/paginacao";
 import { excluirReembolso } from "./actions";
 import type { StatusRequerimentoReembolso } from "@/lib/supabase/database.types";
 
@@ -25,11 +29,14 @@ const STATUS_STYLES: Record<StatusRequerimentoReembolso, string> = {
 export default async function RequerimentosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ busca?: string; ano?: string; pagina?: string; error?: string }>;
 }) {
-  const { error: errorMsg } = await searchParams;
+  const { busca, ano: anoParam, pagina: paginaStr, error: errorMsg } = await searchParams;
   const supabase = await createClient();
   const usuario = await getCurrentUsuario();
+
+  const anoAtual = new Date().getFullYear();
+  const anoSelecionado = anoParam === "todos" ? null : Number(anoParam) || anoAtual;
 
   const { data: minhaPessoa } = usuario
     ? await supabase.from("pessoas").select("id").eq("usuario_id", usuario.id).maybeSingle()
@@ -40,10 +47,46 @@ export default async function RequerimentosPage({
     usuario?.papel === "ordenador_despesa" ||
     usuario?.papel === "gestor_diarias";
 
-  const { data: requerimentos, error } = await supabase
+  const { pagina, de, ate } = calcularPagina(paginaStr);
+
+  let query = supabase
     .from("requerimentos_reembolso")
-    .select("id, protocolo, subassunto, valor, status, pessoa_id, pessoas(nome)")
-    .order("criado_em", { ascending: false });
+    .select("id, protocolo, subassunto, valor, status, pessoa_id, municipio, pessoas(nome)", {
+      count: "exact",
+    })
+    .order("criado_em", { ascending: false })
+    .range(de, ate);
+
+  if (anoSelecionado) {
+    query = query
+      .gte("data_requerimento", `${anoSelecionado}-01-01`)
+      .lt("data_requerimento", `${anoSelecionado + 1}-01-01`);
+  }
+  if (busca) {
+    const idsPessoas = await buscarIdsPessoasPorNome(supabase, busca);
+    query = query.or(
+      construirFiltroBusca(busca, ["protocolo", "municipio"], {
+        coluna: "pessoa_id",
+        ids: idsPessoas,
+      }),
+    );
+  }
+
+  const { data: requerimentos, error, count } = await query;
+
+  const { data: todasDatas } = await supabase
+    .from("requerimentos_reembolso")
+    .select("data_requerimento");
+  const anosDisponiveis = Array.from(
+    new Set([anoAtual, ...(todasDatas ?? []).map((d) => Number(d.data_requerimento?.slice(0, 4)))]),
+  )
+    .filter(Boolean)
+    .sort((a, b) => b - a);
+
+  const paramsBase = new URLSearchParams({
+    ...(busca ? { busca } : {}),
+    ...(anoParam ? { ano: anoParam } : {}),
+  });
 
   return (
     <div>
@@ -61,6 +104,31 @@ export default async function RequerimentosPage({
           Novo requerimento
         </Link>
       </div>
+
+      <form className="mt-4 flex flex-wrap items-end gap-3 text-sm" action="/requerimentos">
+        <CampoBusca defaultValue={busca} placeholder="Protocolo, município ou solicitante" />
+        <div>
+          <label className="block text-xs font-medium text-slate-500">Ano</label>
+          <select
+            name="ano"
+            defaultValue={anoParam ?? String(anoAtual)}
+            className="mt-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+          >
+            <option value="todos">Todos os anos</option>
+            {anosDisponiveis.map((a) => (
+              <option key={a} value={a}>
+                {a}
+              </option>
+            ))}
+          </select>
+        </div>
+        <button
+          type="submit"
+          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        >
+          Filtrar
+        </button>
+      </form>
 
       {error && (
         <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -145,6 +213,14 @@ export default async function RequerimentosPage({
           </tbody>
         </table>
       </div>
+
+      <Paginacao
+        pagina={pagina}
+        totalPaginas={totalDePaginas(count)}
+        count={count}
+        baseHref="/requerimentos"
+        paramsBase={paramsBase}
+      />
     </div>
   );
 }
