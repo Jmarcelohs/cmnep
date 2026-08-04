@@ -172,8 +172,11 @@ export function RequerimentoInternoForm({
               name="nome"
               value={nome}
               onChange={(e) => setNome(e.target.value)}
-              disabled={modoCadastro && Boolean(pessoaId)}
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-100"
+              // readOnly, não disabled: um campo disabled não entra no
+              // FormData do envio — é exatamente por isso que o nome saía
+              // em branco ao selecionar alguém em "Cadastrados".
+              readOnly={modoCadastro && Boolean(pessoaId)}
+              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm read-only:bg-slate-100"
             />
           </div>
           <div>
