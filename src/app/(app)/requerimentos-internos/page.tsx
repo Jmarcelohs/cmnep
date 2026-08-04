@@ -162,8 +162,10 @@ export default async function RequerimentosInternosPage({
           </thead>
           <tbody className="divide-y divide-slate-100">
             {requerimentos?.map((r) => {
-              const podeExcluir =
+              const podeGerenciar =
                 podeGerenciarSempre || (r.pessoa_id && minhaPessoa?.id === r.pessoa_id);
+              const podeEditar = podeGerenciar && r.status === "pendente";
+              const podeExcluir = podeGerenciar;
               return (
                 <tr key={r.id} className="hover:bg-slate-50">
                   <td className="px-4 py-2">
@@ -190,6 +192,14 @@ export default async function RequerimentosInternosPage({
                       >
                         Ver
                       </Link>
+                      {podeEditar && (
+                        <Link
+                          href={`/requerimentos-internos/${r.id}/editar`}
+                          className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                        >
+                          Editar
+                        </Link>
+                      )}
                       <DownloadPdfButton
                         url={`/api/requerimentos-internos/${r.id}/pdf`}
                         nomeArquivoPadrao={`requerimento-${r.numero}-${r.ano}.pdf`}
