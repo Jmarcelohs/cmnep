@@ -141,7 +141,7 @@ export default async function DiariasPage({
                     )}
                   </td>
                   <td className="px-4 py-2 text-slate-700">{s.municipio_destino ?? "—"}</td>
-                  <td className="px-4 py-2 text-slate-700">{s.finalidade ?? "—"}</td>
+                  <td className="px-4 py-2 text-justify text-slate-700">{s.finalidade ?? "—"}</td>
                   <td className="px-4 py-2 text-slate-700">
                     {Number(s.total ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
                   </td>
