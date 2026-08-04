@@ -62,28 +62,10 @@ export async function criarRequerimentoInterno(formData: FormData) {
 
   const campos = lerCampos(formData);
 
-  if (!campos.tipo || !campos.nome || !campos.cargo || !campos.assunto) {
-    redirect(
-      `/requerimentos-internos/novo?error=${encodeURIComponent("Preencha todos os campos obrigatórios")}`,
-    );
-  }
-
+  // Nenhum campo é obrigatório — o requerimento é salvo com o que foi
+  // preenchido, sem travar por falta de dado.
   const assunto = campos.assunto_key ? getAssunto(campos.tipo, campos.assunto_key) : undefined;
   const modoEstruturado = Boolean(assunto?.fields?.length);
-
-  if (modoEstruturado) {
-    for (const f of assunto!.fields ?? []) {
-      if (f.required && !campos.campos[f.key]) {
-        redirect(
-          `/requerimentos-internos/novo?error=${encodeURIComponent(`Preencha o campo "${f.label}"`)}`,
-        );
-      }
-    }
-  } else if (!campos.pedido) {
-    redirect(
-      `/requerimentos-internos/novo?error=${encodeURIComponent("Descreva o pedido")}`,
-    );
-  }
 
   const supabase = await createClient();
   const ano = new Date(campos.data_requerimento).getFullYear();
@@ -139,10 +121,6 @@ export async function criarRequerimentoInterno(formData: FormData) {
 
 export async function editarRequerimentoInterno(id: string, formData: FormData) {
   const campos = lerCampos(formData);
-
-  if (!campos.numeroManual) {
-    redirect(`/requerimentos-internos/${id}/editar?error=${encodeURIComponent("Informe o número")}`);
-  }
 
   const assunto = campos.assunto_key ? getAssunto(campos.tipo, campos.assunto_key) : undefined;
   const modoEstruturado = Boolean(assunto?.fields?.length);

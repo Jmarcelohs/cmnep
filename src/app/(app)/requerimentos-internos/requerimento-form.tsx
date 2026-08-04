@@ -167,10 +167,9 @@ export function RequerimentoInternoForm({
 
         <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-slate-700">Nome completo</label>
+            <label className="block text-sm font-medium text-slate-700">Nome completo (opcional)</label>
             <input
               name="nome"
-              required
               value={nome}
               onChange={(e) => setNome(e.target.value)}
               disabled={modoCadastro && Boolean(pessoaId)}
@@ -181,7 +180,6 @@ export function RequerimentoInternoForm({
             <label className="block text-sm font-medium text-slate-700">Cargo/Função</label>
             <select
               name="cargo"
-              required
               value={cargo}
               onChange={(e) => setCargo(e.target.value as CargoDeclarado)}
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -213,11 +211,10 @@ export function RequerimentoInternoForm({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700">Data do requerimento</label>
+            <label className="block text-sm font-medium text-slate-700">Data do requerimento (opcional)</label>
             <input
               type="date"
               name="data_requerimento"
-              required
               value={dataRequerimento}
               onChange={(e) => setDataRequerimento(e.target.value)}
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -225,10 +222,9 @@ export function RequerimentoInternoForm({
           </div>
           {valoresIniciais && (
             <div>
-              <label className="block text-sm font-medium text-slate-700">Número</label>
+              <label className="block text-sm font-medium text-slate-700">Número (opcional)</label>
               <input
                 name="numero"
-                required
                 defaultValue={valoresIniciais.numero}
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
               />
@@ -260,11 +256,10 @@ export function RequerimentoInternoForm({
 
         {ehPersonalizado && (
           <div className="mt-3">
-            <label className="block text-sm font-medium text-slate-700">Título do requerimento</label>
+            <label className="block text-sm font-medium text-slate-700">Título do requerimento (opcional)</label>
             <input
               value={assuntoTitulo}
               onChange={(e) => setAssuntoTitulo(e.target.value)}
-              required={ehPersonalizado}
               placeholder="Ex.: Solicitação de crachá"
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
             />
@@ -300,13 +295,9 @@ export function RequerimentoInternoForm({
           <div className="mt-4 space-y-3">
             {assuntoSelecionado!.fields!.map((f) => (
               <div key={f.key}>
-                <label className="block text-sm font-medium text-slate-700">
-                  {f.label}
-                  {f.required ? "" : " (opcional)"}
-                </label>
+                <label className="block text-sm font-medium text-slate-700">{f.label} (opcional)</label>
                 {f.type === "select" ? (
                   <select
-                    required={f.required}
                     value={campos[f.key] ?? ""}
                     onChange={(e) => setCampos((prev) => ({ ...prev, [f.key]: e.target.value }))}
                     className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -321,7 +312,6 @@ export function RequerimentoInternoForm({
                 ) : (
                   <input
                     type={f.type === "date" ? "date" : "text"}
-                    required={f.required}
                     value={campos[f.key] ?? ""}
                     onChange={(e) => setCampos((prev) => ({ ...prev, [f.key]: e.target.value }))}
                     className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -333,10 +323,9 @@ export function RequerimentoInternoForm({
         ) : (
           <div className="mt-4 space-y-3">
             <div>
-              <label className="block text-sm font-medium text-slate-700">Descrição do pedido</label>
+              <label className="block text-sm font-medium text-slate-700">Descrição do pedido (opcional)</label>
               <textarea
                 name="pedido"
-                required
                 rows={4}
                 value={pedido}
                 onChange={(e) => setPedido(e.target.value)}
