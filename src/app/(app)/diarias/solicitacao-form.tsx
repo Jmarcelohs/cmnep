@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { calcularTotalItens, calcularValorInternacional } from "@/lib/diarias/calculo";
 
 type Pessoa = { id: string; nome: string; categoria: string };
 type ValorTabela = { tipo: string; faixa: string; categoria: string; valor: number };
@@ -100,7 +101,7 @@ export function SolicitacaoForm({
     });
   }
 
-  const total = itens.reduce((acc, item) => acc + item.quantidade * item.valor_unitario, 0);
+  const total = calcularTotalItens(itens);
 
   function aplicarDiariaInternacional(index: number, tipo: "comPernoite" | "semPernoite") {
     // Art. 8º-A (Resolução 51): 120% da diária de Brasília/capitais,
@@ -112,7 +113,7 @@ export function SolicitacaoForm({
       (v) => v.tipo === tipo && v.faixa === "Brasília e outras capitais" && v.categoria === "Vereador",
     );
     if (!base) return;
-    const valor = Math.round(base.valor * 1.2 * 100) / 100;
+    const valor = calcularValorInternacional(base.valor);
     const rotulo = tipo === "comPernoite" ? "com pernoite" : "sem pernoite";
     atualizarItem(index, {
       descricao_manual: `Diária internacional (art. 8º-A) — 120% da diária ${rotulo} Brasília/capitais Vereador`,

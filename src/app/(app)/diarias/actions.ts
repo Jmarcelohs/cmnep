@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
+import { calcularTotalItens } from "@/lib/diarias/calculo";
 import type { Categoria, ModoItemDiaria, TipoDiaria } from "@/lib/supabase/database.types";
 
 type ItemInput = {
@@ -39,10 +40,7 @@ export async function criarSolicitacao(formData: FormData) {
 
   const supabase = await createClient();
 
-  const total = itens.reduce(
-    (acc, item) => acc + item.quantidade * item.valor_unitario,
-    0,
-  );
+  const total = calcularTotalItens(itens);
 
   const { data: solicitacao, error } = await supabase
     .from("diarias_solicitacoes")
@@ -112,10 +110,7 @@ export async function editarSolicitacao(id: string, formData: FormData) {
 
   const supabase = await createClient();
 
-  const total = itens.reduce(
-    (acc, item) => acc + item.quantidade * item.valor_unitario,
-    0,
-  );
+  const total = calcularTotalItens(itens);
 
   const { error } = await supabase
     .from("diarias_solicitacoes")

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { DOTACAO_ORCAMENTARIA_PADRAO } from "@/lib/decretos/documento";
+import { proximoNumero } from "@/lib/numeracao";
 import type { Tratamento } from "@/lib/supabase/database.types";
 
 async function exigirOrdenadorOuAdmin(redirectPath: string) {
@@ -63,8 +64,7 @@ export async function criarDecretoTituloHonorario(formData: FormData) {
       .select("numero")
       .eq("ano", ano);
 
-    const maiorNumero = (doAno ?? []).reduce((max, r) => Math.max(max, Number(r.numero) || 0), 0);
-    numero = String(maiorNumero > 0 ? maiorNumero + 1 : 1);
+    numero = String(proximoNumero((doAno ?? []).map((r) => r.numero)));
   }
 
   const { data: decreto, error } = await supabase

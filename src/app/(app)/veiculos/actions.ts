@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
+import { proximoNumero } from "@/lib/numeracao";
 
 async function exigirOrdenadorOuAdmin(redirectPath: string) {
   const usuario = await getCurrentUsuario();
@@ -104,13 +105,11 @@ export async function criarLocacao(formData: FormData) {
       .select("numero")
       .eq("ano", ano);
 
-    const maiorNumero = (doAno ?? []).reduce(
-      (max, r) => Math.max(max, Number(r.numero) || 0),
-      0,
+    const proximo = proximoNumero(
+      (doAno ?? []).map((r) => r.numero),
+      ano === 2026 ? 52 : 1,
     );
-
-    const proximoNumero = maiorNumero > 0 ? maiorNumero + 1 : ano === 2026 ? 52 : 1;
-    numero = String(proximoNumero).padStart(3, "0");
+    numero = String(proximo).padStart(3, "0");
   }
 
   const valor_total = campos.valor_diaria * campos.qtd_diarias;
