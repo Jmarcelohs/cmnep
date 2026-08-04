@@ -681,6 +681,22 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["decretos_titulo_honorario"]["Row"]>;
         Relationships: [];
       };
+      auditoria: {
+        Row: {
+          id: string;
+          tabela: string;
+          registro_id: string | null;
+          operacao: "INSERT" | "UPDATE" | "DELETE";
+          dados_antigos: Record<string, unknown> | null;
+          dados_novos: Record<string, unknown> | null;
+          usuario_id: string | null;
+          usuario_nome: string | null;
+          criado_em: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
