@@ -4,6 +4,7 @@ import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import type { StatusDiaria } from "@/lib/supabase/database.types";
 import { DownloadPdfButton } from "@/components/download-pdf-button";
 import { ExcluirSolicitacaoButton } from "@/components/excluir-solicitacao-button";
+import { MenuAcoes } from "@/components/menu-acoes";
 import { excluirSolicitacao } from "./actions";
 import { excluirPrestacaoContas } from "./prestacao-contas-actions";
 
@@ -145,16 +146,17 @@ export default async function DiariasPage({
                     </span>
                   </td>
                   <td className="px-4 py-2">
-                    <div className="flex flex-wrap items-center gap-2">
+                    <MenuAcoes>
                       {podeEditar && (
                         <Link
                           href={`/diarias/${s.id}/editar`}
-                          className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                          className="block w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
                         >
                           Editar
                         </Link>
                       )}
                       <DownloadPdfButton
+                        variant="menu"
                         url={`/api/diarias/${s.id}/pdf`}
                         nomeArquivoPadrao={`anexo-i-${s.id}.pdf`}
                       />
@@ -162,7 +164,7 @@ export default async function DiariasPage({
                         <>
                           <Link
                             href={`/diarias/${s.id}/prestacao-contas`}
-                            className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                            className="block w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
                           >
                             {temPrestacao ? "Ver prestação" : "Prestar contas"}
                           </Link>
@@ -170,16 +172,18 @@ export default async function DiariasPage({
                             <>
                               <Link
                                 href={`/diarias/${s.id}/prestacao-contas/editar`}
-                                className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                                className="block w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
                               >
                                 Editar prestação
                               </Link>
                               <DownloadPdfButton
+                                variant="menu"
                                 url={`/api/diarias/${s.id}/prestacao-contas/pdf`}
                                 nomeArquivoPadrao={`anexo-ii-${s.id}.pdf`}
                                 label="Salvar PDF (Anexo II)"
                               />
                               <ExcluirSolicitacaoButton
+                                variant="menu"
                                 action={excluirPrestacaoContas.bind(
                                   null,
                                   prestacaoDaLinha!.id,
@@ -193,9 +197,12 @@ export default async function DiariasPage({
                         </>
                       )}
                       {podeEditar && (
-                        <ExcluirSolicitacaoButton action={excluirSolicitacao.bind(null, s.id)} />
+                        <ExcluirSolicitacaoButton
+                          variant="menu"
+                          action={excluirSolicitacao.bind(null, s.id)}
+                        />
                       )}
-                    </div>
+                    </MenuAcoes>
                   </td>
                 </tr>
               );

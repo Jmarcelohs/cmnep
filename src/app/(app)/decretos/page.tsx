@@ -4,6 +4,7 @@ import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { formatarData } from "@/lib/pdf/formato";
 import { DownloadPdfButton } from "@/components/download-pdf-button";
 import { ExcluirSolicitacaoButton } from "@/components/excluir-solicitacao-button";
+import { MenuAcoes } from "@/components/menu-acoes";
 import { excluirDecretoTituloHonorario } from "./actions";
 
 export default async function DecretosPage({
@@ -109,8 +110,9 @@ export default async function DecretosPage({
                   {d.autor_partido && ` – ${d.autor_partido}`}
                 </td>
                 <td className="px-4 py-2">
-                  <div className="flex flex-wrap items-center gap-2">
+                  <MenuAcoes>
                     <DownloadPdfButton
+                      variant="menu"
                       url={`/api/decretos/${d.id}/pdf`}
                       nomeArquivoPadrao={`decreto-titulo-honorario-${d.numero}-${d.ano}.pdf`}
                     />
@@ -118,17 +120,18 @@ export default async function DecretosPage({
                       <>
                         <Link
                           href={`/decretos/${d.id}/editar`}
-                          className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                          className="block w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
                         >
                           Editar
                         </Link>
                         <ExcluirSolicitacaoButton
+                          variant="menu"
                           action={excluirDecretoTituloHonorario.bind(null, d.id)}
                           mensagemConfirmacao={`Tem certeza que deseja excluir o decreto ${d.numero}/${d.ano} (${d.nome_homenageado})? Essa ação não pode ser desfeita.`}
                         />
                       </>
                     )}
-                  </div>
+                  </MenuAcoes>
                 </td>
               </tr>
             ))}

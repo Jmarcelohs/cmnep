@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { alternarAtivoPessoa, excluirPessoa } from "./actions";
 import { ExcluirSolicitacaoButton } from "@/components/excluir-solicitacao-button";
+import { MenuAcoes } from "@/components/menu-acoes";
 
 export default async function PessoasPage({
   searchParams,
@@ -73,26 +74,27 @@ export default async function PessoasPage({
                 </td>
                 {ehAdmin && (
                   <td className="px-4 py-2">
-                    <div className="flex flex-wrap items-center gap-2">
+                    <MenuAcoes>
                       <Link
                         href={`/pessoas/${pessoa.id}/editar`}
-                        className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                        className="block w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
                       >
                         Editar
                       </Link>
                       <form action={alternarAtivoPessoa.bind(null, pessoa.id, pessoa.ativo)}>
                         <button
                           type="submit"
-                          className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                          className="block w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
                         >
                           {pessoa.ativo ? "Inativar" : "Ativar"}
                         </button>
                       </form>
                       <ExcluirSolicitacaoButton
+                        variant="menu"
                         action={excluirPessoa.bind(null, pessoa.id)}
                         mensagemConfirmacao={`Tem certeza que deseja excluir "${pessoa.nome}"? Só funciona se não houver diárias ou outros registros vinculados a essa pessoa — caso contrário, use "Inativar".`}
                       />
-                    </div>
+                    </MenuAcoes>
                   </td>
                 )}
               </tr>

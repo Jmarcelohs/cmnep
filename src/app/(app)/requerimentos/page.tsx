@@ -4,6 +4,7 @@ import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { formatarMoeda } from "@/lib/pdf/formato";
 import { SUBASSUNTO_TITULO } from "@/lib/reembolso/documento";
 import { ExcluirSolicitacaoButton } from "@/components/excluir-solicitacao-button";
+import { MenuAcoes } from "@/components/menu-acoes";
 import { excluirReembolso } from "./actions";
 import type { StatusRequerimentoReembolso } from "@/lib/supabase/database.types";
 
@@ -104,28 +105,29 @@ export default async function RequerimentosPage({
                     </span>
                   </td>
                   <td className="px-4 py-2">
-                    <div className="flex flex-wrap items-center gap-2">
+                    <MenuAcoes>
                       <Link
                         href={`/requerimentos/${r.id}`}
-                        className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                        className="block w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
                       >
                         Ver
                       </Link>
                       {podeExcluir && (
                         <Link
                           href={`/requerimentos/${r.id}/editar`}
-                          className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                          className="block w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
                         >
                           Editar
                         </Link>
                       )}
                       {podeExcluir && (
                         <ExcluirSolicitacaoButton
+                          variant="menu"
                           action={excluirReembolso.bind(null, r.id)}
                           mensagemConfirmacao={`Tem certeza que deseja excluir o requerimento ${r.protocolo}? Essa ação não pode ser desfeita.`}
                         />
                       )}
-                    </div>
+                    </MenuAcoes>
                   </td>
                 </tr>
               );

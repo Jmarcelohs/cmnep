@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { ExcluirSolicitacaoButton } from "@/components/excluir-solicitacao-button";
+import { MenuAcoes } from "@/components/menu-acoes";
 import { alternarAtivoUsuario, excluirUsuario } from "./actions";
 
 const PAPEL_LABEL: Record<string, string> = {
@@ -81,10 +82,10 @@ export default async function UsuariosPage({
                   <td className="px-4 py-2 text-slate-700">{nomePessoa ?? "—"}</td>
                   <td className="px-4 py-2 text-slate-700">{u.ativo ? "Ativo" : "Inativo"}</td>
                   <td className="px-4 py-2">
-                    <div className="flex flex-wrap items-center gap-2">
+                    <MenuAcoes>
                       <Link
                         href={`/usuarios/${u.id}/editar`}
-                        className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                        className="block w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
                       >
                         Editar
                       </Link>
@@ -93,18 +94,19 @@ export default async function UsuariosPage({
                           <form action={alternarAtivoUsuario.bind(null, u.id, u.ativo)}>
                             <button
                               type="submit"
-                              className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                              className="block w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
                             >
                               {u.ativo ? "Inativar" : "Ativar"}
                             </button>
                           </form>
                           <ExcluirSolicitacaoButton
+                            variant="menu"
                             action={excluirUsuario.bind(null, u.id)}
                             mensagemConfirmacao={`Tem certeza que deseja excluir o usuário "${u.nome}"? O login dessa pessoa deixa de funcionar imediatamente. Essa ação não pode ser desfeita.`}
                           />
                         </>
                       )}
-                    </div>
+                    </MenuAcoes>
                   </td>
                 </tr>
               );

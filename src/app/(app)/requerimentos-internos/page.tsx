@@ -5,6 +5,7 @@ import { formatarData } from "@/lib/pdf/formato";
 import { TIPO_LABEL } from "@/lib/requerimentos-internos/assuntos";
 import { DownloadPdfButton } from "@/components/download-pdf-button";
 import { ExcluirSolicitacaoButton } from "@/components/excluir-solicitacao-button";
+import { MenuAcoes } from "@/components/menu-acoes";
 import { excluirRequerimentoInterno } from "./actions";
 import type { StatusRequerimentoInterno, TipoRequerimentoInterno } from "@/lib/supabase/database.types";
 
@@ -185,32 +186,34 @@ export default async function RequerimentosInternosPage({
                     </span>
                   </td>
                   <td className="px-4 py-2">
-                    <div className="flex flex-wrap items-center gap-2">
+                    <MenuAcoes>
                       <Link
                         href={`/requerimentos-internos/${r.id}`}
-                        className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                        className="block w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
                       >
                         Ver
                       </Link>
                       {podeEditar && (
                         <Link
                           href={`/requerimentos-internos/${r.id}/editar`}
-                          className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                          className="block w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
                         >
                           Editar
                         </Link>
                       )}
                       <DownloadPdfButton
+                        variant="menu"
                         url={`/api/requerimentos-internos/${r.id}/pdf`}
                         nomeArquivoPadrao={`requerimento-${r.numero}-${r.ano}.pdf`}
                       />
                       {podeExcluir && (
                         <ExcluirSolicitacaoButton
+                          variant="menu"
                           action={excluirRequerimentoInterno.bind(null, r.id)}
                           mensagemConfirmacao={`Tem certeza que deseja excluir o requerimento ${r.numero}/${r.ano}? Essa ação não pode ser desfeita.`}
                         />
                       )}
-                    </div>
+                    </MenuAcoes>
                   </td>
                 </tr>
               );

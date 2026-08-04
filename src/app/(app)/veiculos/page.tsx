@@ -4,6 +4,7 @@ import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { formatarData, formatarMoeda } from "@/lib/pdf/formato";
 import { DownloadPdfButton } from "@/components/download-pdf-button";
 import { ExcluirSolicitacaoButton } from "@/components/excluir-solicitacao-button";
+import { MenuAcoes } from "@/components/menu-acoes";
 import { excluirLocacao } from "./actions";
 
 export default async function VeiculosPage({
@@ -134,12 +135,14 @@ export default async function VeiculosPage({
                 <td className="px-4 py-2 text-slate-700">{l.veiculo_descricao}</td>
                 <td className="px-4 py-2 text-slate-700">{formatarMoeda(l.valor_total)}</td>
                 <td className="px-4 py-2">
-                  <div className="flex flex-wrap items-center gap-2">
+                  <MenuAcoes>
                     <DownloadPdfButton
+                      variant="menu"
                       url={`/api/veiculos/${l.id}/pdf`}
                       nomeArquivoPadrao={`locacao-veiculo-${l.numero}-${l.ano}.pdf`}
                     />
                     <DownloadPdfButton
+                      variant="menu"
                       url={`/api/veiculos/${l.id}/imagem`}
                       nomeArquivoPadrao={`locacao-veiculo-${l.numero}-${l.ano}.png`}
                       label="Baixar imagem"
@@ -148,17 +151,18 @@ export default async function VeiculosPage({
                       <>
                         <Link
                           href={`/veiculos/${l.id}/editar`}
-                          className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                          className="block w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
                         >
                           Editar
                         </Link>
                         <ExcluirSolicitacaoButton
+                          variant="menu"
                           action={excluirLocacao.bind(null, l.id)}
                           mensagemConfirmacao={`Tem certeza que deseja excluir a solicitação ${l.numero}/${l.ano}? Essa ação não pode ser desfeita.`}
                         />
                       </>
                     )}
-                  </div>
+                  </MenuAcoes>
                 </td>
               </tr>
             ))}

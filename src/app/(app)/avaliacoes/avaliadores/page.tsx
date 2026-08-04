@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { alternarAtivoAvaliador } from "../actions";
+import { MenuAcoes } from "@/components/menu-acoes";
 
 export default async function AvaliadoresPage({
   searchParams,
@@ -65,22 +66,22 @@ export default async function AvaliadoresPage({
                   {avaliador.ativo ? "Ativo" : "Inativo"}
                 </td>
                 <td className="px-4 py-2">
-                  <div className="flex flex-wrap items-center gap-2">
+                  <MenuAcoes>
                     <Link
                       href={`/avaliacoes/avaliadores/${avaliador.id}/editar`}
-                      className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                      className="block w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
                     >
                       Editar
                     </Link>
                     <form action={alternarAtivoAvaliador.bind(null, avaliador.id, avaliador.ativo)}>
                       <button
                         type="submit"
-                        className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                        className="block w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
                       >
                         {avaliador.ativo ? "Inativar" : "Ativar"}
                       </button>
                     </form>
-                  </div>
+                  </MenuAcoes>
                 </td>
               </tr>
             ))}
