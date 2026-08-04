@@ -1,32 +1,71 @@
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { AppShell } from "./app-shell";
+import type { Papel } from "@/lib/supabase/database.types";
 
-const NAV_ITEMS = [
+type NavLeaf = {
+  href: string;
+  label: string;
+  // Se definido, só esses papéis veem o item — senão, todo autenticado vê.
+  apenas?: Papel[];
+  // Papéis pra quem esse item específico fica escondido (usado no lugar
+  // de "apenas" quando é mais fácil listar exceção do que lista fechada).
+  oculto?: Papel[];
+};
+type NavGroup = { label: string; items: NavLeaf[] };
+export type NavEntry = NavLeaf | NavGroup;
+
+const NAV_ESTRUTURA: NavEntry[] = [
   { href: "/dashboard", label: "Painel" },
-  { href: "/diarias", label: "Diárias de Viagem" },
-  { href: "/requerimentos-internos", label: "Requerimentos Internos" },
-  { href: "/requerimentos", label: "Reembolso" },
-  { href: "/veiculos", label: "Veículos" },
-  { href: "/decretos", label: "Decretos" },
-  { href: "/pessoas", label: "Pessoas" },
-  { href: "/avaliacoes", label: "Avaliações" },
+  {
+    label: "Diárias e Reembolsos",
+    items: [
+      { href: "/diarias", label: "Diárias" },
+      { href: "/diarias?prestacao=pendente", label: "Prestações de Contas" },
+      { href: "/requerimentos", label: "Reembolsos" },
+      { href: "/veiculos", label: "Veículos", oculto: ["servidor"] },
+    ],
+  },
+  {
+    label: "Secretaria",
+    items: [{ href: "/decretos", label: "Decretos" }],
+  },
+  {
+    label: "Recursos Humanos",
+    items: [
+      { href: "/requerimentos-internos", label: "Requerimentos Internos" },
+      { href: "/avaliacoes", label: "Avaliações", oculto: ["servidor", "gestor_diarias"] },
+    ],
+  },
+  {
+    label: "Configurações",
+    items: [
+      { href: "/pessoas", label: "Pessoas", oculto: ["servidor", "gestor_diarias"] },
+      { href: "/usuarios", label: "Usuários", apenas: ["admin"] },
+    ],
+  },
+  { href: "/auditoria", label: "Auditoria", apenas: ["admin"] },
 ];
 
-const NAV_ITEMS_ADMIN = [
-  { href: "/usuarios", label: "Usuários" },
-  { href: "/auditoria", label: "Auditoria" },
-];
+function podeVer(item: NavLeaf, papel: Papel | undefined) {
+  if (item.apenas) return Boolean(papel && item.apenas.includes(papel));
+  if (item.oculto) return !papel || !item.oculto.includes(papel);
+  return true;
+}
 
-// Abas que servidor não precisa ver — não são do dia a dia dele
-// (gestão de pessoas, avaliações e veículos são operadas por
-// ordenador da despesa/admin/gestor de diárias).
-const HREFS_OCULTOS_SERVIDOR = ["/pessoas", "/avaliacoes", "/veiculos"];
-
-// Gestor de Diárias é um servidor comum "elevado" só em Diárias,
-// Reembolso e Veículos — por isso continua sem ver Pessoas/Avaliações,
-// mas Veículos (que é justamente um dos 3 módulos elevados) não entra
-// na lista de ocultos dele.
-const HREFS_OCULTOS_GESTOR_DIARIAS = ["/pessoas", "/avaliacoes"];
+// Filtra cada item (folha ou dentro de grupo) pelo papel do usuário — e
+// remove grupos que ficaram sem nenhum item visível.
+function filtrarNav(estrutura: NavEntry[], papel: Papel | undefined): NavEntry[] {
+  const resultado: NavEntry[] = [];
+  for (const item of estrutura) {
+    if ("items" in item) {
+      const visiveis = item.items.filter((sub) => podeVer(sub, papel));
+      if (visiveis.length > 0) resultado.push({ label: item.label, items: visiveis });
+    } else if (podeVer(item, papel)) {
+      resultado.push(item);
+    }
+  }
+  return resultado;
+}
 
 export default async function AppLayout({
   children,
@@ -34,14 +73,7 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   const usuario = await getCurrentUsuario();
-  const hrefsOcultos =
-    usuario?.papel === "servidor"
-      ? HREFS_OCULTOS_SERVIDOR
-      : usuario?.papel === "gestor_diarias"
-        ? HREFS_OCULTOS_GESTOR_DIARIAS
-        : [];
-  const itensBase = NAV_ITEMS.filter((item) => !hrefsOcultos.includes(item.href));
-  const navItems = [...itensBase, ...(usuario?.papel === "admin" ? NAV_ITEMS_ADMIN : [])];
+  const navItems = filtrarNav(NAV_ESTRUTURA, usuario?.papel);
 
   return (
     <AppShell usuario={usuario} navItems={navItems}>

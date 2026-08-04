@@ -6,23 +6,107 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { LogoutButton } from "@/components/logout-button";
 import { BotaoSuporteWhatsapp } from "@/components/botao-suporte-whatsapp";
+import type { NavEntry } from "./layout";
 
-type NavItem = { href: string; label: string };
 type Usuario = { nome: string; papel: string } | null;
+
+function ehGrupo(item: NavEntry): item is Extract<NavEntry, { items: unknown[] }> {
+  return "items" in item;
+}
+
+// Compara só o caminho, ignorando querystring — "/diarias?prestacao=..."
+// e "/diarias" contam como o mesmo caminho pra fins de destaque do menu.
+function ativoPara(href: string, pathname: string) {
+  const caminho = href.split("?")[0];
+  return pathname === caminho || pathname.startsWith(`${caminho}/`);
+}
 
 function NavLinks({
   items,
   pathname,
   onNavigate,
 }: {
-  items: NavItem[];
+  items: NavEntry[];
   pathname: string;
   onNavigate?: () => void;
 }) {
+  const [gruposAbertos, setGruposAbertos] = useState<Set<string>>(() => {
+    const abertos = new Set<string>();
+    for (const item of items) {
+      if (ehGrupo(item) && item.items.some((sub) => ativoPara(sub.href, pathname))) {
+        abertos.add(item.label);
+      }
+    }
+    return abertos;
+  });
+
+  function alternarGrupo(label: string) {
+    setGruposAbertos((prev) => {
+      const novo = new Set(prev);
+      if (novo.has(label)) novo.delete(label);
+      else novo.add(label);
+      return novo;
+    });
+  }
+
   return (
     <nav className="flex flex-1 flex-col gap-1 px-3">
       {items.map((item) => {
-        const ativo = pathname === item.href || pathname.startsWith(`${item.href}/`);
+        if (ehGrupo(item)) {
+          const aberto = gruposAbertos.has(item.label);
+          const grupoAtivo = item.items.some((sub) => ativoPara(sub.href, pathname));
+          return (
+            <div key={item.label}>
+              <button
+                type="button"
+                onClick={() => alternarGrupo(item.label)}
+                className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                  grupoAtivo ? "text-white" : "text-white/70 hover:text-white"
+                }`}
+              >
+                {item.label}
+                <svg
+                  width="10"
+                  height="10"
+                  viewBox="0 0 12 12"
+                  fill="none"
+                  className={`shrink-0 transition-transform ${aberto ? "rotate-180" : ""}`}
+                >
+                  <path
+                    d="M2 4l4 4 4-4"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+              {aberto && (
+                <div className="mt-1 ml-2 flex flex-col gap-1 border-l border-white/10 pl-3">
+                  {item.items.map((sub) => {
+                    const ativo = ativoPara(sub.href, pathname);
+                    return (
+                      <Link
+                        key={sub.href}
+                        href={sub.href}
+                        onClick={onNavigate}
+                        className={`rounded-md px-3 py-1.5 text-sm transition-colors ${
+                          ativo
+                            ? "bg-white/15 font-medium text-white"
+                            : "text-white/60 hover:bg-white/10 hover:text-white"
+                        }`}
+                      >
+                        {sub.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        const ativo = ativoPara(item.href, pathname);
         return (
           <Link
             key={item.href}
@@ -74,7 +158,7 @@ export function AppShell({
   children,
 }: {
   usuario: Usuario;
-  navItems: NavItem[];
+  navItems: NavEntry[];
   children: React.ReactNode;
 }) {
   const [aberto, setAberto] = useState(false);
@@ -83,7 +167,7 @@ export function AppShell({
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Sidebar fixa (telas grandes) */}
-      <aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:w-64 lg:flex-col lg:bg-brand-navy">
+      <aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:w-64 lg:flex-col lg:overflow-y-auto lg:bg-brand-navy">
         <div className="m-4 rounded-lg bg-white p-3">
           <Logo />
         </div>
@@ -111,7 +195,7 @@ export function AppShell({
       {aberto && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="fixed inset-0 bg-black/40" onClick={() => setAberto(false)} />
-          <aside className="fixed inset-y-0 left-0 flex w-64 flex-col bg-brand-navy shadow-xl">
+          <aside className="fixed inset-y-0 left-0 flex w-64 flex-col overflow-y-auto bg-brand-navy shadow-xl">
             <div className="m-4 flex items-center justify-between">
               <div className="rounded-lg bg-white p-3">
                 <Logo />
