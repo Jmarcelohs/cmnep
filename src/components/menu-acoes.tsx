@@ -86,7 +86,15 @@ export function MenuAcoes({ children }: { children: React.ReactNode }) {
         createPortal(
           <div
             ref={painelRef}
-            onClick={() => setAberto(false)}
+            onClick={() => {
+              // Fecha depois do clique atual terminar de ser processado —
+              // não na hora. Um botão type="submit" só dispara o envio do
+              // formulário DEPOIS da fase de bubble do evento de clique;
+              // fechar o menu na hora (setAberto direto) desmonta o
+              // formulário do DOM antes desse envio acontecer, e o clique
+              // em Autorizar/Excluir/etc. simplesmente não fazia nada.
+              setTimeout(() => setAberto(false), 0);
+            }}
             style={{ top: posicao.top, left: posicao.left }}
             className="fixed z-50 w-48 overflow-hidden rounded-md border border-slate-200 bg-white py-1 text-left shadow-lg"
           >
