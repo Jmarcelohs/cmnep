@@ -6,7 +6,12 @@ import { TIPO_LABEL } from "@/lib/requerimentos-internos/assuntos";
 import { DownloadPdfButton } from "@/components/download-pdf-button";
 import { ExcluirSolicitacaoButton } from "@/components/excluir-solicitacao-button";
 import { MenuAcoes } from "@/components/menu-acoes";
-import { excluirRequerimentoInterno } from "./actions";
+import {
+  autorizarRequerimentoInterno,
+  excluirRequerimentoInterno,
+  marcarEmAnaliseRequerimentoInterno,
+  naoAutorizarRequerimentoInterno,
+} from "./actions";
 import type { StatusRequerimentoInterno, TipoRequerimentoInterno } from "@/lib/supabase/database.types";
 
 const STATUS_LABEL: Record<StatusRequerimentoInterno, string> = {
@@ -167,6 +172,8 @@ export default async function RequerimentosInternosPage({
                 podeGerenciarSempre || (r.pessoa_id && minhaPessoa?.id === r.pessoa_id);
               const podeEditar = podeGerenciar && r.status === "pendente";
               const podeExcluir = podeGerenciar;
+              const podeDecidir =
+                podeGerenciarSempre && r.status !== "deferido" && r.status !== "indeferido";
               return (
                 <tr key={r.id} className="hover:bg-slate-50">
                   <td className="px-4 py-2">
@@ -206,6 +213,36 @@ export default async function RequerimentosInternosPage({
                         url={`/api/requerimentos-internos/${r.id}/pdf`}
                         nomeArquivoPadrao={`requerimento-${r.numero}-${r.ano}.pdf`}
                       />
+                      {podeDecidir && (
+                        <>
+                          <form action={autorizarRequerimentoInterno.bind(null, r.id)}>
+                            <button
+                              type="submit"
+                              className="block w-full px-3 py-2 text-left text-sm text-emerald-700 hover:bg-emerald-50"
+                            >
+                              Autorizar
+                            </button>
+                          </form>
+                          <form action={naoAutorizarRequerimentoInterno.bind(null, r.id)}>
+                            <button
+                              type="submit"
+                              className="block w-full px-3 py-2 text-left text-sm text-red-700 hover:bg-red-50"
+                            >
+                              Não autorizar
+                            </button>
+                          </form>
+                          {r.status !== "analise" && (
+                            <form action={marcarEmAnaliseRequerimentoInterno.bind(null, r.id)}>
+                              <button
+                                type="submit"
+                                className="block w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+                              >
+                                Marcar em análise
+                              </button>
+                            </form>
+                          )}
+                        </>
+                      )}
                       {podeExcluir && (
                         <ExcluirSolicitacaoButton
                           variant="menu"
