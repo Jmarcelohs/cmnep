@@ -24,19 +24,15 @@ export default async function NovoUsuarioPage({
     <div>
       <h1 className="text-xl font-semibold text-brand-navy">Novo usuário</h1>
       <p className="mt-1 text-sm text-slate-500">
-        Cria o login (Supabase Auth) e o vínculo de papel em um só passo.
+        Cria o login (Supabase Auth) e o vínculo de papel em um só passo. Um e-mail de convite é
+        enviado pro endereço informado, com um link pra pessoa escolher a própria senha.
       </p>
 
       {errorMsg && (
         <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{errorMsg}</p>
       )}
 
-      <UsuarioForm
-        action={criarUsuario}
-        pessoas={pessoas ?? []}
-        submitLabel="Criar usuário"
-        pedirSenha
-      />
+      <UsuarioForm action={criarUsuario} pessoas={pessoas ?? []} submitLabel="Criar usuário" />
     </div>
   );
 }

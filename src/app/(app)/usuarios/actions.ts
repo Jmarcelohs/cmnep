@@ -1,5 +1,6 @@
 "use server";
 
+import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -31,29 +32,32 @@ export async function criarUsuario(formData: FormData) {
 
   const nome = String(formData.get("nome") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
-  const senha = String(formData.get("senha") ?? "");
   const papel = String(formData.get("papel") ?? "") as Papel;
   const pessoa_id = String(formData.get("pessoa_id") ?? "") || null;
 
-  if (!nome || !email || !senha || !papel) {
-    redirect(`/usuarios/novo?error=${encodeURIComponent("Preencha nome, e-mail, senha e papel")}`);
+  if (!nome || !email || !papel) {
+    redirect(`/usuarios/novo?error=${encodeURIComponent("Preencha nome, e-mail e papel")}`);
   }
-  if (senha.length < 6) {
-    redirect(`/usuarios/novo?error=${encodeURIComponent("A senha precisa ter ao menos 6 caracteres")}`);
-  }
+
+  // Convite por e-mail (não senha provisória definida na hora): o Supabase
+  // manda um e-mail com link de acesso, a pessoa cai em /redefinir-senha já
+  // autenticada pra escolher a própria senha — mesmo destino usado pelo
+  // fluxo de "esqueci minha senha" (ver src/app/esqueci-senha/actions.ts).
+  const h = await headers();
+  const proto = h.get("x-forwarded-proto") ?? "http";
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  const origem = `${proto}://${host}`;
 
   const admin = createAdminClient();
 
-  const { data: authData, error: authError } = await admin.auth.admin.createUser({
-    email,
-    password: senha,
-    email_confirm: true,
+  const { data: authData, error: authError } = await admin.auth.admin.inviteUserByEmail(email, {
+    redirectTo: `${origem}/auth/callback?next=/redefinir-senha`,
   });
 
   if (authError || !authData.user) {
     const mensagem = authError?.message.includes("already been registered")
       ? "Já existe um usuário com esse e-mail."
-      : (authError?.message ?? "Erro ao criar o login");
+      : (authError?.message ?? "Erro ao enviar o convite por e-mail");
     redirect(`/usuarios/novo?error=${encodeURIComponent(mensagem)}`);
   }
 
