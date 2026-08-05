@@ -14,9 +14,17 @@ export type LinhaRankingSolicitante = {
   numeroSolicitacao: string | null;
 };
 
-// Ranking de diárias por solicitante, ordenado pela solicitação mais
-// recente de cada um (não pelo total) — reaproveitado pelo Painel e pela
-// exportação em CSV/PDF, pra não duplicar a mesma agregação em dois lugares.
+// Maior nº de diária primeiro; quem não tem número (null/inválido) vai
+// pro fim da lista em vez de embolar com os números reais.
+function numeroOuMinimo(valor: string | null) {
+  const n = Number(valor);
+  return valor && !Number.isNaN(n) ? n : -Infinity;
+}
+
+// Ranking de diárias por solicitante, ordenado pelo nº da diária mais
+// recente de cada um em ordem decrescente (não pelo total) — reaproveitado
+// pelo Painel e pela exportação em CSV/PDF, pra não duplicar a mesma
+// agregação em dois lugares.
 export async function calcularRankingSolicitantes(
   supabase: SupabaseClient<Database>,
 ): Promise<LinhaRankingSolicitante[]> {
@@ -50,9 +58,7 @@ export async function calcularRankingSolicitantes(
     porSolicitante.set(nome, atual);
   }
 
-  return Array.from(porSolicitante.values()).sort((a, b) => {
-    const dataA = a.ultimaSolicitacao ?? "";
-    const dataB = b.ultimaSolicitacao ?? "";
-    return dataB.localeCompare(dataA);
-  });
+  return Array.from(porSolicitante.values()).sort(
+    (a, b) => numeroOuMinimo(b.numeroDiaria) - numeroOuMinimo(a.numeroDiaria),
+  );
 }
