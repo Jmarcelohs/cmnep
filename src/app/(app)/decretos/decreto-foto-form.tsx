@@ -3,8 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { validarArquivos } from "@/lib/uploads/validacao";
 
 const BUCKET = "decretos-fotos";
+const TIPOS_ACEITOS_LISTA = ["image/jpeg", "image/png", "image/webp"];
+const LIMITE_BYTES = 5 * 1024 * 1024;
 
 export function DecretoFotoForm({
   decretoId,
@@ -21,6 +24,16 @@ export function DecretoFotoForm({
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const arquivo = e.target.files?.[0];
     if (!arquivo) return;
+
+    const erroValidacao = validarArquivos([arquivo], {
+      limiteBytes: LIMITE_BYTES,
+      tiposAceitos: TIPOS_ACEITOS_LISTA,
+    });
+    if (erroValidacao) {
+      setErro(erroValidacao);
+      e.target.value = "";
+      return;
+    }
 
     setEnviando(true);
     setErro(null);
@@ -87,7 +100,7 @@ export function DecretoFotoForm({
         <input
           id="decreto-foto"
           type="file"
-          accept="image/jpeg,image/png,image/webp"
+          accept={TIPOS_ACEITOS_LISTA.join(",")}
           onChange={handleUpload}
           disabled={enviando}
           className="text-sm text-slate-600"

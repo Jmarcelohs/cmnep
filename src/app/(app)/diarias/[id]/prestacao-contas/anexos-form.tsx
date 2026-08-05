@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { validarArquivos } from "@/lib/uploads/validacao";
 
 type Anexo = {
   id: string;
@@ -11,7 +12,9 @@ type Anexo = {
   caminho: string;
 };
 
-const TIPOS_ACEITOS = "image/jpeg,image/png,image/webp,application/pdf";
+const TIPOS_ACEITOS_LISTA = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+const TIPOS_ACEITOS = TIPOS_ACEITOS_LISTA.join(",");
+const LIMITE_BYTES = 10 * 1024 * 1024;
 
 export function AnexosForm({
   prestacaoId,
@@ -29,6 +32,16 @@ export function AnexosForm({
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const arquivos = e.target.files;
     if (!arquivos || arquivos.length === 0) return;
+
+    const erroValidacao = validarArquivos(Array.from(arquivos), {
+      limiteBytes: LIMITE_BYTES,
+      tiposAceitos: TIPOS_ACEITOS_LISTA,
+    });
+    if (erroValidacao) {
+      setErro(erroValidacao);
+      e.target.value = "";
+      return;
+    }
 
     setEnviando(true);
     setErro(null);
