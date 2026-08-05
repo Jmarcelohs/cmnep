@@ -19,12 +19,14 @@ export default async function NovoOficioPage({
     redirect("/oficios");
 
   const supabase = await createClient();
-  const { data: vereadores } = await supabase
-    .from("pessoas")
-    .select("nome")
-    .eq("categoria", "Vereador")
-    .eq("ativo", true)
-    .order("nome");
+  const [{ data: vereadores }, { data: autoridades }] = await Promise.all([
+    supabase.from("pessoas").select("nome").eq("categoria", "Vereador").eq("ativo", true).order("nome"),
+    supabase
+      .from("autoridades")
+      .select("tratamento, nome, cargo, cidade_uf")
+      .eq("ativo", true)
+      .order("nome"),
+  ]);
 
   return (
     <div>
@@ -37,7 +39,11 @@ export default async function NovoOficioPage({
         <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
       )}
 
-      <OficioForm action={criarOficio} nomesVereadores={(vereadores ?? []).map((v) => v.nome)} />
+      <OficioForm
+        action={criarOficio}
+        nomesVereadores={(vereadores ?? []).map((v) => v.nome)}
+        autoridades={autoridades ?? []}
+      />
     </div>
   );
 }

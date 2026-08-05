@@ -37,15 +37,24 @@ export type ValoresIniciaisOficio = {
 
 const TIPOS: TipoOficio[] = ["padrao", "indicacao", "requerimento", "convite"];
 
+export type AutoridadeQuickPick = {
+  tratamento: TratamentoOficio;
+  nome: string;
+  cargo: string;
+  cidade_uf: string | null;
+};
+
 export function OficioForm({
   action,
   valoresIniciais,
   nomesVereadores,
+  autoridades = [],
   submitLabel = "Salvar ofício",
 }: {
   action: (formData: FormData) => void;
   valoresIniciais?: ValoresIniciaisOficio;
   nomesVereadores: string[];
+  autoridades?: AutoridadeQuickPick[];
   submitLabel?: string;
 }) {
   const [tipo, setTipo] = useState<TipoOficio>(valoresIniciais?.tipo ?? "padrao");
@@ -156,6 +165,39 @@ export function OficioForm({
 
       <div className="rounded-lg border border-slate-200 p-4">
         <p className="text-sm font-semibold text-slate-700">Destinatário</p>
+
+        {autoridades.length > 0 && (
+          <div className="mt-3">
+            <label htmlFor="autoridade_rapida" className="block text-sm font-medium text-slate-700">
+              Preencher com autoridade cadastrada
+            </label>
+            <select
+              id="autoridade_rapida"
+              defaultValue=""
+              onChange={(e) => {
+                const autoridade = autoridades[Number(e.target.value)];
+                if (!autoridade) return;
+                setTratamento(autoridade.tratamento);
+                setDestinatarioNome(autoridade.nome);
+                setDestinatarioCargo(autoridade.cargo);
+                setDestinatarioCidadeUf(autoridade.cidade_uf ?? "");
+                setSaudacaoTocada(false);
+                e.target.value = "";
+              }}
+              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            >
+              <option value="" disabled>
+                Selecione…
+              </option>
+              {autoridades.map((a, i) => (
+                <option key={`${a.nome}-${a.cargo}`} value={i}>
+                  {a.nome} — {a.cargo}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="destinatario_tratamento" className="block text-sm font-medium text-slate-700">

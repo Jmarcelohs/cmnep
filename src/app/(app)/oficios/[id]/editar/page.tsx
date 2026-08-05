@@ -17,9 +17,14 @@ export default async function EditarOficioPage({
   if (usuario?.papel !== "admin" && usuario?.papel !== "ordenador_despesa") redirect("/oficios");
 
   const supabase = await createClient();
-  const [{ data: oficio }, { data: vereadores }] = await Promise.all([
+  const [{ data: oficio }, { data: vereadores }, { data: autoridades }] = await Promise.all([
     supabase.from("oficios").select("*").eq("id", id).single(),
     supabase.from("pessoas").select("nome").eq("categoria", "Vereador").eq("ativo", true).order("nome"),
+    supabase
+      .from("autoridades")
+      .select("tratamento, nome, cargo, cidade_uf")
+      .eq("ativo", true)
+      .order("nome"),
   ]);
 
   if (!oficio) notFound();
@@ -38,6 +43,7 @@ export default async function EditarOficioPage({
         action={editarOficio.bind(null, id)}
         submitLabel="Salvar alterações"
         nomesVereadores={(vereadores ?? []).map((v) => v.nome)}
+        autoridades={autoridades ?? []}
         valoresIniciais={{
           tipo: oficio.tipo,
           numero: oficio.numero,

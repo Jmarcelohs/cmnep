@@ -41,6 +41,7 @@ export const NAV_ESTRUTURA: NavEntry[] = [
     label: "Configurações",
     items: [
       { href: "/pessoas", label: "Pessoas", oculto: ["servidor", "gestor_diarias"] },
+      { href: "/autoridades", label: "Autoridades", oculto: ["servidor", "gestor_diarias"] },
       { href: "/usuarios", label: "Usuários", apenas: ["admin"] },
     ],
   },

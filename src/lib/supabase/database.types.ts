@@ -725,6 +725,23 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["oficios"]["Row"]>;
         Relationships: [];
       };
+      autoridades: {
+        Row: {
+          id: string;
+          tratamento: TratamentoOficio;
+          nome: string;
+          cargo: string;
+          cidade_uf: string | null;
+          ativo: boolean;
+          criado_em: string;
+        };
+        Insert: Partial<Omit<Database["public"]["Tables"]["autoridades"]["Row"], "id">> & {
+          nome: string;
+          cargo: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["autoridades"]["Row"]>;
+        Relationships: [];
+      };
       auditoria: {
         Row: {
           id: string;
