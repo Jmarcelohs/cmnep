@@ -39,6 +39,12 @@ export type DecisaoRequerimentoReembolso = "autorizado" | "nao_autorizado";
 
 export type TipoRequerimentoInterno = "rh" | "presidente" | "geral";
 
+export type TipoOficio = "padrao" | "indicacao" | "requerimento" | "convite";
+
+export type TratamentoOficio = "Excelentíssimo Senhor" | "Excelentíssima Senhora";
+
+export type GeneroVereador = "Vereador" | "Vereadora";
+
 export type StatusRequerimentoInterno = "pendente" | "analise" | "deferido" | "indeferido";
 
 export type DecisaoRequerimentoInterno = "autorizado" | "nao_autorizado";
@@ -680,6 +686,42 @@ export interface Database {
           autor_nome: string;
         };
         Update: Partial<Database["public"]["Tables"]["decretos_titulo_honorario"]["Row"]>;
+        Relationships: [];
+      };
+      oficios: {
+        Row: {
+          id: string;
+          tipo: TipoOficio;
+          numero: string;
+          ano: number;
+          data_oficio: string;
+          destinatario_tratamento: TratamentoOficio;
+          destinatario_nome: string;
+          destinatario_cargo: string;
+          destinatario_cidade_uf: string | null;
+          saudacao: string;
+          assunto: string;
+          autor_nome: string | null;
+          autor_genero: GeneroVereador | null;
+          autor_associado_nome: string | null;
+          autor_associado_genero: GeneroVereador | null;
+          corpo_texto: string;
+          evento_data: string | null;
+          evento_hora: string | null;
+          evento_local: string | null;
+          paragrafo_fechamento: string;
+          criado_por: string | null;
+          criado_em: string;
+        };
+        Insert: Partial<Omit<Database["public"]["Tables"]["oficios"]["Row"], "id">> & {
+          tipo: TipoOficio;
+          numero: string;
+          ano: number;
+          destinatario_nome: string;
+          destinatario_cargo: string;
+          assunto: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["oficios"]["Row"]>;
         Relationships: [];
       };
       auditoria: {

@@ -2,6 +2,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { formatarData } from "@/lib/pdf/formato";
+import { TIPO_OFICIO_LABEL } from "@/lib/oficios/documento";
+import type { TipoOficio } from "@/lib/supabase/database.types";
 import { DownloadPdfButton } from "@/components/download-pdf-button";
 import { ExcluirSolicitacaoButton } from "@/components/excluir-solicitacao-button";
 import { MenuAcoes } from "@/components/menu-acoes";
@@ -9,45 +11,43 @@ import { CampoBusca } from "@/components/campo-busca";
 import { Paginacao } from "@/components/paginacao";
 import { construirFiltroBusca } from "@/lib/busca";
 import { calcularPagina, totalDePaginas } from "@/lib/paginacao";
-import { excluirDecretoTituloHonorario } from "./actions";
+import { excluirOficio } from "./actions";
 
-export default async function DecretosPage({
+export default async function OficiosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ano?: string; busca?: string; pagina?: string; error?: string }>;
+  searchParams: Promise<{ ano?: string; tipo?: string; busca?: string; pagina?: string; error?: string }>;
 }) {
-  const { ano, busca, pagina: paginaStr, error: errorMsg } = await searchParams;
+  const { ano, tipo, busca, pagina: paginaStr, error: errorMsg } = await searchParams;
   const usuario = await getCurrentUsuario();
   const podeGerenciar = usuario?.papel === "admin" || usuario?.papel === "ordenador_despesa";
-  // Criação é liberada pra qualquer servidor — edição/exclusão continuam
-  // restritas a admin/ordenador da despesa (podeGerenciar).
   const podeCriar = podeGerenciar || usuario?.papel === "servidor";
 
   const supabase = await createClient();
   const { pagina, de, ate } = calcularPagina(paginaStr);
 
   let query = supabase
-    .from("decretos_titulo_honorario")
-    .select("id, numero, ano, data_decreto, nome_homenageado, autor_nome, autor_partido", {
-      count: "exact",
-    })
+    .from("oficios")
+    .select("id, tipo, numero, ano, data_oficio, destinatario_nome, assunto", { count: "exact" })
     .order("ano", { ascending: false })
     .order("numero", { ascending: false })
     .range(de, ate);
 
   if (ano) query = query.eq("ano", Number(ano));
-  if (busca) query = query.or(construirFiltroBusca(busca, ["nome_homenageado", "autor_nome"]));
+  if (tipo) query = query.eq("tipo", tipo as TipoOficio);
+  if (busca) query = query.or(construirFiltroBusca(busca, ["destinatario_nome", "assunto"]));
 
-  const { data: decretos, error, count } = await query;
+  const { data: oficios, error, count } = await query;
 
   const { data: todosAnos } = await supabase
-    .from("decretos_titulo_honorario")
+    .from("oficios")
     .select("ano")
     .order("ano", { ascending: false });
   const anosDisponiveis = Array.from(new Set((todosAnos ?? []).map((a) => a.ano)));
 
   const paramsBase = new URLSearchParams({
     ...(ano ? { ano } : {}),
+    ...(tipo ? { tipo } : {}),
     ...(busca ? { busca } : {}),
   });
 
@@ -55,23 +55,39 @@ export default async function DecretosPage({
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-brand-navy">Decretos — Título de Cidadão Honorário</h1>
+          <h1 className="text-xl font-semibold text-brand-navy">Ofícios</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Redação padronizada dos projetos de decreto legislativo de título de cidadão honorário.
+            Ofícios, indicações, requerimentos e convites da Câmara, no timbrado oficial.
           </p>
         </div>
         {podeCriar && (
           <Link
-            href="/decretos/novo"
+            href="/oficios/novo"
             className="rounded-md bg-brand-navy px-3 py-2 text-sm font-medium text-white hover:bg-brand-navy-light"
           >
-            Novo decreto
+            Novo ofício
           </Link>
         )}
       </div>
 
-      <form className="mt-4 flex flex-wrap items-end gap-3 text-sm" action="/decretos">
-        <CampoBusca defaultValue={busca} placeholder="Homenageado ou autor" />
+      <form className="mt-4 flex flex-wrap items-end gap-3 text-sm" action="/oficios">
+        <CampoBusca defaultValue={busca} placeholder="Destinatário ou assunto" />
+        <div>
+          <label htmlFor="filtro-tipo" className="block text-xs font-medium text-slate-500">Tipo</label>
+          <select
+            id="filtro-tipo"
+            name="tipo"
+            defaultValue={tipo ?? ""}
+            className="mt-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+          >
+            <option value="">Todos</option>
+            {Object.entries(TIPO_OFICIO_LABEL).map(([valor, label]) => (
+              <option key={valor} value={valor}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
         <div>
           <label htmlFor="filtro-ano" className="block text-xs font-medium text-slate-500">Ano</label>
           <select
@@ -98,7 +114,7 @@ export default async function DecretosPage({
 
       {error && (
         <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-          Erro ao carregar decretos: {error.message}
+          Erro ao carregar ofícios: {error.message}
         </p>
       )}
       {errorMsg && (
@@ -110,43 +126,42 @@ export default async function DecretosPage({
           <thead className="bg-brand-navy/5">
             <tr>
               <th className="px-4 py-2 text-left font-medium text-slate-600">Nº</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Tipo</th>
               <th className="px-4 py-2 text-left font-medium text-slate-600">Data</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-600">Homenageado</th>
-              <th className="px-4 py-2 text-left font-medium text-slate-600">Autor</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Destinatário</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Assunto</th>
               <th className="px-4 py-2 text-left font-medium text-slate-600">Ações</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {decretos?.map((d) => (
-              <tr key={d.id} className="hover:bg-slate-50">
+            {oficios?.map((o) => (
+              <tr key={o.id} className="hover:bg-slate-50">
                 <td className="px-4 py-2 text-slate-900">
-                  {d.numero}/{d.ano}
+                  {o.numero}/{o.ano}
                 </td>
-                <td className="px-4 py-2 text-slate-700">{formatarData(d.data_decreto)}</td>
-                <td className="px-4 py-2 text-slate-700">{d.nome_homenageado}</td>
-                <td className="px-4 py-2 text-slate-700">
-                  {d.autor_nome}
-                  {d.autor_partido && ` – ${d.autor_partido}`}
-                </td>
+                <td className="px-4 py-2 text-slate-700">{TIPO_OFICIO_LABEL[o.tipo]}</td>
+                <td className="px-4 py-2 text-slate-700">{formatarData(o.data_oficio)}</td>
+                <td className="px-4 py-2 text-slate-700">{o.destinatario_nome}</td>
+                <td className="px-4 py-2 max-w-xs truncate text-slate-700">{o.assunto}</td>
                 <td className="px-4 py-2">
                   <MenuAcoes>
                     <DownloadPdfButton
                       variant="menu"
-                      url={`/api/decretos/${d.id}/pdf`}
-                      nomeArquivoPadrao={`decreto-titulo-honorario-${d.numero}-${d.ano}.pdf`}
+                      url={`/api/oficios/${o.id}/pdf`}
+                      nomeArquivoPadrao={`oficio-${o.numero}-${o.ano}.pdf`}
                     />
                     {podeGerenciar && (
                       <>
                         <Link
-                          href={`/decretos/${d.id}/editar`}
+                          href={`/oficios/${o.id}/editar`}
                           className="block w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
                         >
                           Editar
                         </Link>
                         <ExcluirSolicitacaoButton
                           variant="menu"
-                          action={excluirDecretoTituloHonorario.bind(null, d.id)}
-                          mensagemConfirmacao={`Tem certeza que deseja excluir o decreto ${d.numero}/${d.ano} (${d.nome_homenageado})? Essa ação não pode ser desfeita.`}
+                          action={excluirOficio.bind(null, o.id)}
+                          mensagemConfirmacao={`Tem certeza que deseja excluir o ofício ${o.numero}/${o.ano} (${o.destinatario_nome})? Essa ação não pode ser desfeita.`}
                         />
                       </>
                     )}
@@ -154,10 +169,10 @@ export default async function DecretosPage({
                 </td>
               </tr>
             ))}
-            {decretos?.length === 0 && (
+            {oficios?.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-slate-400">
-                  Nenhum decreto encontrado.
+                <td colSpan={6} className="px-4 py-6 text-center text-slate-400">
+                  Nenhum ofício encontrado.
                 </td>
               </tr>
             )}
@@ -169,7 +184,7 @@ export default async function DecretosPage({
         pagina={pagina}
         totalPaginas={totalDePaginas(count)}
         count={count}
-        baseHref="/decretos"
+        baseHref="/oficios"
         paramsBase={paramsBase}
       />
     </div>

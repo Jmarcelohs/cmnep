@@ -10,7 +10,12 @@ export default async function NovoDecretoPage({
 }) {
   const { error } = await searchParams;
   const usuario = await getCurrentUsuario();
-  if (usuario?.papel !== "admin" && usuario?.papel !== "ordenador_despesa") redirect("/decretos");
+  if (
+    usuario?.papel !== "admin" &&
+    usuario?.papel !== "ordenador_despesa" &&
+    usuario?.papel !== "servidor"
+  )
+    redirect("/decretos");
 
   return (
     <div>

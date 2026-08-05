@@ -16,6 +16,20 @@ async function exigirOrdenadorOuAdmin(redirectPath: string) {
   return usuario;
 }
 
+// Criação é liberada pra qualquer servidor — só edição/exclusão continuam
+// restritas a admin/ordenador da despesa.
+async function exigirPodeCriarDecreto(redirectPath: string) {
+  const usuario = await getCurrentUsuario();
+  if (
+    usuario?.papel !== "admin" &&
+    usuario?.papel !== "ordenador_despesa" &&
+    usuario?.papel !== "servidor"
+  ) {
+    redirect(redirectPath);
+  }
+  return usuario;
+}
+
 function lerCampos(formData: FormData) {
   const numeroManual = String(formData.get("numero") ?? "").trim();
   const data_decreto = String(formData.get("data_decreto") ?? "");
@@ -40,7 +54,7 @@ function lerCampos(formData: FormData) {
 }
 
 export async function criarDecretoTituloHonorario(formData: FormData) {
-  const usuario = await exigirOrdenadorOuAdmin("/decretos");
+  const usuario = await exigirPodeCriarDecreto("/decretos");
 
   const campos = lerCampos(formData);
 
@@ -59,12 +73,17 @@ export async function criarDecretoTituloHonorario(formData: FormData) {
     // numeração real de "Projeto de Decreto" é compartilhada com outros
     // assuntos fora desta ferramenta, então isso é só um ponto de partida
     // — quem redige confirma/ajusta antes de salvar.
+    //
+    // A numeração real da Câmara para decretos começa em 313 — o
+    // Math.max garante que a sugestão nunca fica abaixo disso, mesmo que
+    // exista algum registro de teste com número baixo na tabela.
     const { data: doAno } = await supabase
       .from("decretos_titulo_honorario")
       .select("numero")
       .eq("ano", ano);
 
-    numero = String(proximoNumero((doAno ?? []).map((r) => r.numero)));
+    const proximo = Math.max(proximoNumero((doAno ?? []).map((r) => r.numero)), 313);
+    numero = String(proximo);
   }
 
   const { data: decreto, error } = await supabase
