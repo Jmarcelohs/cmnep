@@ -13,6 +13,7 @@ export async function criarPessoa(formData: FormData) {
   const nome = String(formData.get("nome") ?? "").trim();
   const cargo = String(formData.get("cargo") ?? "").trim();
   const categoria = String(formData.get("categoria") ?? "") as Categoria;
+  const partido = String(formData.get("partido") ?? "").trim() || null;
   const cpf = apenasDigitos(String(formData.get("cpf") ?? "")) || null;
 
   if (!nome || !cargo || !categoria) {
@@ -21,7 +22,7 @@ export async function criarPessoa(formData: FormData) {
 
   const { data: pessoa, error } = await supabase
     .from("pessoas")
-    .insert({ matricula, nome, cargo, categoria })
+    .insert({ matricula, nome, cargo, categoria, partido: categoria === "Vereador" ? partido : null })
     .select("id")
     .single();
 
@@ -44,6 +45,7 @@ export async function editarPessoa(id: string, formData: FormData) {
   const nome = String(formData.get("nome") ?? "").trim();
   const cargo = String(formData.get("cargo") ?? "").trim();
   const categoria = String(formData.get("categoria") ?? "") as Categoria;
+  const partido = String(formData.get("partido") ?? "").trim() || null;
   const cpf = apenasDigitos(String(formData.get("cpf") ?? "")) || null;
 
   if (!nome || !cargo || !categoria) {
@@ -52,7 +54,7 @@ export async function editarPessoa(id: string, formData: FormData) {
 
   const { error } = await supabase
     .from("pessoas")
-    .update({ matricula, nome, cargo, categoria })
+    .update({ matricula, nome, cargo, categoria, partido: categoria === "Vereador" ? partido : null })
     .eq("id", id);
 
   if (error) {

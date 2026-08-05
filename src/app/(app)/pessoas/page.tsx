@@ -23,7 +23,7 @@ export default async function PessoasPage({
 
   let query = supabase
     .from("pessoas")
-    .select("id, matricula, nome, cargo, categoria, ativo", { count: "exact" })
+    .select("id, matricula, nome, cargo, categoria, partido, ativo", { count: "exact" })
     .order("nome")
     .range(de, ate);
 
@@ -93,7 +93,10 @@ export default async function PessoasPage({
                 <td className="px-4 py-2 text-slate-700">{pessoa.matricula ?? "—"}</td>
                 <td className="px-4 py-2 text-slate-900">{pessoa.nome}</td>
                 <td className="px-4 py-2 text-slate-700">{pessoa.cargo}</td>
-                <td className="px-4 py-2 text-slate-700">{pessoa.categoria}</td>
+                <td className="px-4 py-2 text-slate-700">
+                  {pessoa.categoria}
+                  {pessoa.categoria === "Vereador" && pessoa.partido && ` – ${pessoa.partido}`}
+                </td>
                 <td className="px-4 py-2 text-slate-700">
                   {pessoa.ativo ? "Ativo" : "Inativo"}
                 </td>

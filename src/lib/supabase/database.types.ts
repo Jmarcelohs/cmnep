@@ -94,6 +94,7 @@ export interface Database {
           nome: string;
           cargo: string;
           categoria: Categoria;
+          partido: string | null;
           usuario_id: string | null;
           ativo: boolean;
           criado_em: string;

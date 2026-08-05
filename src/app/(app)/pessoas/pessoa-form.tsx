@@ -8,6 +8,7 @@ export type ValoresIniciaisPessoa = {
   nome: string;
   cargo: string;
   categoria: string;
+  partido: string;
   cpf: string;
 };
 
@@ -21,6 +22,7 @@ export function PessoaForm({
   submitLabel: string;
 }) {
   const [cpf, setCpf] = useState(formatarCpfDigitado(valoresIniciais?.cpf ?? ""));
+  const [categoria, setCategoria] = useState(valoresIniciais?.categoria ?? "");
 
   return (
     <form action={action} className="mt-6 max-w-lg space-y-4">
@@ -77,7 +79,8 @@ export function PessoaForm({
           id="categoria"
           name="categoria"
           required
-          defaultValue={valoresIniciais?.categoria ?? ""}
+          value={categoria}
+          onChange={(e) => setCategoria(e.target.value)}
           className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
         >
           <option value="">Selecione…</option>
@@ -86,6 +89,18 @@ export function PessoaForm({
           <option value="Vereador">Vereador</option>
         </select>
       </div>
+      {categoria === "Vereador" && (
+        <div>
+          <label htmlFor="partido" className="block text-sm font-medium text-slate-700">Partido</label>
+          <input
+            id="partido"
+            name="partido"
+            defaultValue={valoresIniciais?.partido}
+            placeholder="ex.: PL – Partido Liberal"
+            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+        </div>
+      )}
       <button
         type="submit"
         className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white hover:bg-brand-navy-light"
