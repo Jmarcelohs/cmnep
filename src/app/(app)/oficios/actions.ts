@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { PARAGRAFO_FECHAMENTO_PADRAO } from "@/lib/oficios/documento";
+import { sanitizarHtmlDocumento } from "@/lib/sanitizar-html";
 import type { GeneroVereador, TipoOficio, TratamentoOficio } from "@/lib/supabase/database.types";
 
 async function exigirPodeCriar(redirectPath: string) {
@@ -47,7 +48,10 @@ function lerCampos(formData: FormData) {
     String(formData.get("autor_associado_nome") ?? "").trim() || null;
   const autor_associado_genero = (String(formData.get("autor_associado_genero") ?? "Vereador") ||
     null) as GeneroVereador | null;
-  const corpo_texto = String(formData.get("corpo_texto") ?? "").trim();
+  // Sanitiza o HTML do editor de texto rico antes de qualquer outra coisa —
+  // nunca confia no que o navegador de quem preencheu produziu (ver
+  // src/lib/sanitizar-html.ts pro porquê).
+  const corpo_texto = sanitizarHtmlDocumento(String(formData.get("corpo_texto") ?? "").trim());
   const evento_data = String(formData.get("evento_data") ?? "").trim() || null;
   const evento_hora = String(formData.get("evento_hora") ?? "").trim() || null;
   const evento_local = String(formData.get("evento_local") ?? "").trim() || null;
@@ -76,6 +80,13 @@ function lerCampos(formData: FormData) {
   };
 }
 
+// O editor de texto rico manda HTML mesmo sem texto nenhum (ex.: "<p><br></p>"
+// de um parágrafo vazio) — checar string vazia não basta pra validar
+// obrigatoriedade, precisa olhar o texto sem as tags.
+function corpoTextoEstaVazio(corpoTextoHtml: string) {
+  return corpoTextoHtml.replace(/<[^>]*>/g, "").trim().length === 0;
+}
+
 export async function criarOficio(formData: FormData) {
   const usuario = await exigirPodeCriar("/oficios");
 
@@ -87,7 +98,7 @@ export async function criarOficio(formData: FormData) {
     !campos.destinatario_nome ||
     !campos.destinatario_cargo ||
     !campos.assunto ||
-    !campos.corpo_texto
+    corpoTextoEstaVazio(campos.corpo_texto)
   ) {
     redirect(
       `/oficios/novo?error=${encodeURIComponent("Preencha o número, a data, o destinatário, o assunto e o texto do ofício")}`,
@@ -125,7 +136,7 @@ export async function editarOficio(id: string, formData: FormData) {
     !campos.destinatario_nome ||
     !campos.destinatario_cargo ||
     !campos.assunto ||
-    !campos.corpo_texto
+    corpoTextoEstaVazio(campos.corpo_texto)
   ) {
     redirect(
       `/oficios/${id}/editar?error=${encodeURIComponent("Preencha o número, a data, o destinatário, o assunto e o texto do ofício")}`,

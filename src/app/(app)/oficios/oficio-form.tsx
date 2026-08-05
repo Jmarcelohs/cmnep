@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import {
   aberturaOficio,
   fraseEventoConvite,
+  injetarAberturaHtml,
   numeroOficioFormatado,
   PARAGRAFO_FECHAMENTO_PADRAO,
   saudacaoSugerida,
@@ -12,6 +13,7 @@ import {
   TIPO_EXIGE_AUTOR,
   TIPO_OFICIO_LABEL,
 } from "@/lib/oficios/documento";
+import { RichTextEditor } from "@/components/rich-text-editor";
 import type { GeneroVereador, TipoOficio, TratamentoOficio } from "@/lib/supabase/database.types";
 
 export type ValoresIniciaisOficio = {
@@ -365,17 +367,12 @@ export function OficioForm({
           Texto do ofício
         </label>
         <p className="mt-1 text-xs text-slate-500">
-          Continue direto a frase mostrada na prévia abaixo — cada parágrafo em uma linha separada.
+          Continue direto a frase mostrada na prévia abaixo. Use a barra de ferramentas pra negrito,
+          itálico, sublinhado e listas.
         </p>
-        <textarea
-          id="corpo_texto"
-          name="corpo_texto"
-          rows={8}
-          value={corpoTexto}
-          onChange={(e) => setCorpoTexto(e.target.value)}
-          required
-          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-        />
+        <div className="mt-1">
+          <RichTextEditor name="corpo_texto" value={corpoTexto} onChange={setCorpoTexto} />
+        </div>
       </div>
 
       {ehConvite && (
@@ -440,10 +437,12 @@ export function OficioForm({
           <p>{destinatarioCargo && `Ao ${tratamento} ${destinatarioNome || "—"}, ${destinatarioCargo}`}</p>
           <p>{assunto && `Assunto: ${assunto}`}</p>
           <p>{saudacaoExibida}</p>
-          <p>
-            {abertura}
-            {corpoTexto || "…"}
-          </p>
+          <div
+            className="space-y-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5"
+            dangerouslySetInnerHTML={{
+              __html: injetarAberturaHtml(abertura, corpoTexto || "<p>…</p>"),
+            }}
+          />
           {fraseEvento && <p>{fraseEvento}</p>}
           <p>{paragrafoFechamento}</p>
           <p className="pt-2 font-semibold uppercase">{SIGNATARIO_OFICIO}</p>

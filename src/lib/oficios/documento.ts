@@ -120,6 +120,26 @@ export function saudacaoSugerida(
   return feminino ? "Excelentíssima Senhora," : "Excelentíssimo Senhor,";
 }
 
+function escapeHtml(texto: string): string {
+  return texto.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// Emenda a frase de abertura (texto simples, gerado automaticamente a
+// partir de tipo/autor) direto no início do primeiro parágrafo do corpo em
+// HTML vindo do editor de texto rico — mantém a leitura como uma frase só,
+// igual aos ofícios reais da Câmara (ex.: "Comunico que o Vereador X...
+// para que " + continuação escrita pelo redator, tudo num parágrafo). Se o
+// corpo não começar com <p> (ex.: começa direto com uma lista), a abertura
+// vira um parágrafo próprio antes do resto.
+export function injetarAberturaHtml(abertura: string, corpoHtml: string): string {
+  const aberturaEscapada = escapeHtml(abertura);
+  const match = corpoHtml.match(/^<p[^>]*>/i);
+  if (match) {
+    return corpoHtml.slice(0, match[0].length) + aberturaEscapada + corpoHtml.slice(match[0].length);
+  }
+  return `<p>${aberturaEscapada}</p>${corpoHtml}`;
+}
+
 // Frase auto-gerada com data/hora/local do evento — só usada em convites,
 // reproduz o segundo parágrafo do modelo real ("A referida audiência será
 // realizada no dia ... às ... no Plenário...").

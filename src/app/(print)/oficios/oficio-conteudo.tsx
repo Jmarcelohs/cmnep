@@ -4,11 +4,13 @@ import {
   aberturaOficio,
   CIDADE,
   fraseEventoConvite,
+  injetarAberturaHtml,
   LEGISLATURA,
   numeroOficioFormatado,
   PRESIDENTE_CARGO,
   SIGNATARIO_OFICIO,
 } from "@/lib/oficios/documento";
+import { sanitizarHtmlDocumento } from "@/lib/sanitizar-html";
 import type { GeneroVereador, TipoOficio, TratamentoOficio } from "@/lib/supabase/database.types";
 
 type Oficio = {
@@ -42,11 +44,10 @@ export function OficioConteudo({ oficio }: { oficio: Oficio }) {
     autorAssociadoGenero: oficio.autor_associado_genero,
   });
 
-  const paragrafos = oficio.corpo_texto
-    .split(/\n+/)
-    .map((p) => p.trim())
-    .filter(Boolean);
-  const [primeiroParagrafo, ...demaisParagrafos] = paragrafos;
+  // Sanitiza de novo aqui (já sanitizado ao salvar) — esse HTML roda dentro
+  // da própria página que o Puppeteer abre pra gerar o PDF, então vale a
+  // camada extra de segurança direto no ponto de renderização.
+  const corpoHtml = injetarAberturaHtml(abertura, sanitizarHtmlDocumento(oficio.corpo_texto));
 
   const fraseEvento =
     oficio.tipo === "convite"
@@ -78,17 +79,10 @@ export function OficioConteudo({ oficio }: { oficio: Oficio }) {
 
         <p className="mt-6">{oficio.saudacao}</p>
 
-        <div className="mt-3 space-y-3">
-          <p className="text-justify">
-            {abertura}
-            {primeiroParagrafo}
-          </p>
-          {demaisParagrafos.map((paragrafo, i) => (
-            <p key={i} className="text-justify">
-              {paragrafo}
-            </p>
-          ))}
-        </div>
+        <div
+          className="mt-3 space-y-3 text-justify [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5"
+          dangerouslySetInnerHTML={{ __html: corpoHtml }}
+        />
 
         {fraseEvento && <p className="mt-3 text-justify">{fraseEvento}</p>}
 
