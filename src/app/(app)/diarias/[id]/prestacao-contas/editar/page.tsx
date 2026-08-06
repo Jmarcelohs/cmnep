@@ -50,8 +50,7 @@ export default async function EditarPrestacaoContasPage({
       <NovaPrestacaoForm
         action={editarPrestacaoContas.bind(null, prestacao.id, id)}
         valorAutorizado={0}
-        submitLabel="Salvar alterações"
-        mostrarDeclaracao={false}
+        modoRascunho={!prestacao.data_autenticacao_beneficiario}
         valoresIniciais={{
           relatorio_resultado: prestacao.relatorio_resultado ?? "",
           debito_diarias_previstas: Number(prestacao.debito_diarias_previstas),

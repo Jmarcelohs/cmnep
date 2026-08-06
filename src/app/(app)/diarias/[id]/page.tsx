@@ -5,6 +5,7 @@ import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { autorizarSolicitacao, indeferirSolicitacao, excluirSolicitacao } from "../actions";
 import { ExcluirSolicitacaoButton } from "@/components/excluir-solicitacao-button";
 import { calcularVerificacoes } from "@/lib/diarias/verificacoes";
+import { LinhaDoTempoDiaria } from "@/components/linha-do-tempo-diaria";
 
 const VERIFICACAO_ESTILO: Record<string, string> = {
   ok: "bg-emerald-50 text-emerald-700",
@@ -66,10 +67,12 @@ export default async function DetalheSolicitacaoPage({
     solicitacao.status === "Autorizado"
       ? await supabase
           .from("diarias_prestacoes_contas")
-          .select("id")
+          .select("id, data_autenticacao_beneficiario, data_aprovacao_ordenador, data_baixa, parecer_data")
           .eq("solicitacao_id", id)
           .maybeSingle()
       : { data: null };
+
+  const prestacaoRascunho = Boolean(prestacaoExistente && !prestacaoExistente.data_autenticacao_beneficiario);
 
   let verificacoes: ReturnType<typeof calcularVerificacoes> = [];
   if (solicitacao.status === "Solicitado") {
@@ -127,7 +130,11 @@ export default async function DetalheSolicitacaoPage({
               href={`/diarias/${id}/prestacao-contas`}
               className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
             >
-              {prestacaoExistente ? "Ver prestação de contas" : "Prestar contas"}
+              {!prestacaoExistente
+                ? "Prestar contas"
+                : prestacaoRascunho
+                  ? "Continuar rascunho"
+                  : "Ver prestação de contas"}
             </Link>
           )}
           {podeEditar && (
@@ -169,6 +176,17 @@ export default async function DetalheSolicitacaoPage({
           <dd className="text-slate-900">{solicitacao.finalidade ?? "—"}</dd>
         </div>
       </dl>
+
+      <div className="mt-6">
+        <LinhaDoTempoDiaria
+          solicitacao={{
+            status: solicitacao.status,
+            data_solicitacao: solicitacao.data_solicitacao,
+            data_autorizacao: solicitacao.data_autorizacao,
+          }}
+          prestacao={prestacaoExistente}
+        />
+      </div>
 
       <div className="mt-6 overflow-x-auto rounded-lg border border-slate-200 bg-white">
         <table className="min-w-full divide-y divide-slate-200 text-sm">

@@ -255,6 +255,7 @@ export interface Database {
           ordenador_despesa: string;
           data_aprovacao_ordenador: string | null;
           tesoureiro_nome: string | null;
+          data_baixa: string | null;
           parecer: Parecer | null;
           parecer_observacao: string | null;
           parecer_data: string | null;

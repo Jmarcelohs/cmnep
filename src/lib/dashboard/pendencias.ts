@@ -58,7 +58,9 @@ export async function buscarPendenciasPrestacaoContas(
 
   const { data } = await supabase
     .from("diarias_prestacoes_contas")
-    .select("id, solicitacao_id, pessoa_id, data_aprovacao_ordenador, tesoureiro_nome, parecer, pessoas(nome)")
+    .select(
+      "id, solicitacao_id, pessoa_id, data_autenticacao_beneficiario, data_aprovacao_ordenador, tesoureiro_nome, parecer, pessoas(nome)",
+    )
     .order("criado_em", { ascending: true });
 
   const aguardandoAprovacaoOrdenador: ItemPendente[] = [];
@@ -66,6 +68,9 @@ export async function buscarPendenciasPrestacaoContas(
   const aguardandoParecerControleInterno: ItemPendente[] = [];
 
   for (const linha of data ?? []) {
+    // Rascunho (ainda não enviado oficialmente) não gera pendência pra
+    // ninguém — ver souRascunho em diarias/[id]/prestacao-contas/page.tsx.
+    if (!linha.data_autenticacao_beneficiario) continue;
     if (papel === "gestor_diarias" && linha.pessoa_id === minhaPessoaId) continue;
 
     const nome = (linha.pessoas as unknown as { nome: string } | null)?.nome ?? "—";

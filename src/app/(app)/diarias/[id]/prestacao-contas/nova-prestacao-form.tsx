@@ -43,14 +43,15 @@ export function NovaPrestacaoForm({
   action,
   valorAutorizado,
   valoresIniciais,
-  submitLabel = "Enviar prestação de contas",
-  mostrarDeclaracao = true,
+  modoRascunho = false,
 }: {
   action: (formData: FormData) => void;
   valorAutorizado: number;
   valoresIniciais?: ValoresIniciaisPrestacao;
-  submitLabel?: string;
-  mostrarDeclaracao?: boolean;
+  // true quando a prestação ainda não foi enviada oficialmente (nova ou
+  // rascunho salvo) — mostra os dois botões (rascunho/enviar) em vez de um
+  // "Salvar alterações" só, usado pra editar uma prestação já enviada.
+  modoRascunho?: boolean;
 }) {
   const [relatorio, setRelatorio] = useState(valoresIniciais?.relatorio_resultado ?? "");
   const [enviando, setEnviando] = useState(false);
@@ -128,20 +129,46 @@ export function NovaPrestacaoForm({
         </div>
       </div>
 
-      {mostrarDeclaracao && (
-        <p className="rounded-md bg-slate-50 px-3 py-2 text-sm text-slate-600">
-          Ao enviar, você declara, sob as penas da lei, que as informações prestadas são
-          verídicas — essa é a autenticação do beneficiário exigida no Anexo II.
-        </p>
+      {modoRascunho ? (
+        <>
+          <p className="rounded-md bg-slate-50 px-3 py-2 text-sm text-slate-600">
+            &ldquo;Salvar rascunho&rdquo; guarda o que já foi preenchido sem enviar oficialmente —
+            dá pra continuar depois. Ao clicar em &ldquo;Enviar prestação de contas&rdquo;, você
+            declara, sob as penas da lei, que as informações prestadas são verídicas
+            (autenticação do beneficiário exigida no Anexo II) e ela passa a valer pra decisão do
+            ordenador, tesoureiro e Controle Interno.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="submit"
+              name="_acao"
+              value="rascunho"
+              formNoValidate
+              disabled={enviando}
+              className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+            >
+              {enviando ? "Salvando…" : "Salvar rascunho"}
+            </button>
+            <button
+              type="submit"
+              name="_acao"
+              value="enviar"
+              disabled={enviando}
+              className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white hover:bg-brand-navy-light disabled:opacity-60"
+            >
+              {enviando ? "Enviando…" : "Enviar prestação de contas"}
+            </button>
+          </div>
+        </>
+      ) : (
+        <button
+          type="submit"
+          disabled={enviando}
+          className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white hover:bg-brand-navy-light disabled:opacity-60"
+        >
+          {enviando ? "Salvando…" : "Salvar alterações"}
+        </button>
       )}
-
-      <button
-        type="submit"
-        disabled={enviando}
-        className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white hover:bg-brand-navy-light disabled:opacity-60"
-      >
-        {enviando ? "Enviando…" : submitLabel}
-      </button>
     </form>
   );
 }

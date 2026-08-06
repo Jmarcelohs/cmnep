@@ -52,7 +52,7 @@ export default async function DiariasPage({
   let query = supabase
     .from("diarias_solicitacoes")
     .select(
-      "id, pessoa_id, numero_diaria, numero_solicitacao, municipio_destino, finalidade, status, total, data_solicitacao, pessoas(nome), diarias_prestacoes_contas(id, parecer)",
+      "id, pessoa_id, numero_diaria, numero_solicitacao, municipio_destino, finalidade, status, total, data_solicitacao, pessoas(nome), diarias_prestacoes_contas(id, parecer, data_autenticacao_beneficiario)",
       { count: "exact" },
     )
     .order("criado_em", { ascending: false })
@@ -78,18 +78,21 @@ export default async function DiariasPage({
     query = query.eq("status", "Autorizado");
     const { data: prestacoes } = await supabase
       .from("diarias_prestacoes_contas")
-      .select("solicitacao_id");
-    const idsComPrestacao = (prestacoes ?? [])
+      .select("solicitacao_id, data_autenticacao_beneficiario");
+    // "Pendente" inclui rascunho (prestação existe mas ainda não foi
+    // enviada oficialmente) — só sai da fila quando realmente enviada.
+    const idsEnviadas = (prestacoes ?? [])
+      .filter((p) => p.data_autenticacao_beneficiario)
       .map((p) => p.solicitacao_id)
       .filter((id): id is string => Boolean(id));
     if (prestacao === "pendente") {
-      if (idsComPrestacao.length > 0) {
-        query = query.not("id", "in", `(${idsComPrestacao.join(",")})`);
+      if (idsEnviadas.length > 0) {
+        query = query.not("id", "in", `(${idsEnviadas.join(",")})`);
       }
     } else if (prestacao === "realizada") {
       query =
-        idsComPrestacao.length > 0
-          ? query.in("id", idsComPrestacao)
+        idsEnviadas.length > 0
+          ? query.in("id", idsEnviadas)
           : query.eq("id", "00000000-0000-0000-0000-000000000000");
     }
   }
@@ -212,6 +215,7 @@ export default async function DiariasPage({
               const podeEditar = podeEditarSempre || minhaPessoa?.id === s.pessoa_id;
               const prestacaoDaLinha = (s.diarias_prestacoes_contas ?? [])[0];
               const temPrestacao = Boolean(prestacaoDaLinha);
+              const prestacaoRascunho = temPrestacao && !prestacaoDaLinha!.data_autenticacao_beneficiario;
               const podeGerenciarPrestacao =
                 usuario?.papel === "admin" ||
                 usuario?.papel === "gestor_diarias" ||
@@ -261,7 +265,11 @@ export default async function DiariasPage({
                             href={`/diarias/${s.id}/prestacao-contas`}
                             className="block w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
                           >
-                            {temPrestacao ? "Ver prestação" : "Prestar contas"}
+                            {!temPrestacao
+                              ? "Prestar contas"
+                              : prestacaoRascunho
+                                ? "Continuar rascunho"
+                                : "Ver prestação"}
                           </Link>
                           {temPrestacao && podeGerenciarPrestacao && (
                             <>

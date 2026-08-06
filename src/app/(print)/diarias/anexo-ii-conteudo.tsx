@@ -180,25 +180,31 @@ export function AnexoIIConteudo({
             <Celula span={12} className={headerCell}>
               Autenticação do beneficiário dos recursos da viagem
             </Celula>
-            <Celula span={12} className="min-h-[22mm] text-center">
+            <Celula span={12} className="min-h-[35mm] text-center">
               <p>Declaro, sob as penas da lei, que as informações declaradas são verídicas.</p>
               <p className="mt-2">{formatarData(prestacao.data_autenticacao_beneficiario)}</p>
-              <div className="mx-auto mt-[10mm] w-2/3 border-t border-black pt-1">
+              <div className="mx-auto mt-[20mm] w-2/3 border-t border-black pt-1">
                 Assinatura do beneficiário
               </div>
             </Celula>
+          </TabelaGrid>
+        </div>
+      </PaginaA4>
 
+      <PaginaA4>
+        <div className="mx-[15mm] mt-[32mm] mb-[26mm] flex flex-1 flex-col">
+          <TabelaGrid>
             <Celula span={6} className={headerCell}>Aprovação do ordenador da despesa</Celula>
             <Celula span={6} className={headerCell}>Baixa do pagamento</Celula>
 
-            <Celula span={6} className="min-h-[28mm] text-center">
+            <Celula span={6} className="min-h-[45mm] text-center">
               <p>Aprovo a prestação de contas apresentada.</p>
               <p className="mt-2">{formatarData(prestacao.data_aprovacao_ordenador)}</p>
-              <div className="mx-auto mt-[8mm] w-2/3 border-t border-black pt-1">
+              <div className="mx-auto mt-[18mm] w-2/3 border-t border-black pt-1">
                 Assinatura do ordenador da despesa
               </div>
             </Celula>
-            <Celula span={6} className="min-h-[28mm]">
+            <Celula span={6} className="min-h-[45mm]">
               <p>Atesto o pagamento nos termos abaixo:</p>
               <div className="mt-2 space-y-1">
                 {pagamentos.map((p) => (
@@ -207,7 +213,7 @@ export function AnexoIIConteudo({
                   </p>
                 ))}
               </div>
-              <div className="mx-auto mt-[6mm] w-2/3 border-t border-black pt-1 text-center">
+              <div className="mx-auto mt-[16mm] w-2/3 border-t border-black pt-1 text-center">
                 Assinatura do Tesoureiro
               </div>
             </Celula>
@@ -215,7 +221,7 @@ export function AnexoIIConteudo({
             <Celula span={12} className={headerCell}>
               Parecer conclusivo do Controle Interno
             </Celula>
-            <Celula span={12} className="min-h-[38mm]">
+            <Celula span={12} className="min-h-[55mm]">
               <p>
                 Atesto que à luz da legislação vigente e das decisões do Tribunal de Contas de
                 Minas Gerais, acerca da prestação de contas da viagem acima, emito opinião pela:
@@ -232,7 +238,7 @@ export function AnexoIIConteudo({
               </div>
               <p className="mt-2">Observação: {prestacao.parecer_observacao ?? ""}</p>
               <p className="mt-4 text-center">{formatarData(prestacao.parecer_data)}</p>
-              <div className="mx-auto mt-[8mm] w-2/3 border-t border-black pt-1 text-center">
+              <div className="mx-auto mt-[18mm] w-2/3 border-t border-black pt-1 text-center">
                 Assinatura do Controle Interno
               </div>
               <p className="mt-1 text-center text-[7pt]">

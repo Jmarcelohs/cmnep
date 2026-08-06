@@ -55,6 +55,8 @@ export async function criarPrestacaoContas(solicitacaoId: string, formData: Form
     credito_transporte_urbano +
     credito_devolver;
 
+  const enviar = formData.get("_acao") === "enviar";
+
   const { data: prestacao, error } = await supabase
     .from("diarias_prestacoes_contas")
     .insert({
@@ -76,7 +78,7 @@ export async function criarPrestacaoContas(solicitacaoId: string, formData: Form
       credito_devolver,
       total_debito,
       total_credito,
-      data_autenticacao_beneficiario: hoje(),
+      data_autenticacao_beneficiario: enviar ? hoje() : null,
       criado_por: usuario.id,
     })
     .select("id")
@@ -130,6 +132,8 @@ export async function editarPrestacaoContas(
     credito_transporte_urbano +
     credito_devolver;
 
+  const enviar = formData.get("_acao") === "enviar";
+
   const { error } = await supabase
     .from("diarias_prestacoes_contas")
     .update({
@@ -144,6 +148,7 @@ export async function editarPrestacaoContas(
       credito_devolver,
       total_debito,
       total_credito,
+      ...(enviar ? { data_autenticacao_beneficiario: hoje() } : {}),
     })
     .eq("id", prestacaoId);
 
@@ -157,6 +162,20 @@ export async function editarPrestacaoContas(
   revalidatePath(`/diarias/${solicitacaoId}/prestacao-contas`);
   revalidatePath("/diarias");
   redirect(`/diarias/${solicitacaoId}/prestacao-contas`);
+}
+
+// Formaliza um rascunho já preenchido sem precisar reabrir o formulário —
+// mesmo efeito de editar e clicar "Enviar prestação de contas".
+export async function enviarPrestacaoContas(prestacaoId: string, solicitacaoId: string) {
+  const supabase = await createClient();
+  await supabase
+    .from("diarias_prestacoes_contas")
+    .update({ data_autenticacao_beneficiario: hoje() })
+    .eq("id", prestacaoId);
+
+  revalidatePath(`/diarias/${solicitacaoId}`);
+  revalidatePath(`/diarias/${solicitacaoId}/prestacao-contas`);
+  revalidatePath("/diarias");
 }
 
 export async function excluirPrestacaoContas(prestacaoId: string, solicitacaoId: string) {
@@ -208,7 +227,7 @@ export async function darBaixaPagamento(
 
   await supabase
     .from("diarias_prestacoes_contas")
-    .update({ tesoureiro_nome: TESOUREIRO_PADRAO })
+    .update({ tesoureiro_nome: TESOUREIRO_PADRAO, data_baixa: hoje() })
     .eq("id", prestacaoId);
 
   revalidatePath(`/diarias/${solicitacaoId}/prestacao-contas`);

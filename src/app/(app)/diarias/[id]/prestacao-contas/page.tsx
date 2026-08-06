@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import {
   criarPrestacaoContas,
+  enviarPrestacaoContas,
   aprovarPrestacaoOrdenador,
   darBaixaPagamento,
   emitirParecerControleInterno,
@@ -134,6 +135,7 @@ export default async function PrestacaoContasPage({
         <NovaPrestacaoForm
           action={criarPrestacaoContas.bind(null, id)}
           valorAutorizado={Number(solicitacao.total ?? 0)}
+          modoRascunho
           valoresIniciais={{
             relatorio_resultado: "",
             debito_diarias_previstas: Number(solicitacao.total ?? 0),
@@ -173,6 +175,11 @@ export default async function PrestacaoContasPage({
     usuario?.papel === "gestor_diarias" ||
     minhaPessoa?.id === prestacao.pessoa_id;
 
+  // Enquanto não for enviada oficialmente (rascunho), ninguém do lado das
+  // decisões (ordenador/tesoureiro/controle interno) pode agir — só existe
+  // pra quem está preenchendo salvar o progresso.
+  const souRascunho = !prestacao.data_autenticacao_beneficiario;
+
   // Gestor de diárias tem acesso equivalente ao admin nesse módulo, mas não
   // pode aprovar/dar baixa/emitir parecer na própria prestação de contas —
   // aí o acesso elevado vira conflito de interesse e a decisão fica só com
@@ -182,10 +189,13 @@ export default async function PrestacaoContasPage({
 
   const podeAprovarOrdenador =
     (usuario?.papel === "ordenador_despesa" || usuario?.papel === "admin" || gestorDiariasElevado) &&
+    !souRascunho &&
     !prestacao.data_aprovacao_ordenador;
-  const podeDarBaixa = usuario?.papel === "tesoureiro" || usuario?.papel === "admin" || gestorDiariasElevado;
+  const podeDarBaixa =
+    (usuario?.papel === "tesoureiro" || usuario?.papel === "admin" || gestorDiariasElevado) && !souRascunho;
   const podeEmitirParecer =
     (usuario?.papel === "controle_interno" || usuario?.papel === "admin" || gestorDiariasElevado) &&
+    !souRascunho &&
     !prestacao.parecer;
 
   return (
@@ -205,6 +215,16 @@ export default async function PrestacaoContasPage({
             >
               Editar
             </Link>
+          )}
+          {podeAnexar && souRascunho && (
+            <form action={enviarPrestacaoContas.bind(null, prestacao.id, id)}>
+              <button
+                type="submit"
+                className="rounded-md bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+              >
+                Enviar prestação de contas oficialmente
+              </button>
+            </form>
           )}
           <Link
             href={`/diarias/${id}/prestacao-contas/imprimir`}
@@ -307,9 +327,16 @@ export default async function PrestacaoContasPage({
         </div>
       </div>
 
-      <p className="mt-3 text-sm text-slate-600">
-        Autenticado pelo beneficiário em {formatarData(prestacao.data_autenticacao_beneficiario)}.
-      </p>
+      {souRascunho ? (
+        <p className="mt-3 rounded-md bg-amber-50 px-3 py-2 text-sm font-medium text-amber-700">
+          Rascunho — ainda não enviado oficialmente. Ordenador, tesoureiro e Controle Interno só
+          conseguem agir depois do envio.
+        </p>
+      ) : (
+        <p className="mt-3 text-sm text-slate-600">
+          Autenticado pelo beneficiário em {formatarData(prestacao.data_autenticacao_beneficiario)}.
+        </p>
+      )}
 
       <div className="mt-6">
         <AnexosForm prestacaoId={prestacao.id} anexos={anexos ?? []} podeEditar={podeAnexar} />
@@ -333,7 +360,11 @@ export default async function PrestacaoContasPage({
               </button>
             </form>
           ) : (
-            <p className="mt-2 text-sm text-slate-400">Aguardando aprovação do ordenador da despesa.</p>
+            <p className="mt-2 text-sm text-slate-400">
+              {souRascunho
+                ? "Aguardando envio da prestação de contas pelo solicitante."
+                : "Aguardando aprovação do ordenador da despesa."}
+            </p>
           )}
         </div>
 
@@ -381,6 +412,11 @@ export default async function PrestacaoContasPage({
               </button>
             </form>
           )}
+          {!podeDarBaixa && souRascunho && (
+            <p className="mt-2 text-sm text-slate-400">
+              Aguardando envio da prestação de contas pelo solicitante.
+            </p>
+          )}
           {prestacao.tesoureiro_nome && (
             <p className="mt-2 text-xs text-slate-500">Tesoureiro: {prestacao.tesoureiro_nome}</p>
           )}
@@ -427,7 +463,11 @@ export default async function PrestacaoContasPage({
             </button>
           </form>
         ) : (
-          <p className="mt-2 text-sm text-slate-400">Aguardando parecer do Controle Interno.</p>
+          <p className="mt-2 text-sm text-slate-400">
+            {souRascunho
+              ? "Aguardando envio da prestação de contas pelo solicitante."
+              : "Aguardando parecer do Controle Interno."}
+          </p>
         )}
       </div>
     </div>
