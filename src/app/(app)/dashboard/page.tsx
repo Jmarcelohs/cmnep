@@ -45,7 +45,7 @@ export default async function DashboardPage() {
   const usuario = await getCurrentUsuario();
   const supabase = await createClient();
 
-  const pendencias = await buscarPendenciasPrestacaoContas(supabase, usuario?.papel);
+  const pendencias = await buscarPendenciasPrestacaoContas(supabase, usuario);
 
   const { data: solicitacoes } = await supabase
     .from("diarias_solicitacoes")

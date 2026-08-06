@@ -173,19 +173,19 @@ export default async function PrestacaoContasPage({
     usuario?.papel === "gestor_diarias" ||
     minhaPessoa?.id === prestacao.pessoa_id;
 
+  // Gestor de diárias tem acesso equivalente ao admin nesse módulo, mas não
+  // pode aprovar/dar baixa/emitir parecer na própria prestação de contas —
+  // aí o acesso elevado vira conflito de interesse e a decisão fica só com
+  // quem tem o papel específico (ou admin).
+  const souDono = minhaPessoa?.id === prestacao.pessoa_id;
+  const gestorDiariasElevado = usuario?.papel === "gestor_diarias" && !souDono;
+
   const podeAprovarOrdenador =
-    (usuario?.papel === "ordenador_despesa" ||
-      usuario?.papel === "admin" ||
-      usuario?.papel === "gestor_diarias") &&
+    (usuario?.papel === "ordenador_despesa" || usuario?.papel === "admin" || gestorDiariasElevado) &&
     !prestacao.data_aprovacao_ordenador;
-  const podeDarBaixa =
-    usuario?.papel === "tesoureiro" ||
-    usuario?.papel === "admin" ||
-    usuario?.papel === "gestor_diarias";
+  const podeDarBaixa = usuario?.papel === "tesoureiro" || usuario?.papel === "admin" || gestorDiariasElevado;
   const podeEmitirParecer =
-    (usuario?.papel === "controle_interno" ||
-      usuario?.papel === "admin" ||
-      usuario?.papel === "gestor_diarias") &&
+    (usuario?.papel === "controle_interno" || usuario?.papel === "admin" || gestorDiariasElevado) &&
     !prestacao.parecer;
 
   return (

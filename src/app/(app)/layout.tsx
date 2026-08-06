@@ -14,7 +14,7 @@ export default async function AppLayout({
   const navItems = filtrarNav(NAV_ESTRUTURA, usuario?.papel);
 
   const supabase = await createClient();
-  const pendencias = await buscarPendenciasPrestacaoContas(supabase, usuario?.papel);
+  const pendencias = await buscarPendenciasPrestacaoContas(supabase, usuario);
 
   // Contador de pendências (aprovação/baixa/parecer) no item "Painel" — só
   // quem tem alguma dessas etapas pra decidir enxerga o número.

@@ -24,13 +24,17 @@ const VAZIO: PendenciasPrestacaoContas = {
 // Notificação "dentro do sistema" das 3 etapas de decisão da prestação de
 // contas (ver src/app/(app)/diarias/prestacao-contas-actions.ts) — cada
 // papel só vê a(s) etapa(s) que pode agir; admin/gestor_diarias veem as 3
-// (mesmo acesso elevado que já têm nesse módulo). Sem fila nova: só
-// reconta, a cada carregamento, quais prestações já existentes ainda
-// não têm o campo daquela etapa preenchido.
+// (mesmo acesso elevado que já têm nesse módulo), exceto na própria
+// prestação de contas do gestor_diarias — aí o acesso elevado é conflito
+// de interesse (ver mesma regra em diarias/[id]/prestacao-contas/page.tsx)
+// e a pendência não conta pra ele, só pra admin/papel específico. Sem fila
+// nova: só reconta, a cada carregamento, quais prestações já existentes
+// ainda não têm o campo daquela etapa preenchido.
 export async function buscarPendenciasPrestacaoContas(
   supabase: Awaited<ReturnType<typeof createClient>>,
-  papel: Papel | undefined,
+  usuario: { id: string; papel: Papel } | null | undefined,
 ): Promise<PendenciasPrestacaoContas> {
+  const papel = usuario?.papel;
   if (!papel) return VAZIO;
 
   const vePendenciaOrdenador =
@@ -42,9 +46,19 @@ export async function buscarPendenciasPrestacaoContas(
 
   if (!vePendenciaOrdenador && !vePendenciaTesoureiro && !vePendenciaControleInterno) return VAZIO;
 
+  let minhaPessoaId: string | null = null;
+  if (papel === "gestor_diarias") {
+    const { data: minhaPessoa } = await supabase
+      .from("pessoas")
+      .select("id")
+      .eq("usuario_id", usuario!.id)
+      .maybeSingle();
+    minhaPessoaId = minhaPessoa?.id ?? null;
+  }
+
   const { data } = await supabase
     .from("diarias_prestacoes_contas")
-    .select("id, solicitacao_id, data_aprovacao_ordenador, tesoureiro_nome, parecer, pessoas(nome)")
+    .select("id, solicitacao_id, pessoa_id, data_aprovacao_ordenador, tesoureiro_nome, parecer, pessoas(nome)")
     .order("criado_em", { ascending: true });
 
   const aguardandoAprovacaoOrdenador: ItemPendente[] = [];
@@ -52,6 +66,8 @@ export async function buscarPendenciasPrestacaoContas(
   const aguardandoParecerControleInterno: ItemPendente[] = [];
 
   for (const linha of data ?? []) {
+    if (papel === "gestor_diarias" && linha.pessoa_id === minhaPessoaId) continue;
+
     const nome = (linha.pessoas as unknown as { nome: string } | null)?.nome ?? "—";
     const item: ItemPendente = { prestacaoId: linha.id, solicitacaoId: linha.solicitacao_id!, nome };
 
