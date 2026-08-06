@@ -47,7 +47,7 @@ export function VeiculoLocacaoConteudo({
 
   return (
     <PaginaA4 quebrarPagina={quebrarPagina}>
-      <div className="mx-[30mm] mt-[32.5mm] mb-[25mm] flex flex-1 flex-col text-[11pt] leading-relaxed">
+      <div className="ml-[30mm] mr-[20mm] mt-[32.5mm] mb-[25mm] flex flex-1 flex-col text-[12pt] leading-relaxed">
         <p className="text-right">Nepomuceno, {dataPorExtenso(locacao.data_pedido)}.</p>
 
         <p className="mt-6 text-center text-[13pt] font-bold">
@@ -56,7 +56,7 @@ export function VeiculoLocacaoConteudo({
 
         <p className="mt-6">Prezados(as),</p>
 
-        <p className="mt-3 text-justify">
+        <p className="mt-3 indent-[1.25cm] text-justify">
           {paragrafoAbertura(locacao.processo, locacao.locadora)}
         </p>
 
@@ -69,12 +69,12 @@ export function VeiculoLocacaoConteudo({
         </div>
 
         {locacao.observacoes && (
-          <p className="mt-4 text-justify">
+          <p className="mt-4 indent-[1.25cm] text-justify">
             <span className="font-bold">Observações:</span> {locacao.observacoes}
           </p>
         )}
 
-        <p className="mt-4 text-justify">{paragrafoFechamento()}</p>
+        <p className="mt-4 indent-[1.25cm] text-justify">{paragrafoFechamento()}</p>
 
         <p className="mt-8">Atenciosamente,</p>
         <p className="font-bold">Câmara Municipal de Nepomuceno.</p>

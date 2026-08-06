@@ -60,7 +60,7 @@ export function OficioConteudo({ oficio }: { oficio: Oficio }) {
 
   return (
     <PaginaA4>
-      <div className="mx-[30mm] mt-[32mm] mb-[26mm] flex flex-1 flex-col text-[11pt] leading-relaxed">
+      <div className="ml-[30mm] mr-[20mm] mt-[32mm] mb-[26mm] flex flex-1 flex-col text-[12pt] leading-relaxed">
         <p className="text-right font-bold">
           {numeroOficioFormatado({ numero: oficio.numero, ano: oficio.ano })}
         </p>
@@ -80,13 +80,13 @@ export function OficioConteudo({ oficio }: { oficio: Oficio }) {
         <p className="mt-6">{oficio.saudacao}</p>
 
         <div
-          className="mt-3 space-y-3 text-justify [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5"
+          className="mt-3 space-y-3 text-justify [&>p]:indent-[1.25cm] [&_ol]:list-decimal [&_ol]:pl-[1.25cm] [&_ul]:list-disc [&_ul]:pl-[1.25cm]"
           dangerouslySetInnerHTML={{ __html: corpoHtml }}
         />
 
-        {fraseEvento && <p className="mt-3 text-justify">{fraseEvento}</p>}
+        {fraseEvento && <p className="mt-3 indent-[1.25cm] text-justify">{fraseEvento}</p>}
 
-        <p className="mt-6 text-justify">{oficio.paragrafo_fechamento}</p>
+        <p className="mt-6 indent-[1.25cm] text-justify">{oficio.paragrafo_fechamento}</p>
 
         <p className="mt-6">Atenciosamente,</p>
 

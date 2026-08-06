@@ -15,16 +15,18 @@ export function contarPaginasFotos(
 }
 
 // Estimativa de quantas linhas um parágrafo justificado ocupa numa página
-// A4 de texto corrido (fonte 11pt, margens de 30mm, leading-relaxed) — só
+// A4 de texto corrido (fonte 12pt, margens 30mm/20mm, leading-relaxed) — só
 // pra decidir onde quebrar a página, nunca afeta a redação em si. Estimar
 // menos caracteres por linha do que o real é proposital: prefere gerar uma
 // página a mais a arriscar o texto estourar por cima do rodapé do timbrado
-// (já aconteceu — ver decreto-conteudo.tsx).
-const CARACTERES_POR_LINHA = 90;
-const ALTURA_LINHA_MM = 6.3;
+// (já aconteceu — ver decreto-conteudo.tsx). Constantes recalculadas pra
+// fonte 12pt/margem assimétrica (Base de Formatação da Câmara) — eram
+// 90 chars / 6.3mm de linha na versão anterior (11pt, margem 30mm/30mm).
+const CARACTERES_POR_LINHA = 88;
+const ALTURA_LINHA_MM = 6.9;
 const ALTURA_UTIL_PAGINA_MM = 239; // 297mm - 32mm (topo) - 26mm (rodapé), igual PaginaA4
-const ALTURA_TITULO_MM = 15;
-const ALTURA_BLOCO_ASSINATURA_MM = 55;
+const ALTURA_TITULO_MM = 16;
+const ALTURA_BLOCO_ASSINATURA_MM = 58;
 
 function linhasDoParagrafo(paragrafo: string): number {
   return Math.ceil(paragrafo.length / CARACTERES_POR_LINHA) + 0.5;

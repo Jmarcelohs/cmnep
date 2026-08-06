@@ -112,7 +112,7 @@ export function DecretoConteudo({ decreto, fotoUrl }: { decreto: Decreto; fotoUr
   return (
     <>
       <PaginaA4>
-        <div className="mx-[30mm] mt-[32mm] mb-[26mm] flex flex-1 flex-col text-[11pt] leading-relaxed">
+        <div className="ml-[30mm] mr-[20mm] mt-[32mm] mb-[26mm] flex flex-1 flex-col text-[12pt] leading-relaxed">
           <p className="text-center font-bold">
             {tituloProjetoDecreto({ numero: decreto.numero, dataDecreto: decreto.data_decreto })}
           </p>
@@ -121,7 +121,7 @@ export function DecretoConteudo({ decreto, fotoUrl }: { decreto: Decreto; fotoUr
               centralizada, convenção de redação legislativa. */}
           <p className="mt-1 ml-[80mm] text-justify font-bold uppercase">{SUBTITULO_TITULO_HONORARIO}</p>
 
-          <p className="mt-6 text-justify">
+          <p className="mt-6 indent-[1.25cm] text-justify">
             A {NOME_CAMARA} de Minas Gerais, aprova e eu, promulgo o seguinte Decreto Legislativo:
           </p>
 
@@ -142,7 +142,7 @@ export function DecretoConteudo({ decreto, fotoUrl }: { decreto: Decreto; fotoUr
       </PaginaA4>
 
       <PaginaA4>
-        <div className="mx-[30mm] mt-[32mm] mb-[26mm] flex flex-1 flex-col justify-center gap-[16mm] text-[10pt]">
+        <div className="ml-[30mm] mr-[20mm] mt-[32mm] mb-[26mm] flex flex-1 flex-col justify-center gap-[16mm] text-[10pt]">
           <ParecerComissao comissao={COMISSAO_CCJ} />
           <ParecerComissao comissao={COMISSAO_FINANCAS} />
         </div>
@@ -153,7 +153,7 @@ export function DecretoConteudo({ decreto, fotoUrl }: { decreto: Decreto; fotoUr
         const ultimaPagina = indice === paginasJustificativa.length - 1;
         return (
           <PaginaA4 key={indice} quebrarPagina={!ultimaPagina}>
-            <div className="mx-[30mm] mt-[32mm] mb-[26mm] flex flex-1 flex-col text-[11pt] leading-relaxed">
+            <div className="ml-[30mm] mr-[20mm] mt-[32mm] mb-[26mm] flex flex-1 flex-col text-[12pt] leading-relaxed">
               {primeiraPagina && <p className="text-center font-bold">JUSTIFICATIVA</p>}
 
               {primeiraPagina && fotoUrl && (
@@ -167,7 +167,7 @@ export function DecretoConteudo({ decreto, fotoUrl }: { decreto: Decreto; fotoUr
 
               <div className={`space-y-1 ${primeiraPagina ? "mt-4" : ""}`}>
                 {paragrafos.map((paragrafo, i) => (
-                  <p key={i} className="text-justify">
+                  <p key={i} className="indent-[1.25cm] text-justify">
                     {paragrafo}
                   </p>
                 ))}

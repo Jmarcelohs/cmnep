@@ -63,7 +63,7 @@ export function RequerimentoInternoConteudo({
 
   return (
     <PaginaA4 quebrarPagina={quebrarPagina}>
-      <div className="mx-[30mm] mt-[32mm] mb-[26mm] flex flex-1 flex-col text-[11pt] leading-relaxed">
+      <div className="ml-[30mm] mr-[20mm] mt-[32mm] mb-[26mm] flex flex-1 flex-col text-[12pt] leading-relaxed">
         <p className="text-center text-[13pt] font-bold">REQUERIMENTO</p>
         <p className="mt-1 text-center text-[11pt] font-bold uppercase">{requerimento.assunto}</p>
         <p className="mt-1 text-center text-[9pt] text-slate-500">
@@ -101,10 +101,10 @@ export function RequerimentoInternoConteudo({
           )}
         </div>
 
-        <p className="mt-4 text-justify">{corpo}</p>
+        <p className="mt-4 indent-[1.25cm] text-justify">{corpo}</p>
 
         {requerimento.referente_a && (
-          <p className="mt-3 text-justify">
+          <p className="mt-3 indent-[1.25cm] text-justify">
             <span className="font-bold">Referente à:</span> {requerimento.referente_a}
           </p>
         )}
@@ -120,7 +120,7 @@ export function RequerimentoInternoConteudo({
         </div>
 
         <div className="mt-[14mm] border-t border-black pt-3">
-          <p className="text-justify">
+          <p className="indent-[1.25cm] text-justify">
             {paragrafoDecisao({ decisao: requerimento.decisao, fundamento: requerimento.fundamento })}
           </p>
           <p className="mt-4 text-right">
