@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { MensagemThread } from "./mensagem-thread";
+import { IndicadorOnline } from "@/components/indicador-online";
 
 export default async function ConversaPage({
   params,
@@ -35,7 +36,10 @@ export default async function ConversaPage({
           ← Mensagens
         </Link>
         <div>
-          <h1 className="text-base font-semibold text-brand-navy">{pessoaOutro.nome}</h1>
+          <h1 className="flex items-center gap-1.5 text-base font-semibold text-brand-navy">
+            <IndicadorOnline usuarioId={usuarioId} />
+            {pessoaOutro.nome}
+          </h1>
           <p className="text-xs text-slate-500">{pessoaOutro.cargo}</p>
         </div>
       </div>

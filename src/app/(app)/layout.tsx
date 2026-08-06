@@ -3,6 +3,7 @@ import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { buscarPendenciasPrestacaoContas } from "@/lib/dashboard/pendencias";
 import { buscarMensagensNaoLidas } from "@/lib/mensagens/nao-lidas";
 import { AppShell } from "./app-shell";
+import { ChatProvider } from "./chat-provider";
 import { NAV_ESTRUTURA, filtrarNav, type NavEntry } from "@/lib/nav";
 export type { NavEntry } from "@/lib/nav";
 
@@ -35,8 +36,10 @@ export default async function AppLayout({
   });
 
   return (
-    <AppShell usuario={usuario} navItems={navComBadge}>
-      {children}
-    </AppShell>
+    <ChatProvider usuarioId={usuario?.id} totalNaoLidasInicial={mensagensNaoLidas.total}>
+      <AppShell usuario={usuario} navItems={navComBadge}>
+        {children}
+      </AppShell>
+    </ChatProvider>
   );
 }

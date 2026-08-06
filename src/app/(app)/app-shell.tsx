@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { LogoutButton } from "@/components/logout-button";
 import { BotaoSuporteWhatsapp } from "@/components/botao-suporte-whatsapp";
+import { useChatPresenca } from "./chat-provider";
 import type { NavEntry } from "./layout";
 
 type Usuario = { nome: string; papel: string } | null;
@@ -30,6 +31,7 @@ function NavLinks({
   pathname: string;
   onNavigate?: () => void;
 }) {
+  const { totalNaoLidas } = useChatPresenca();
   const [gruposAbertos, setGruposAbertos] = useState<Set<string>>(() => {
     const abertos = new Set<string>();
     for (const item of items) {
@@ -110,6 +112,10 @@ function NavLinks({
         }
 
         const ativo = ativoPara(item.href, pathname);
+        // "Mensagens" usa o contador ao vivo do ChatProvider (semeado pelo
+        // valor calculado no servidor) — os demais ficam só com o valor
+        // calculado por requisição, sem atualização em tempo real.
+        const badge = item.href === "/mensagens" ? totalNaoLidas : item.badge;
         return (
           <Link
             key={item.href}
@@ -120,9 +126,9 @@ function NavLinks({
             }`}
           >
             {item.label}
-            {Boolean(item.badge) && (
+            {Boolean(badge) && (
               <span className="ml-2 rounded-full bg-amber-500 px-2 py-0.5 text-xs font-semibold text-white">
-                {item.badge}
+                {badge}
               </span>
             )}
           </Link>

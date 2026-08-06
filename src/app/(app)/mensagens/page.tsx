@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
+import { IndicadorOnline } from "@/components/indicador-online";
 
 type Contato = {
   usuarioId: string;
@@ -95,7 +96,10 @@ export default async function MensagensPage() {
             className="flex items-center justify-between border-b border-slate-100 px-4 py-3 last:border-b-0 hover:bg-slate-50"
           >
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-slate-900">{c.nome}</p>
+              <p className="flex items-center gap-1.5 truncate text-sm font-medium text-slate-900">
+                <IndicadorOnline usuarioId={c.usuarioId} />
+                {c.nome}
+              </p>
               <p className="truncate text-xs text-slate-500">{c.ultimaMensagem ?? c.cargo}</p>
             </div>
             {c.naoLidas > 0 && (

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useChatPresenca } from "@/app/(app)/chat-provider";
 
 type Mensagem = {
   id: string;
@@ -37,6 +38,7 @@ export function MensagemThread({
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const fimDaListaRef = useRef<HTMLDivElement>(null);
+  const { marcarLidas } = useChatPresenca();
 
   useEffect(() => {
     fimDaListaRef.current?.scrollIntoView({ block: "end" });
@@ -47,14 +49,21 @@ export function MensagemThread({
 
     // Marca como lida as mensagens que essa pessoa me mandou — feito aqui
     // (no mount do client component), não no server component da página,
-    // pra não ser disparado por prefetch de link.
-    supabase
-      .from("mensagens_diretas")
-      .update({ lida: true })
-      .eq("destinatario_id", meuUsuarioId)
-      .eq("remetente_id", outroUsuarioId)
-      .eq("lida", false)
-      .then();
+    // pra não ser disparado por prefetch de link. Abate do contador global
+    // (ChatProvider) a quantidade que já estava não lida ao abrir a tela.
+    const naoLidasAoAbrir = mensagensIniciais.filter(
+      (m) => m.remetente_id === outroUsuarioId && m.destinatario_id === meuUsuarioId && !m.lida,
+    ).length;
+
+    if (naoLidasAoAbrir > 0) {
+      supabase
+        .from("mensagens_diretas")
+        .update({ lida: true })
+        .eq("destinatario_id", meuUsuarioId)
+        .eq("remetente_id", outroUsuarioId)
+        .eq("lida", false)
+        .then(() => marcarLidas(naoLidasAoAbrir));
+    }
 
     const canal = supabase
       .channel(`mensagens-diretas-${meuUsuarioId}-${outroUsuarioId}`)
@@ -69,6 +78,14 @@ export function MensagemThread({
         (payload) => {
           if (payload.new.remetente_id !== outroUsuarioId) return;
           setMensagens((atual) => [...atual, payload.new]);
+
+          // Chegou com a conversa já aberta — marca como lida na hora e
+          // abate do contador global (que o ChatProvider acabou de somar).
+          supabase
+            .from("mensagens_diretas")
+            .update({ lida: true })
+            .eq("id", payload.new.id)
+            .then(() => marcarLidas(1));
         },
       )
       .subscribe();
@@ -76,7 +93,10 @@ export function MensagemThread({
     return () => {
       supabase.removeChannel(canal);
     };
-  }, [meuUsuarioId, outroUsuarioId]);
+    // mensagensIniciais é só o retrato do momento em que a tela abriu —
+    // de propósito não entra aqui (a comparação de "não lida" já foi feita).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [meuUsuarioId, outroUsuarioId, marcarLidas]);
 
   async function handleEnviar(e: React.FormEvent) {
     e.preventDefault();
