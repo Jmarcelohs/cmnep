@@ -26,6 +26,8 @@ export type Parecer =
 
 export type TipoAnexo = "imagem" | "pdf";
 
+export type TipoAnexoOficio = "imagem" | "pdf" | "word";
+
 export type CargoDeclarado = "Vereador(a)" | "Servidor(a)" | "Estagiário(a)";
 
 export type SubassuntoReembolso =
@@ -725,6 +727,33 @@ export interface Database {
         };
         Update: Partial<Database["public"]["Tables"]["oficios"]["Row"]>;
         Relationships: [];
+      };
+      oficios_anexos: {
+        Row: {
+          id: string;
+          oficio_id: string;
+          caminho: string;
+          nome_original: string;
+          tipo: TipoAnexoOficio;
+          criado_por: string | null;
+          criado_em: string;
+        };
+        Insert: Partial<Omit<Database["public"]["Tables"]["oficios_anexos"]["Row"], "id">> & {
+          oficio_id: string;
+          caminho: string;
+          nome_original: string;
+          tipo: TipoAnexoOficio;
+        };
+        Update: Partial<Database["public"]["Tables"]["oficios_anexos"]["Row"]>;
+        Relationships: [
+          {
+            foreignKeyName: "oficios_anexos_oficio_id_fkey";
+            columns: ["oficio_id"];
+            isOneToOne: false;
+            referencedRelation: "oficios";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       autoridades: {
         Row: {

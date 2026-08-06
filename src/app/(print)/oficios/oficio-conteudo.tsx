@@ -61,12 +61,12 @@ export function OficioConteudo({ oficio }: { oficio: Oficio }) {
   return (
     <PaginaA4>
       <div className="ml-[30mm] mr-[20mm] mt-[32mm] mb-[26mm] flex flex-1 flex-col text-[12pt] leading-relaxed">
-        <p className="text-right font-bold">
+        <p className="font-bold">
           {numeroOficioFormatado({ numero: oficio.numero, ano: oficio.ano })}
         </p>
         <p className="mt-4 text-right">{CIDADE}, {dataPorExtenso(oficio.data_oficio)}.</p>
 
-        <div className="mt-6">
+        <div className="mt-6 leading-none">
           <p>Ao {oficio.destinatario_tratamento}</p>
           <p className="font-bold">{oficio.destinatario_nome}</p>
           <p>{oficio.destinatario_cargo}</p>
@@ -90,7 +90,7 @@ export function OficioConteudo({ oficio }: { oficio: Oficio }) {
 
         <p className="mt-6">Atenciosamente,</p>
 
-        <div className="mx-auto mt-[16mm] w-[100mm] text-center">
+        <div className="mx-auto mt-[16mm] w-[100mm] text-center leading-none">
           <p className="font-bold uppercase">{SIGNATARIO_OFICIO}</p>
           <p>{PRESIDENTE_CARGO}</p>
           <p>{LEGISLATURA}</p>

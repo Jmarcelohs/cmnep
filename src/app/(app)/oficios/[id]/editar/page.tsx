@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { editarOficio } from "../../actions";
 import { OficioForm } from "../../oficio-form";
+import { OficioAnexosForm } from "../oficio-anexos-form";
 
 export default async function EditarOficioPage({
   params,
@@ -17,7 +18,7 @@ export default async function EditarOficioPage({
   if (usuario?.papel !== "admin" && usuario?.papel !== "ordenador_despesa") redirect("/oficios");
 
   const supabase = await createClient();
-  const [{ data: oficio }, { data: vereadores }, { data: autoridades }] = await Promise.all([
+  const [{ data: oficio }, { data: vereadores }, { data: autoridades }, { data: anexos }] = await Promise.all([
     supabase.from("oficios").select("*").eq("id", id).single(),
     supabase.from("pessoas").select("nome").eq("categoria", "Vereador").eq("ativo", true).order("nome"),
     supabase
@@ -25,6 +26,11 @@ export default async function EditarOficioPage({
       .select("tratamento, nome, cargo, cidade_uf")
       .eq("ativo", true)
       .order("nome"),
+    supabase
+      .from("oficios_anexos")
+      .select("id, nome_original, tipo, caminho")
+      .eq("oficio_id", id)
+      .order("criado_em", { ascending: true }),
   ]);
 
   if (!oficio) notFound();
@@ -65,6 +71,10 @@ export default async function EditarOficioPage({
           paragrafo_fechamento: oficio.paragrafo_fechamento,
         }}
       />
+
+      <div className="mt-6">
+        <OficioAnexosForm oficioId={id} anexos={anexos ?? []} />
+      </div>
     </div>
   );
 }
