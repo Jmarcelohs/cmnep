@@ -13,7 +13,8 @@ async function exigirPodeCriar(redirectPath: string) {
   if (
     usuario?.papel !== "admin" &&
     usuario?.papel !== "ordenador_despesa" &&
-    usuario?.papel !== "servidor"
+    usuario?.papel !== "servidor" &&
+    usuario?.papel !== "estagiario"
   ) {
     redirect(redirectPath);
   }

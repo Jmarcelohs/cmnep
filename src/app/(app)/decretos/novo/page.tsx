@@ -13,7 +13,8 @@ export default async function NovoDecretoPage({
   if (
     usuario?.papel !== "admin" &&
     usuario?.papel !== "ordenador_despesa" &&
-    usuario?.papel !== "servidor"
+    usuario?.papel !== "servidor" &&
+    usuario?.papel !== "estagiario"
   )
     redirect("/decretos");
 

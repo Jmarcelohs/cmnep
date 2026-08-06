@@ -19,9 +19,10 @@ export default async function DecretosPage({
   const { ano, busca, pagina: paginaStr, error: errorMsg } = await searchParams;
   const usuario = await getCurrentUsuario();
   const podeGerenciar = usuario?.papel === "admin" || usuario?.papel === "ordenador_despesa";
-  // Criação é liberada pra qualquer servidor — edição/exclusão continuam
-  // restritas a admin/ordenador da despesa (podeGerenciar).
-  const podeCriar = podeGerenciar || usuario?.papel === "servidor";
+  // Criação é liberada pra qualquer servidor (e estagiário) — edição/
+  // exclusão continuam restritas a admin/ordenador da despesa (podeGerenciar).
+  const podeCriar =
+    podeGerenciar || usuario?.papel === "servidor" || usuario?.papel === "estagiario";
 
   const supabase = await createClient();
   const { pagina, de, ate } = calcularPagina(paginaStr);

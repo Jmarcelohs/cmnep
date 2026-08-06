@@ -8,9 +8,10 @@ export type Papel =
   | "ordenador_despesa"
   | "tesoureiro"
   | "controle_interno"
-  | "gestor_diarias";
+  | "gestor_diarias"
+  | "estagiario";
 
-export type Categoria = "Efetivo" | "Comissionado" | "Vereador";
+export type Categoria = "Efetivo" | "Comissionado" | "Vereador" | "Estagiário";
 
 export type StatusDiaria = "Solicitado" | "Autorizado" | "Indeferido";
 

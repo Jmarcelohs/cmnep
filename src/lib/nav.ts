@@ -17,10 +17,10 @@ export const NAV_ESTRUTURA: NavEntry[] = [
   {
     label: "Diárias e Reembolsos",
     items: [
-      { href: "/diarias", label: "Diárias" },
-      { href: "/diarias?prestacao=pendente", label: "Prestações de Contas" },
-      { href: "/requerimentos", label: "Reembolsos" },
-      { href: "/veiculos", label: "Veículos", oculto: ["servidor"] },
+      { href: "/diarias", label: "Diárias", oculto: ["estagiario"] },
+      { href: "/diarias?prestacao=pendente", label: "Prestações de Contas", oculto: ["estagiario"] },
+      { href: "/requerimentos", label: "Reembolsos", oculto: ["estagiario"] },
+      { href: "/veiculos", label: "Veículos", oculto: ["servidor", "estagiario"] },
     ],
   },
   {
@@ -34,14 +34,14 @@ export const NAV_ESTRUTURA: NavEntry[] = [
     label: "Recursos Humanos",
     items: [
       { href: "/requerimentos-internos", label: "Requerimentos Internos" },
-      { href: "/avaliacoes", label: "Avaliações", oculto: ["servidor", "gestor_diarias"] },
+      { href: "/avaliacoes", label: "Avaliações", oculto: ["servidor", "gestor_diarias", "estagiario"] },
     ],
   },
   {
     label: "Configurações",
     items: [
-      { href: "/pessoas", label: "Pessoas", oculto: ["servidor", "gestor_diarias"] },
-      { href: "/autoridades", label: "Autoridades", oculto: ["servidor", "gestor_diarias"] },
+      { href: "/pessoas", label: "Pessoas", oculto: ["servidor", "gestor_diarias", "estagiario"] },
+      { href: "/autoridades", label: "Autoridades", oculto: ["servidor", "gestor_diarias", "estagiario"] },
       { href: "/usuarios", label: "Usuários", apenas: ["admin"] },
     ],
   },

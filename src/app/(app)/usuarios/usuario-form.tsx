@@ -4,6 +4,7 @@ import type { Papel } from "@/lib/supabase/database.types";
 
 const PAPEIS: { value: Papel; label: string }[] = [
   { value: "servidor", label: "Servidor" },
+  { value: "estagiario", label: "Estagiário(a)" },
   { value: "gestor_diarias", label: "Gestor de Diárias" },
   { value: "ordenador_despesa", label: "Ordenador da despesa" },
   { value: "tesoureiro", label: "Tesoureiro" },

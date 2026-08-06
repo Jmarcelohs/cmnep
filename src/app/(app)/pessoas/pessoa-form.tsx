@@ -87,6 +87,7 @@ export function PessoaForm({
           <option value="Efetivo">Efetivo</option>
           <option value="Comissionado">Comissionado</option>
           <option value="Vereador">Vereador</option>
+          <option value="Estagiário">Estagiário</option>
         </select>
       </div>
       {categoria === "Vereador" && (

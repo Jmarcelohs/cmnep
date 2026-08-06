@@ -21,7 +21,8 @@ export default async function OficiosPage({
   const { ano, tipo, busca, pagina: paginaStr, error: errorMsg } = await searchParams;
   const usuario = await getCurrentUsuario();
   const podeGerenciar = usuario?.papel === "admin" || usuario?.papel === "ordenador_despesa";
-  const podeCriar = podeGerenciar || usuario?.papel === "servidor";
+  const podeCriar =
+    podeGerenciar || usuario?.papel === "servidor" || usuario?.papel === "estagiario";
 
   const supabase = await createClient();
   const { pagina, de, ate } = calcularPagina(paginaStr);

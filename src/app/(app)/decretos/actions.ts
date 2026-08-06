@@ -16,14 +16,15 @@ async function exigirOrdenadorOuAdmin(redirectPath: string) {
   return usuario;
 }
 
-// Criação é liberada pra qualquer servidor — só edição/exclusão continuam
-// restritas a admin/ordenador da despesa.
+// Criação é liberada pra qualquer servidor (e estagiário) — só
+// edição/exclusão continuam restritas a admin/ordenador da despesa.
 async function exigirPodeCriarDecreto(redirectPath: string) {
   const usuario = await getCurrentUsuario();
   if (
     usuario?.papel !== "admin" &&
     usuario?.papel !== "ordenador_despesa" &&
-    usuario?.papel !== "servidor"
+    usuario?.papel !== "servidor" &&
+    usuario?.papel !== "estagiario"
   ) {
     redirect(redirectPath);
   }
