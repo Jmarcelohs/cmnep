@@ -18,6 +18,7 @@ export type NavEntry = NavLeaf | NavGroup;
 
 export const NAV_ESTRUTURA: NavEntry[] = [
   { href: "/dashboard", label: "Painel" },
+  { href: "/mensagens", label: "Mensagens" },
   {
     label: "Diárias e Reembolsos",
     items: [

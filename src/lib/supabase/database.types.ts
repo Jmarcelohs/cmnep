@@ -755,6 +755,38 @@ export interface Database {
           },
         ];
       };
+      mensagens_diretas: {
+        Row: {
+          id: string;
+          remetente_id: string;
+          destinatario_id: string;
+          conteudo: string;
+          lida: boolean;
+          criado_em: string;
+        };
+        Insert: Partial<Omit<Database["public"]["Tables"]["mensagens_diretas"]["Row"], "id">> & {
+          remetente_id: string;
+          destinatario_id: string;
+          conteudo: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["mensagens_diretas"]["Row"]>;
+        Relationships: [
+          {
+            foreignKeyName: "mensagens_diretas_remetente_id_fkey";
+            columns: ["remetente_id"];
+            isOneToOne: false;
+            referencedRelation: "usuarios";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "mensagens_diretas_destinatario_id_fkey";
+            columns: ["destinatario_id"];
+            isOneToOne: false;
+            referencedRelation: "usuarios";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       autoridades: {
         Row: {
           id: string;

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { buscarPendenciasPrestacaoContas } from "@/lib/dashboard/pendencias";
+import { buscarMensagensNaoLidas } from "@/lib/mensagens/nao-lidas";
 import { AppShell } from "./app-shell";
 import { NAV_ESTRUTURA, filtrarNav, type NavEntry } from "@/lib/nav";
 export type { NavEntry } from "@/lib/nav";
@@ -14,18 +15,24 @@ export default async function AppLayout({
   const navItems = filtrarNav(NAV_ESTRUTURA, usuario?.papel);
 
   const supabase = await createClient();
-  const pendencias = await buscarPendenciasPrestacaoContas(supabase, usuario);
+  const [pendencias, mensagensNaoLidas] = await Promise.all([
+    buscarPendenciasPrestacaoContas(supabase, usuario),
+    buscarMensagensNaoLidas(supabase, usuario),
+  ]);
 
-  // Contador de pendências (aprovação/baixa/parecer) no item "Painel" — só
-  // quem tem alguma dessas etapas pra decidir enxerga o número.
-  const navComBadge: NavEntry[] =
-    pendencias.total > 0
-      ? navItems.map((item) =>
-          "items" in item || item.href !== "/dashboard"
-            ? item
-            : { ...item, badge: pendencias.total },
-        )
-      : navItems;
+  // Contador por item de topo: pendências (aprovação/baixa/parecer) no
+  // "Painel", mensagens não lidas em "Mensagens" — cada um só aparece pra
+  // quem tem algo pendente/não lido.
+  const badgesPorHref: Record<string, number> = {
+    "/dashboard": pendencias.total,
+    "/mensagens": mensagensNaoLidas.total,
+  };
+
+  const navComBadge: NavEntry[] = navItems.map((item) => {
+    if ("items" in item) return item;
+    const badge = badgesPorHref[item.href];
+    return badge ? { ...item, badge } : item;
+  });
 
   return (
     <AppShell usuario={usuario} navItems={navComBadge}>
