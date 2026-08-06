@@ -13,6 +13,13 @@ type Mensagem = {
   criado_em: string;
 };
 
+// Conversa aberta é polling curto (aqui, não no ChatProvider global) —
+// WebSocket/Realtime se mostrou bloqueado em várias redes brasileiras
+// (ver migration 0030), então tanto a lista de contatos quanto a
+// conversa aberta reconferem por HTTPS comum em vez de manter conexão
+// aberta.
+const INTERVALO_POLL_MS = 4_000;
+
 function formatarHora(criadoEm: string) {
   return new Date(criadoEm).toLocaleString("pt-BR", {
     day: "2-digit",
@@ -39,6 +46,11 @@ export function MensagemThread({
   const [erro, setErro] = useState<string | null>(null);
   const fimDaListaRef = useRef<HTMLDivElement>(null);
   const { marcarLidas } = useChatPresenca();
+  const ultimaCriadoEmRef = useRef(
+    mensagensIniciais.length > 0
+      ? mensagensIniciais[mensagensIniciais.length - 1].criado_em
+      : new Date(0).toISOString(),
+  );
 
   useEffect(() => {
     fimDaListaRef.current?.scrollIntoView({ block: "end" });
@@ -46,6 +58,7 @@ export function MensagemThread({
 
   useEffect(() => {
     const supabase = createClient();
+    let cancelado = false;
 
     // Marca como lida as mensagens que essa pessoa me mandou — feito aqui
     // (no mount do client component), não no server component da página,
@@ -65,33 +78,31 @@ export function MensagemThread({
         .then(() => marcarLidas(naoLidasAoAbrir));
     }
 
-    const canal = supabase
-      .channel(`mensagens-diretas-${meuUsuarioId}-${outroUsuarioId}`)
-      .on<Mensagem>(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "mensagens_diretas",
-          filter: `destinatario_id=eq.${meuUsuarioId}`,
-        },
-        (payload) => {
-          if (payload.new.remetente_id !== outroUsuarioId) return;
-          setMensagens((atual) => [...atual, payload.new]);
+    async function poll() {
+      const { data: novas } = await supabase
+        .from("mensagens_diretas")
+        .select("id, remetente_id, destinatario_id, conteudo, lida, criado_em")
+        .eq("remetente_id", outroUsuarioId)
+        .eq("destinatario_id", meuUsuarioId)
+        .gt("criado_em", ultimaCriadoEmRef.current)
+        .order("criado_em", { ascending: true });
+      if (cancelado || !novas || novas.length === 0) return;
 
-          // Chegou com a conversa já aberta — marca como lida na hora e
-          // abate do contador global (que o ChatProvider acabou de somar).
-          supabase
-            .from("mensagens_diretas")
-            .update({ lida: true })
-            .eq("id", payload.new.id)
-            .then(() => marcarLidas(1));
-        },
-      )
-      .subscribe();
+      ultimaCriadoEmRef.current = novas[novas.length - 1].criado_em;
+      setMensagens((atual) => [...atual, ...novas]);
+
+      const idsNaoLidas = novas.filter((m) => !m.lida).map((m) => m.id);
+      if (idsNaoLidas.length > 0) {
+        await supabase.from("mensagens_diretas").update({ lida: true }).in("id", idsNaoLidas);
+        if (!cancelado) marcarLidas(idsNaoLidas.length);
+      }
+    }
+
+    const intervalo = setInterval(poll, INTERVALO_POLL_MS);
 
     return () => {
-      supabase.removeChannel(canal);
+      cancelado = true;
+      clearInterval(intervalo);
     };
     // mensagensIniciais é só o retrato do momento em que a tela abriu —
     // de propósito não entra aqui (a comparação de "não lida" já foi feita).
@@ -116,6 +127,7 @@ export function MensagemThread({
     if (error) {
       setErro("Não foi possível enviar a mensagem.");
     } else if (data) {
+      ultimaCriadoEmRef.current = data.criado_em;
       setMensagens((atual) => [...atual, data]);
       setTexto("");
     }

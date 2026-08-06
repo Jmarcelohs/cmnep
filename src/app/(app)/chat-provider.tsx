@@ -4,15 +4,6 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-type MensagemDireta = {
-  id: string;
-  remetente_id: string;
-  destinatario_id: string;
-  conteudo: string;
-  lida: boolean;
-  criado_em: string;
-};
-
 type Toast = { id: string; usuarioId: string; nome: string; preview: string };
 
 type ChatContexto = {
@@ -31,6 +22,11 @@ export function useChatPresenca() {
   return useContext(ChatContext);
 }
 
+// Janela de "online": se não avisou nos últimos 30s (o dobro do intervalo
+// de heartbeat), considera offline.
+const JANELA_ONLINE_MS = 30_000;
+const INTERVALO_POLL_MS = 15_000;
+
 export function ChatProvider({
   usuarioId,
   totalNaoLidasInicial,
@@ -47,6 +43,7 @@ export function ChatProvider({
   const pathname = usePathname();
   const pathnameRef = useRef(pathname);
   const router = useRouter();
+  const nomesCache = useRef(new Map<string, string>());
 
   useEffect(() => {
     pathnameRef.current = pathname;
@@ -56,72 +53,76 @@ export function ChatProvider({
     if (!usuarioId) return;
 
     let cancelado = false;
-    let canal: ReturnType<typeof supabase.channel> | null = null;
+    // Só notifica mensagens com criado_em depois desse instante — evita
+    // reexibir toast de mensagens não lidas que já existiam ao abrir a
+    // página (essas já aparecem no badge, sem precisar de toast).
+    let ultimoPoll = new Date().toISOString();
 
-    function abrirCanal() {
-      const c = supabase
-        .channel("presenca-e-mensagens", { config: { presence: { key: usuarioId! } } })
-        .on("presence", { event: "sync" }, () => {
-          setUsuariosOnline(new Set(Object.keys(c.presenceState())));
-        })
-        .on<MensagemDireta>(
-          "postgres_changes",
-          {
-            event: "INSERT",
-            schema: "public",
-            table: "mensagens_diretas",
-            filter: `destinatario_id=eq.${usuarioId}`,
-          },
-          async (payload) => {
-            const mensagem = payload.new;
-            setTotalNaoLidas((atual) => atual + 1);
+    async function poll() {
+      const agora = new Date();
 
-            // Já estou com essa conversa aberta — a própria tela já mostra a
-            // mensagem ao vivo, não precisa notificar de novo.
-            if (pathnameRef.current === `/mensagens/${mensagem.remetente_id}`) return;
+      // Heartbeat — avisa que esse navegador ainda está ativo.
+      await supabase
+        .from("presenca_usuarios")
+        .upsert({ usuario_id: usuarioId!, ultima_atividade: agora.toISOString() });
+      if (cancelado) return;
 
-            const { data: pessoa } = await supabase
-              .from("pessoas")
-              .select("nome")
-              .eq("usuario_id", mensagem.remetente_id)
-              .maybeSingle();
+      // Quem mais avisou atividade recentemente.
+      const { data: online } = await supabase
+        .from("presenca_usuarios")
+        .select("usuario_id")
+        .gte("ultima_atividade", new Date(agora.getTime() - JANELA_ONLINE_MS).toISOString());
+      if (cancelado) return;
+      setUsuariosOnline(new Set((online ?? []).map((o) => o.usuario_id)));
 
-            const toast: Toast = {
-              id: mensagem.id,
-              usuarioId: mensagem.remetente_id,
-              nome: pessoa?.nome ?? "Alguém",
-              preview: mensagem.conteudo,
-            };
-            setToasts((atual) => [...atual, toast].slice(-4));
-            setTimeout(() => {
-              setToasts((atual) => atual.filter((t) => t.id !== toast.id));
-            }, 6000);
-          },
-        )
-        .subscribe(async (status, err) => {
-          if (status === "SUBSCRIBED") {
-            await c.track({});
-          } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-            console.error("[chat] falha ao conectar no canal de presença/mensagens:", status, err);
-          }
-        });
+      // Não lidas — total pro badge + o que é novo desde o último poll
+      // (pra decidir o toast).
+      const { data: naoLidas } = await supabase
+        .from("mensagens_diretas")
+        .select("id, remetente_id, conteudo, criado_em")
+        .eq("destinatario_id", usuarioId!)
+        .eq("lida", false);
+      if (cancelado) return;
 
-      canal = c;
+      setTotalNaoLidas(naoLidas?.length ?? 0);
+
+      const novas = (naoLidas ?? []).filter((m) => m.criado_em > ultimoPoll);
+      ultimoPoll = agora.toISOString();
+
+      for (const mensagem of novas) {
+        if (pathnameRef.current === `/mensagens/${mensagem.remetente_id}`) continue;
+
+        let nome = nomesCache.current.get(mensagem.remetente_id);
+        if (!nome) {
+          const { data: pessoa } = await supabase
+            .from("pessoas")
+            .select("nome")
+            .eq("usuario_id", mensagem.remetente_id)
+            .maybeSingle();
+          nome = pessoa?.nome ?? "Alguém";
+          nomesCache.current.set(mensagem.remetente_id, nome);
+        }
+        if (cancelado) return;
+
+        const toast: Toast = {
+          id: mensagem.id,
+          usuarioId: mensagem.remetente_id,
+          nome,
+          preview: mensagem.conteudo,
+        };
+        setToasts((atual) => [...atual, toast].slice(-4));
+        setTimeout(() => {
+          setToasts((atual) => atual.filter((t) => t.id !== toast.id));
+        }, 6000);
+      }
     }
 
-    // Garante que o token da sessão já está setado no cliente de Realtime
-    // antes de assinar o canal — na primeira carga da página (sessão vinda
-    // do cookie), a autenticação do Realtime pode não estar pronta ainda
-    // se a gente assinar imediatamente.
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (cancelado || !session) return;
-      supabase.realtime.setAuth(session.access_token);
-      abrirCanal();
-    });
+    poll();
+    const intervalo = setInterval(poll, INTERVALO_POLL_MS);
 
     return () => {
       cancelado = true;
-      if (canal) supabase.removeChannel(canal);
+      clearInterval(intervalo);
     };
   }, [supabase, usuarioId]);
 

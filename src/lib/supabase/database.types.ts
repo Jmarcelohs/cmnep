@@ -787,6 +787,25 @@ export interface Database {
           },
         ];
       };
+      presenca_usuarios: {
+        Row: {
+          usuario_id: string;
+          ultima_atividade: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["presenca_usuarios"]["Row"]> & {
+          usuario_id: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["presenca_usuarios"]["Row"]>;
+        Relationships: [
+          {
+            foreignKeyName: "presenca_usuarios_usuario_id_fkey";
+            columns: ["usuario_id"];
+            isOneToOne: true;
+            referencedRelation: "usuarios";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       autoridades: {
         Row: {
           id: string;
