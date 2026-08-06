@@ -8,6 +8,10 @@ export type NavLeaf = {
   // Papéis pra quem esse item específico fica escondido (usado no lugar
   // de "apenas" quando é mais fácil listar exceção do que lista fechada).
   oculto?: Papel[];
+  // Contador (ex.: pendências aguardando esse usuário) — calculado por
+  // requisição, não faz parte de NAV_ESTRUTURA; injetado depois de
+  // filtrarNav (ver src/app/(app)/layout.tsx).
+  badge?: number;
 };
 export type NavGroup = { label: string; items: NavLeaf[] };
 export type NavEntry = NavLeaf | NavGroup;

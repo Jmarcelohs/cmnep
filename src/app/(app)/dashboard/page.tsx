@@ -3,8 +3,32 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { formatarData } from "@/lib/pdf/formato";
 import { calcularRankingSolicitantes } from "@/lib/dashboard/ranking";
+import { buscarPendenciasPrestacaoContas, type ItemPendente } from "@/lib/dashboard/pendencias";
 import { DownloadPdfButton } from "@/components/download-pdf-button";
 import type { StatusRequerimentoInterno } from "@/lib/supabase/database.types";
+
+function ListaPendencias({ titulo, itens }: { titulo: string; itens: ItemPendente[] }) {
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white p-4">
+      <p className="text-sm font-medium text-amber-700">
+        {titulo} ({itens.length})
+      </p>
+      <ul className="mt-2 space-y-1 text-sm">
+        {itens.map((item) => (
+          <li key={item.prestacaoId}>
+            <Link
+              href={`/diarias/${item.solicitacaoId}/prestacao-contas`}
+              className="text-slate-900 hover:underline"
+            >
+              {item.nome}
+            </Link>
+          </li>
+        ))}
+        {itens.length === 0 && <li className="text-slate-400">Nenhuma pendência.</li>}
+      </ul>
+    </div>
+  );
+}
 
 const STATUS_INTERNO_LABEL: Record<StatusRequerimentoInterno, string> = {
   pendente: "Pendente",
@@ -20,6 +44,8 @@ function formatarMoeda(valor: number) {
 export default async function DashboardPage() {
   const usuario = await getCurrentUsuario();
   const supabase = await createClient();
+
+  const pendencias = await buscarPendenciasPrestacaoContas(supabase, usuario?.papel);
 
   const { data: solicitacoes } = await supabase
     .from("diarias_solicitacoes")
@@ -73,6 +99,40 @@ export default async function DashboardPage() {
       <p className="mt-1 text-sm text-slate-500">
         Perfil: {usuario?.papel ?? "—"}
       </p>
+
+      {pendencias.total > 0 && (
+        <div className="mt-6">
+          <h2 className="text-base font-semibold text-slate-900">
+            Pendências para você ({pendencias.total})
+          </h2>
+          <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {(usuario?.papel === "ordenador_despesa" ||
+              usuario?.papel === "admin" ||
+              usuario?.papel === "gestor_diarias") && (
+              <ListaPendencias
+                titulo="Aguardando aprovação"
+                itens={pendencias.aguardandoAprovacaoOrdenador}
+              />
+            )}
+            {(usuario?.papel === "tesoureiro" ||
+              usuario?.papel === "admin" ||
+              usuario?.papel === "gestor_diarias") && (
+              <ListaPendencias
+                titulo="Aguardando baixa de pagamento"
+                itens={pendencias.aguardandoBaixaTesoureiro}
+              />
+            )}
+            {(usuario?.papel === "controle_interno" ||
+              usuario?.papel === "admin" ||
+              usuario?.papel === "gestor_diarias") && (
+              <ListaPendencias
+                titulo="Aguardando parecer do Controle Interno"
+                itens={pendencias.aguardandoParecerControleInterno}
+              />
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-lg border border-slate-200 border-t-4 border-t-amber-500 bg-white p-4">
