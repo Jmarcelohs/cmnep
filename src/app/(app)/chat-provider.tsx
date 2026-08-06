@@ -55,51 +55,73 @@ export function ChatProvider({
   useEffect(() => {
     if (!usuarioId) return;
 
-    const canal = supabase
-      .channel("presenca-e-mensagens", { config: { presence: { key: usuarioId } } })
-      .on("presence", { event: "sync" }, () => {
-        setUsuariosOnline(new Set(Object.keys(canal.presenceState())));
-      })
-      .on<MensagemDireta>(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "mensagens_diretas",
-          filter: `destinatario_id=eq.${usuarioId}`,
-        },
-        async (payload) => {
-          const mensagem = payload.new;
-          setTotalNaoLidas((atual) => atual + 1);
+    let cancelado = false;
+    let canal: ReturnType<typeof supabase.channel> | null = null;
 
-          // Já estou com essa conversa aberta — a própria tela já mostra a
-          // mensagem ao vivo, não precisa notificar de novo.
-          if (pathnameRef.current === `/mensagens/${mensagem.remetente_id}`) return;
+    function abrirCanal() {
+      const c = supabase
+        .channel("presenca-e-mensagens", { config: { presence: { key: usuarioId! } } })
+        .on("presence", { event: "sync" }, () => {
+          setUsuariosOnline(new Set(Object.keys(c.presenceState())));
+        })
+        .on<MensagemDireta>(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "mensagens_diretas",
+            filter: `destinatario_id=eq.${usuarioId}`,
+          },
+          async (payload) => {
+            const mensagem = payload.new;
+            setTotalNaoLidas((atual) => atual + 1);
 
-          const { data: pessoa } = await supabase
-            .from("pessoas")
-            .select("nome")
-            .eq("usuario_id", mensagem.remetente_id)
-            .maybeSingle();
+            // Já estou com essa conversa aberta — a própria tela já mostra a
+            // mensagem ao vivo, não precisa notificar de novo.
+            if (pathnameRef.current === `/mensagens/${mensagem.remetente_id}`) return;
 
-          const toast: Toast = {
-            id: mensagem.id,
-            usuarioId: mensagem.remetente_id,
-            nome: pessoa?.nome ?? "Alguém",
-            preview: mensagem.conteudo,
-          };
-          setToasts((atual) => [...atual, toast].slice(-4));
-          setTimeout(() => {
-            setToasts((atual) => atual.filter((t) => t.id !== toast.id));
-          }, 6000);
-        },
-      )
-      .subscribe(async (status) => {
-        if (status === "SUBSCRIBED") await canal.track({});
-      });
+            const { data: pessoa } = await supabase
+              .from("pessoas")
+              .select("nome")
+              .eq("usuario_id", mensagem.remetente_id)
+              .maybeSingle();
+
+            const toast: Toast = {
+              id: mensagem.id,
+              usuarioId: mensagem.remetente_id,
+              nome: pessoa?.nome ?? "Alguém",
+              preview: mensagem.conteudo,
+            };
+            setToasts((atual) => [...atual, toast].slice(-4));
+            setTimeout(() => {
+              setToasts((atual) => atual.filter((t) => t.id !== toast.id));
+            }, 6000);
+          },
+        )
+        .subscribe(async (status, err) => {
+          if (status === "SUBSCRIBED") {
+            await c.track({});
+          } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+            console.error("[chat] falha ao conectar no canal de presença/mensagens:", status, err);
+          }
+        });
+
+      canal = c;
+    }
+
+    // Garante que o token da sessão já está setado no cliente de Realtime
+    // antes de assinar o canal — na primeira carga da página (sessão vinda
+    // do cookie), a autenticação do Realtime pode não estar pronta ainda
+    // se a gente assinar imediatamente.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (cancelado || !session) return;
+      supabase.realtime.setAuth(session.access_token);
+      abrirCanal();
+    });
 
     return () => {
-      supabase.removeChannel(canal);
+      cancelado = true;
+      if (canal) supabase.removeChannel(canal);
     };
   }, [supabase, usuarioId]);
 
