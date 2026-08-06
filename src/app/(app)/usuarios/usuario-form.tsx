@@ -23,11 +23,13 @@ export function UsuarioForm({
   pessoas,
   valoresIniciais,
   submitLabel,
+  pedirSenha = false,
 }: {
   action: (formData: FormData) => void;
   pessoas: { id: string; nome: string }[];
   valoresIniciais?: ValoresIniciaisUsuario;
   submitLabel: string;
+  pedirSenha?: boolean;
 }) {
   return (
     <form action={action} className="mt-6 max-w-lg space-y-4">
@@ -52,6 +54,23 @@ export function UsuarioForm({
           className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
         />
       </div>
+      {pedirSenha && (
+        <div>
+          <label htmlFor="senha" className="block text-sm font-medium text-slate-700">Senha provisória</label>
+          <input
+            id="senha"
+            name="senha"
+            type="text"
+            required
+            minLength={6}
+            placeholder="mínimo 6 caracteres"
+            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+          <p className="mt-1 text-xs text-slate-500">
+            Passe essa senha pra pessoa por fora do sistema — ela consegue trocar depois de logar.
+          </p>
+        </div>
+      )}
       <div>
         <label htmlFor="papel" className="block text-sm font-medium text-slate-700">Papel</label>
         <select
