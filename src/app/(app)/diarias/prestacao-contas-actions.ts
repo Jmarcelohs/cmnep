@@ -14,7 +14,11 @@ function numero(formData: FormData, campo: string) {
 
 const hoje = () => new Date().toISOString().slice(0, 10);
 
-export async function criarPrestacaoContas(solicitacaoId: string, formData: FormData) {
+export async function criarPrestacaoContas(
+  solicitacaoId: string,
+  proximaEtapa: string | null,
+  formData: FormData,
+) {
   const usuario = await getCurrentUsuario();
   if (!usuario) redirect("/login");
 
@@ -91,17 +95,25 @@ export async function criarPrestacaoContas(solicitacaoId: string, formData: Form
     const mensagem = error?.message.includes("duplicate key")
       ? "Essa diária já tem uma prestação de contas registrada."
       : (error?.message ?? "Erro ao salvar a prestação de contas");
-    redirect(`/diarias/${solicitacaoId}/prestacao-contas?error=${encodeURIComponent(mensagem)}`);
+    const etapaQuery = proximaEtapa ? `&etapa=${proximaEtapa}` : "";
+    redirect(
+      `/diarias/${solicitacaoId}/prestacao-contas?error=${encodeURIComponent(mensagem)}${etapaQuery}`,
+    );
   }
 
   revalidatePath(`/diarias/${solicitacaoId}`);
   revalidatePath(`/diarias/${solicitacaoId}/prestacao-contas`);
-  redirect(`/diarias/${solicitacaoId}/prestacao-contas`);
+  redirect(
+    proximaEtapa
+      ? `/diarias/${solicitacaoId}/prestacao-contas?etapa=${proximaEtapa}`
+      : `/diarias/${solicitacaoId}/prestacao-contas`,
+  );
 }
 
 export async function editarPrestacaoContas(
   prestacaoId: string,
   solicitacaoId: string,
+  proximaEtapa: string | null,
   formData: FormData,
 ) {
   const usuario = await getCurrentUsuario();
@@ -153,15 +165,20 @@ export async function editarPrestacaoContas(
     .eq("id", prestacaoId);
 
   if (error) {
-    redirect(
-      `/diarias/${solicitacaoId}/prestacao-contas/editar?error=${encodeURIComponent(error.message)}`,
-    );
+    const destino = proximaEtapa
+      ? `/diarias/${solicitacaoId}/prestacao-contas?etapa=${proximaEtapa}`
+      : `/diarias/${solicitacaoId}/prestacao-contas/editar`;
+    redirect(`${destino}${destino.includes("?") ? "&" : "?"}error=${encodeURIComponent(error.message)}`);
   }
 
   revalidatePath(`/diarias/${solicitacaoId}`);
   revalidatePath(`/diarias/${solicitacaoId}/prestacao-contas`);
   revalidatePath("/diarias");
-  redirect(`/diarias/${solicitacaoId}/prestacao-contas`);
+  redirect(
+    proximaEtapa
+      ? `/diarias/${solicitacaoId}/prestacao-contas?etapa=${proximaEtapa}`
+      : `/diarias/${solicitacaoId}/prestacao-contas`,
+  );
 }
 
 // Formaliza um rascunho já preenchido sem precisar reabrir o formulário —

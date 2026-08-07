@@ -4,16 +4,20 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import {
   criarPrestacaoContas,
+  editarPrestacaoContas,
   enviarPrestacaoContas,
   aprovarPrestacaoOrdenador,
   darBaixaPagamento,
   emitirParecerControleInterno,
   excluirPrestacaoContas,
 } from "../../prestacao-contas-actions";
-import { NovaPrestacaoForm } from "./nova-prestacao-form";
 import { AnexosForm } from "./anexos-form";
 import { ComprovantesPagamentoForm } from "./comprovantes-pagamento-form";
 import { ExcluirSolicitacaoButton } from "@/components/excluir-solicitacao-button";
+import { EtapaProgresso } from "./etapa-progresso";
+import { EtapaRelatorioForm } from "./etapa-relatorio-form";
+import { EtapaFinanceiroForm } from "./etapa-financeiro-form";
+import { FinalizarRascunhoForm } from "./finalizar-rascunho-form";
 
 function formatarMoeda(valor: number) {
   return Number(valor).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -36,10 +40,10 @@ export default async function PrestacaoContasPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; etapa?: string }>;
 }) {
   const { id } = await params;
-  const { error: errorMsg } = await searchParams;
+  const { error: errorMsg, etapa: etapaParam } = await searchParams;
   const supabase = await createClient();
   const usuario = await getCurrentUsuario();
 
@@ -65,6 +69,8 @@ export default async function PrestacaoContasPage({
     .select("*, pessoas(nome, cargo)")
     .eq("solicitacao_id", id)
     .maybeSingle();
+
+  const valorAutorizado = Number(solicitacao.total ?? 0);
 
   if (!prestacao) {
     const podeCriar =
@@ -133,13 +139,12 @@ export default async function PrestacaoContasPage({
           </p>
         )}
 
-        <NovaPrestacaoForm
-          action={criarPrestacaoContas.bind(null, id)}
-          valorAutorizado={Number(solicitacao.total ?? 0)}
-          modoRascunho
-          valoresIniciais={{
-            relatorio_resultado: "",
-            debito_diarias_previstas: Number(solicitacao.total ?? 0),
+        <EtapaProgresso atual={1} />
+        <EtapaRelatorioForm
+          action={criarPrestacaoContas.bind(null, id, "2")}
+          valorAutorizado={valorAutorizado}
+          valoresIniciaisFinanceiro={{
+            debito_diarias_previstas: valorAutorizado,
             debito_diarias_nao_previstas: 0,
             debito_transporte_aereo: debitoTransporteAereo,
             debito_transporte_urbano: debitoTransporteUrbano,
@@ -154,6 +159,116 @@ export default async function PrestacaoContasPage({
   }
 
   const pessoa = prestacao.pessoas as unknown as { nome: string; cargo: string } | null;
+
+  const podeAnexar =
+    usuario?.papel === "admin" ||
+    usuario?.papel === "gestor_diarias" ||
+    minhaPessoa?.id === prestacao.pessoa_id;
+
+  // Enquanto não for enviada oficialmente (rascunho), ninguém do lado das
+  // decisões (ordenador/tesoureiro/controle interno) pode agir — só existe
+  // pra quem está preenchendo salvar o progresso.
+  const souRascunho = !prestacao.data_autenticacao_beneficiario;
+
+  const valoresFinanceiroSalvos = {
+    debito_diarias_previstas: Number(prestacao.debito_diarias_previstas),
+    debito_diarias_nao_previstas: Number(prestacao.debito_diarias_nao_previstas),
+    debito_transporte_aereo: Number(prestacao.debito_transporte_aereo),
+    debito_transporte_urbano: Number(prestacao.debito_transporte_urbano),
+    credito_recebidas_antecipadamente: Number(prestacao.credito_recebidas_antecipadamente),
+    credito_reembolsar: Number(prestacao.credito_reembolsar),
+    credito_transporte_urbano: Number(prestacao.credito_transporte_urbano),
+    credito_devolver: Number(prestacao.credito_devolver),
+  };
+
+  // Rascunho: fluxo por etapas sequenciais (relatório → financeiro →
+  // documentos e salvar) — só quem pode gerenciar a prestação passa por
+  // aqui; sem etapa na URL, sempre volta pra revisão da Etapa 1.
+  if (souRascunho && podeAnexar) {
+    const etapa = etapaParam === "2" ? 2 : etapaParam === "3" ? 3 : 1;
+
+    if (etapa === 3) {
+      const { data: anexos } = await supabase
+        .from("diarias_prestacoes_anexos")
+        .select("id, nome_original, tipo, caminho")
+        .eq("prestacao_id", prestacao.id)
+        .order("criado_em");
+
+      return (
+        <div>
+          <h1 className="text-xl font-semibold text-brand-navy">
+            Prestação de contas — {pessoa?.nome ?? "—"}
+          </h1>
+          <p className="text-sm text-slate-500">{pessoa?.cargo}</p>
+          {errorMsg && (
+            <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{errorMsg}</p>
+          )}
+          <EtapaProgresso atual={3} />
+
+          <AnexosForm prestacaoId={prestacao.id} anexos={anexos ?? []} podeEditar={podeAnexar} />
+
+          <FinalizarRascunhoForm
+            action={editarPrestacaoContas.bind(null, prestacao.id, id, null)}
+            relatorioAtual={prestacao.relatorio_resultado ?? ""}
+            valorAutorizado={valorAutorizado}
+            valoresIniciaisFinanceiro={valoresFinanceiroSalvos}
+          />
+
+          <div className="mt-6 flex items-center justify-between border-t border-slate-200 pt-4">
+            <Link href="?etapa=2" className="text-sm text-slate-500 hover:text-brand-navy">
+              ← Voltar
+            </Link>
+            <ExcluirSolicitacaoButton
+              action={excluirPrestacaoContas.bind(null, prestacao.id, id)}
+              size="md"
+              mensagemConfirmacao="Tem certeza que deseja excluir esse rascunho de prestação de contas? Essa ação não pode ser desfeita."
+            />
+          </div>
+        </div>
+      );
+    }
+
+    if (etapa === 2) {
+      return (
+        <div>
+          <h1 className="text-xl font-semibold text-brand-navy">
+            Prestação de contas — {pessoa?.nome ?? "—"}
+          </h1>
+          <p className="text-sm text-slate-500">{pessoa?.cargo}</p>
+          {errorMsg && (
+            <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{errorMsg}</p>
+          )}
+          <EtapaProgresso atual={2} />
+          <EtapaFinanceiroForm
+            actionProximo={editarPrestacaoContas.bind(null, prestacao.id, id, "3")}
+            actionVoltar={editarPrestacaoContas.bind(null, prestacao.id, id, "1")}
+            valorAutorizado={valorAutorizado}
+            valoresIniciais={valoresFinanceiroSalvos}
+            relatorioAtual={prestacao.relatorio_resultado ?? ""}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div>
+        <h1 className="text-xl font-semibold text-brand-navy">
+          Prestação de contas — {pessoa?.nome ?? "—"}
+        </h1>
+        <p className="text-sm text-slate-500">{pessoa?.cargo}</p>
+        {errorMsg && (
+          <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{errorMsg}</p>
+        )}
+        <EtapaProgresso atual={1} />
+        <EtapaRelatorioForm
+          action={editarPrestacaoContas.bind(null, prestacao.id, id, "2")}
+          valorInicial={prestacao.relatorio_resultado ?? ""}
+          valorAutorizado={valorAutorizado}
+          valoresIniciaisFinanceiro={valoresFinanceiroSalvos}
+        />
+      </div>
+    );
+  }
 
   const { data: pagamentos } = await supabase
     .from("diarias_prestacoes_pagamentos")
@@ -180,16 +295,6 @@ export default async function PrestacaoContasPage({
     .from("requerimentos_reembolso")
     .select("id", { count: "exact", head: true })
     .eq("solicitacao_diaria_id", id);
-
-  const podeAnexar =
-    usuario?.papel === "admin" ||
-    usuario?.papel === "gestor_diarias" ||
-    minhaPessoa?.id === prestacao.pessoa_id;
-
-  // Enquanto não for enviada oficialmente (rascunho), ninguém do lado das
-  // decisões (ordenador/tesoureiro/controle interno) pode agir — só existe
-  // pra quem está preenchendo salvar o progresso.
-  const souRascunho = !prestacao.data_autenticacao_beneficiario;
 
   // Gestor de diárias tem acesso equivalente ao admin nesse módulo, mas não
   // pode aprovar/dar baixa/emitir parecer na própria prestação de contas —

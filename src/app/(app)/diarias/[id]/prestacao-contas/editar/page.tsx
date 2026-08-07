@@ -48,7 +48,7 @@ export default async function EditarPrestacaoContasPage({
       )}
 
       <NovaPrestacaoForm
-        action={editarPrestacaoContas.bind(null, prestacao.id, id)}
+        action={editarPrestacaoContas.bind(null, prestacao.id, id, null)}
         valorAutorizado={0}
         modoRascunho={!prestacao.data_autenticacao_beneficiario}
         valoresIniciais={{
