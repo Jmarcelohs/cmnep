@@ -306,6 +306,35 @@ export interface Database {
           },
         ];
       };
+      diarias_prestacoes_pagamentos_anexos: {
+        Row: {
+          id: string;
+          pagamento_id: string;
+          caminho: string;
+          nome_original: string;
+          tipo: TipoAnexo;
+          criado_por: string | null;
+          criado_em: string;
+        };
+        Insert: Partial<
+          Omit<Database["public"]["Tables"]["diarias_prestacoes_pagamentos_anexos"]["Row"], "id">
+        > & {
+          pagamento_id: string;
+          caminho: string;
+          nome_original: string;
+          tipo: TipoAnexo;
+        };
+        Update: Partial<Database["public"]["Tables"]["diarias_prestacoes_pagamentos_anexos"]["Row"]>;
+        Relationships: [
+          {
+            foreignKeyName: "diarias_prestacoes_pagamentos_anexos_pagamento_id_fkey";
+            columns: ["pagamento_id"];
+            isOneToOne: false;
+            referencedRelation: "diarias_prestacoes_pagamentos";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       diarias_prestacoes_anexos: {
         Row: {
           id: string;

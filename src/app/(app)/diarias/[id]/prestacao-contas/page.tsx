@@ -12,6 +12,7 @@ import {
 } from "../../prestacao-contas-actions";
 import { NovaPrestacaoForm } from "./nova-prestacao-form";
 import { AnexosForm } from "./anexos-form";
+import { ComprovantesPagamentoForm } from "./comprovantes-pagamento-form";
 import { ExcluirSolicitacaoButton } from "@/components/excluir-solicitacao-button";
 
 function formatarMoeda(valor: number) {
@@ -158,6 +159,16 @@ export default async function PrestacaoContasPage({
     .from("diarias_prestacoes_pagamentos")
     .select("*")
     .eq("prestacao_id", prestacao.id);
+
+  const idsPagamentos = (pagamentos ?? []).map((p) => p.id);
+  const { data: comprovantesPagamentos } =
+    idsPagamentos.length > 0
+      ? await supabase
+          .from("diarias_prestacoes_pagamentos_anexos")
+          .select("id, pagamento_id, nome_original, tipo, caminho")
+          .in("pagamento_id", idsPagamentos)
+          .order("criado_em")
+      : { data: [] };
 
   const { data: anexos } = await supabase
     .from("diarias_prestacoes_anexos")
@@ -370,10 +381,17 @@ export default async function PrestacaoContasPage({
 
         <div className="rounded-lg border border-slate-200 bg-white p-4">
           <h3 className="text-sm font-semibold text-slate-900">Baixa do pagamento</h3>
-          <ul className="mt-2 space-y-1 text-sm text-slate-700">
+          <ul className="mt-2 space-y-3 text-sm text-slate-700">
             {pagamentos?.map((p) => (
               <li key={p.id}>
-                Nº {p.numero_processo} — {formatarMoeda(p.valor)}
+                <p>
+                  Nº {p.numero_processo} — {formatarMoeda(p.valor)}
+                </p>
+                <ComprovantesPagamentoForm
+                  pagamentoId={p.id}
+                  comprovantes={(comprovantesPagamentos ?? []).filter((c) => c.pagamento_id === p.id)}
+                  podeEditar={podeDarBaixa}
+                />
               </li>
             ))}
             {(!pagamentos || pagamentos.length === 0) && (
