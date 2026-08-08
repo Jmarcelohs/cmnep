@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { buscarPendenciasPrestacaoContas } from "@/lib/dashboard/pendencias";
 import { buscarDiariasAtrasadas } from "@/lib/dashboard/diarias-atrasadas";
+import { buscarReembolsosParados, buscarRequerimentosInternosParados } from "@/lib/dashboard/requerimentos-parados";
 import { buscarMensagensNaoLidas } from "@/lib/mensagens/nao-lidas";
 import { AppShell } from "./app-shell";
 import { ChatProvider } from "./chat-provider";
@@ -17,19 +18,24 @@ export default async function AppLayout({
   const navItems = filtrarNav(NAV_ESTRUTURA, usuario?.papel);
 
   const supabase = await createClient();
-  const [pendencias, diariasAtrasadas, mensagensNaoLidas] = await Promise.all([
+  const [pendencias, diariasAtrasadas, reembolsosParados, internosParados, mensagensNaoLidas] = await Promise.all([
     buscarPendenciasPrestacaoContas(supabase, usuario),
     buscarDiariasAtrasadas(supabase, usuario),
+    buscarReembolsosParados(supabase, usuario),
+    buscarRequerimentosInternosParados(supabase, usuario),
     buscarMensagensNaoLidas(supabase, usuario),
   ]);
 
   // Contador por item de topo: pendências (aprovação/baixa/parecer) no
   // "Painel", diárias com prestação de contas atrasada em "Prestações de
-  // Contas", mensagens não lidas em "Mensagens" — cada um só aparece pra
-  // quem tem algo pendente/atrasado/não lido.
+  // Contas", reembolsos/requerimentos internos parados sem decisão há muito
+  // tempo em cada módulo, mensagens não lidas em "Mensagens" — cada um só
+  // aparece pra quem tem algo pendente/atrasado/não lido.
   const badgesPorHref: Record<string, number> = {
     "/dashboard": pendencias.total,
     "/diarias?prestacao=pendente": diariasAtrasadas.total,
+    "/requerimentos": reembolsosParados.total,
+    "/requerimentos-internos": internosParados.total,
     "/mensagens": mensagensNaoLidas.total,
   };
 

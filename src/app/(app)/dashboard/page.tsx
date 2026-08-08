@@ -5,6 +5,7 @@ import { formatarData } from "@/lib/pdf/formato";
 import { calcularRankingSolicitantes } from "@/lib/dashboard/ranking";
 import { buscarPendenciasPrestacaoContas } from "@/lib/dashboard/pendencias";
 import { buscarDiariasAtrasadas } from "@/lib/dashboard/diarias-atrasadas";
+import { buscarReembolsosParados, buscarRequerimentosInternosParados } from "@/lib/dashboard/requerimentos-parados";
 import { buscarPessoasSemCpf } from "@/lib/dashboard/pessoas-sem-cpf";
 import { DownloadPdfButton } from "@/components/download-pdf-button";
 import { ListaPendencias } from "./lista-pendencias";
@@ -28,6 +29,8 @@ export default async function DashboardPage() {
 
   const pendencias = await buscarPendenciasPrestacaoContas(supabase, usuario);
   const diariasAtrasadas = await buscarDiariasAtrasadas(supabase, usuario);
+  const reembolsosParados = await buscarReembolsosParados(supabase, usuario);
+  const internosParados = await buscarRequerimentosInternosParados(supabase, usuario);
   const pessoasSemCpf = await buscarPessoasSemCpf(supabase, usuario);
 
   const { data: solicitacoes } = await supabase
@@ -145,6 +148,40 @@ export default async function DashboardPage() {
             />
           </div>
         )}
+
+      {reembolsosParados.total > 0 && (
+        <div className="mt-6 rounded-lg border border-slate-200 bg-white p-4">
+          <p className="text-sm font-medium text-amber-700">
+            Reembolsos parados sem decisão ({reembolsosParados.total})
+          </p>
+          <ul className="mt-2 space-y-1 text-sm">
+            {reembolsosParados.itens.map((item) => (
+              <li key={item.id}>
+                <Link href={`/requerimentos/${item.id}`} className="text-slate-900 hover:underline">
+                  {item.titulo} ({item.diasUteisParado} dias úteis)
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {internosParados.total > 0 && (
+        <div className="mt-6 rounded-lg border border-slate-200 bg-white p-4">
+          <p className="text-sm font-medium text-amber-700">
+            Requerimentos internos parados sem decisão ({internosParados.total})
+          </p>
+          <ul className="mt-2 space-y-1 text-sm">
+            {internosParados.itens.map((item) => (
+              <li key={item.id}>
+                <Link href={`/requerimentos-internos/${item.id}`} className="text-slate-900 hover:underline">
+                  {item.titulo} ({item.diasUteisParado} dias úteis)
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {(usuario?.papel === "admin" || usuario?.papel === "ordenador_despesa") &&
         pessoasSemCpf.total > 0 && (
