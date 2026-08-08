@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { formatarMoeda } from "@/lib/pdf/formato";
 import { calcularRelatorioAnual } from "@/lib/relatorios/anual";
+import { GraficoBarrasMensal } from "@/components/grafico-barras-mensal";
 import { PrintButton } from "../../../print-button";
 import type { StatusRequerimentoInterno, StatusRequerimentoReembolso } from "@/lib/supabase/database.types";
 
@@ -10,6 +11,13 @@ const STATUS_LABEL: Record<StatusRequerimentoInterno | StatusRequerimentoReembol
   deferido: "Deferido",
   indeferido: "Indeferido",
 };
+
+// Mesmo par de cores validado pela skill de dataviz usado na tela
+// interativa (src/app/(app)/relatorios/anual/page.tsx) — as cores de marca
+// do app não passam no validador quando usadas como preenchimento de
+// barra.
+const COR_DIARIAS = "#2563eb";
+const COR_REEMBOLSOS = "#16a34a";
 
 export default async function ImprimirRelatorioAnualPage({
   searchParams,
@@ -83,6 +91,25 @@ export default async function ImprimirRelatorioAnualPage({
               <p className="mt-1 text-xl font-semibold">{relatorio.requerimentosInternos.porStatus[s]}</p>
             </div>
           ))}
+        </div>
+
+        <h2 className="mt-8 text-sm font-semibold">Evolução mensal</h2>
+        <div className="mt-2 grid grid-cols-2 gap-4">
+          <GraficoBarrasMensal
+            titulo="Quantidade por mês"
+            series={[
+              { rotulo: "Diárias autorizadas", cor: COR_DIARIAS, valores: relatorio.diarias.porMes.map((p) => p.quantidade) },
+              { rotulo: "Reembolsos deferidos", cor: COR_REEMBOLSOS, valores: relatorio.reembolsos.porMes.map((p) => p.quantidade) },
+            ]}
+          />
+          <GraficoBarrasMensal
+            titulo="Valor por mês"
+            series={[
+              { rotulo: "Diárias autorizadas", cor: COR_DIARIAS, valores: relatorio.diarias.porMes.map((p) => p.valor) },
+              { rotulo: "Reembolsos deferidos", cor: COR_REEMBOLSOS, valores: relatorio.reembolsos.porMes.map((p) => p.valor) },
+            ]}
+            formatarValor={formatarMoeda}
+          />
         </div>
 
         <h2 className="mt-8 text-sm font-semibold">Diárias por solicitante</h2>

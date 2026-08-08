@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { calcularRelatorioAnual } from "@/lib/relatorios/anual";
 import { formatarData } from "@/lib/pdf/formato";
 import { DownloadPdfButton } from "@/components/download-pdf-button";
+import { GraficoBarrasMensal } from "@/components/grafico-barras-mensal";
 import type { StatusRequerimentoInterno, StatusRequerimentoReembolso } from "@/lib/supabase/database.types";
 
 const STATUS_LABEL: Record<StatusRequerimentoInterno | StatusRequerimentoReembolso, string> = {
@@ -14,6 +15,14 @@ const STATUS_LABEL: Record<StatusRequerimentoInterno | StatusRequerimentoReembol
 function formatarMoeda(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
+
+// Cores validadas pra uso em gráfico (marca de dado) — as cores de marca do
+// app (brand-navy/brand-green) falham o validador de paleta da skill de
+// dataviz quando usadas como preenchimento de barra (escuras/pouco
+// saturadas demais pra ler como dado, ou contraste insuficiente). Par fixo,
+// sempre nessa ordem: Diárias primeiro, Reembolsos depois.
+const COR_DIARIAS = "#2563eb";
+const COR_REEMBOLSOS = "#16a34a";
 
 export default async function RelatorioAnualPage({
   searchParams,
@@ -153,6 +162,29 @@ export default async function RelatorioAnualPage({
             </div>
           ),
         )}
+      </div>
+
+      <h2 className="mt-8 text-base font-semibold text-slate-900">Evolução mensal</h2>
+      <div className="mt-3 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="rounded-lg border border-slate-200 bg-white p-4">
+          <GraficoBarrasMensal
+            titulo="Quantidade por mês"
+            series={[
+              { rotulo: "Diárias autorizadas", cor: COR_DIARIAS, valores: relatorio.diarias.porMes.map((p) => p.quantidade) },
+              { rotulo: "Reembolsos deferidos", cor: COR_REEMBOLSOS, valores: relatorio.reembolsos.porMes.map((p) => p.quantidade) },
+            ]}
+          />
+        </div>
+        <div className="rounded-lg border border-slate-200 bg-white p-4">
+          <GraficoBarrasMensal
+            titulo="Valor por mês"
+            series={[
+              { rotulo: "Diárias autorizadas", cor: COR_DIARIAS, valores: relatorio.diarias.porMes.map((p) => p.valor) },
+              { rotulo: "Reembolsos deferidos", cor: COR_REEMBOLSOS, valores: relatorio.reembolsos.porMes.map((p) => p.valor) },
+            ]}
+            formatarValor={formatarMoeda}
+          />
+        </div>
       </div>
 
       <h2 className="mt-8 text-base font-semibold text-slate-900">Diárias por solicitante</h2>
