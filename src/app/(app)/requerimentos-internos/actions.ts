@@ -202,3 +202,56 @@ export async function naoAutorizarRequerimentoInterno(id: string) {
   revalidatePath(`/requerimentos-internos/${id}`);
   revalidatePath("/requerimentos-internos");
 }
+
+export type ResultadoLoteRequerimentoInterno = {
+  aplicados: number;
+  ignorados: { nome: string; motivo: string }[];
+};
+
+// Chamada diretamente do cliente (não via <form action>) — precisa do
+// resultado (aplicados/ignorados) de volta pra tela. Checa papel e estado
+// no servidor, diferente das ações individuais acima (gate só na UI). Sem
+// gestor_diarias aqui — mesma regra mais estreita que a decisão individual
+// já tem hoje (podeGerenciarSempre em requerimentos-internos/page.tsx).
+export async function decidirRequerimentosInternosEmLote(
+  ids: string[],
+  decisao: "deferido" | "indeferido" | "analise",
+): Promise<ResultadoLoteRequerimentoInterno> {
+  const usuario = await getCurrentUsuario();
+  const supabase = await createClient();
+
+  const papelPermitido = usuario?.papel === "admin" || usuario?.papel === "ordenador_despesa";
+  if (!usuario || !papelPermitido || ids.length === 0) return { aplicados: 0, ignorados: [] };
+
+  const { data: requerimentos } = await supabase
+    .from("requerimentos_internos")
+    .select("id, numero, ano, status")
+    .in("id", ids);
+
+  const aplicaveis: string[] = [];
+  const ignorados: { nome: string; motivo: string }[] = [];
+
+  for (const r of requerimentos ?? []) {
+    const nome = `${r.numero}/${r.ano}`;
+    if (r.status === "deferido" || r.status === "indeferido") {
+      ignorados.push({ nome, motivo: "já foi decidido" });
+    } else {
+      aplicaveis.push(r.id);
+    }
+  }
+
+  if (aplicaveis.length > 0) {
+    const dados =
+      decisao === "analise"
+        ? { status: "analise" as const }
+        : {
+            status: decisao,
+            decisao: decisao === "deferido" ? ("autorizado" as const) : ("nao_autorizado" as const),
+            decisao_data: hoje(),
+          };
+    await supabase.from("requerimentos_internos").update(dados).in("id", aplicaveis);
+    revalidatePath("/requerimentos-internos");
+  }
+
+  return { aplicados: aplicaveis.length, ignorados };
+}

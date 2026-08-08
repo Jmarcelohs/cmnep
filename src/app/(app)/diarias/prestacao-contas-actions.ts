@@ -271,3 +271,119 @@ export async function emitirParecerControleInterno(
 
   revalidatePath(`/diarias/${solicitacaoId}/prestacao-contas`);
 }
+
+export type ResultadoLote = {
+  aplicados: number;
+  ignorados: { nome: string; motivo: string }[];
+};
+
+async function buscarMinhaPessoaId(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  usuarioId: string,
+) {
+  const { data } = await supabase
+    .from("pessoas")
+    .select("id")
+    .eq("usuario_id", usuarioId)
+    .maybeSingle();
+  return data?.id ?? null;
+}
+
+// Ações em lote chamadas diretamente do cliente (não via <form action>) —
+// o resultado (quantos aplicados/ignorados) precisa voltar pra tela em vez
+// de só redirecionar. Diferente das ações individuais acima, checam papel
+// e estado no servidor (a UI que monta a lista de seleção já filtra tudo
+// isso, mas nada impedia uma chamada direta antes — ver plano/contexto).
+export async function aprovarPrestacoesEmLote(ids: string[]): Promise<ResultadoLote> {
+  const usuario = await getCurrentUsuario();
+  const supabase = await createClient();
+
+  const papelPermitido =
+    usuario?.papel === "ordenador_despesa" ||
+    usuario?.papel === "admin" ||
+    usuario?.papel === "gestor_diarias";
+  if (!usuario || !papelPermitido || ids.length === 0) return { aplicados: 0, ignorados: [] };
+
+  const minhaPessoa =
+    usuario.papel === "gestor_diarias" ? await buscarMinhaPessoaId(supabase, usuario.id) : null;
+
+  const { data: prestacoes } = await supabase
+    .from("diarias_prestacoes_contas")
+    .select("id, pessoa_id, data_autenticacao_beneficiario, data_aprovacao_ordenador, pessoas(nome)")
+    .in("id", ids);
+
+  const aplicaveis: string[] = [];
+  const ignorados: { nome: string; motivo: string }[] = [];
+
+  for (const p of prestacoes ?? []) {
+    const nome = (p.pessoas as unknown as { nome: string } | null)?.nome ?? "—";
+    if (minhaPessoa && p.pessoa_id === minhaPessoa) {
+      ignorados.push({ nome, motivo: "é a sua própria prestação de contas" });
+    } else if (!p.data_autenticacao_beneficiario) {
+      ignorados.push({ nome, motivo: "ainda é rascunho" });
+    } else if (p.data_aprovacao_ordenador) {
+      ignorados.push({ nome, motivo: "já foi aprovada" });
+    } else {
+      aplicaveis.push(p.id);
+    }
+  }
+
+  if (aplicaveis.length > 0) {
+    await supabase
+      .from("diarias_prestacoes_contas")
+      .update({ data_aprovacao_ordenador: hoje() })
+      .in("id", aplicaveis);
+    revalidatePath("/dashboard");
+  }
+
+  return { aplicados: aplicaveis.length, ignorados };
+}
+
+export async function emitirPareceresEmLote(
+  ids: string[],
+  parecer: Parecer,
+  parecer_observacao: string | null,
+): Promise<ResultadoLote> {
+  const usuario = await getCurrentUsuario();
+  const supabase = await createClient();
+
+  const papelPermitido =
+    usuario?.papel === "controle_interno" ||
+    usuario?.papel === "admin" ||
+    usuario?.papel === "gestor_diarias";
+  if (!usuario || !papelPermitido || ids.length === 0) return { aplicados: 0, ignorados: [] };
+
+  const minhaPessoa =
+    usuario.papel === "gestor_diarias" ? await buscarMinhaPessoaId(supabase, usuario.id) : null;
+
+  const { data: prestacoes } = await supabase
+    .from("diarias_prestacoes_contas")
+    .select("id, pessoa_id, data_autenticacao_beneficiario, parecer, pessoas(nome)")
+    .in("id", ids);
+
+  const aplicaveis: string[] = [];
+  const ignorados: { nome: string; motivo: string }[] = [];
+
+  for (const p of prestacoes ?? []) {
+    const nome = (p.pessoas as unknown as { nome: string } | null)?.nome ?? "—";
+    if (minhaPessoa && p.pessoa_id === minhaPessoa) {
+      ignorados.push({ nome, motivo: "é a sua própria prestação de contas" });
+    } else if (!p.data_autenticacao_beneficiario) {
+      ignorados.push({ nome, motivo: "ainda é rascunho" });
+    } else if (p.parecer) {
+      ignorados.push({ nome, motivo: "já tem parecer" });
+    } else {
+      aplicaveis.push(p.id);
+    }
+  }
+
+  if (aplicaveis.length > 0) {
+    await supabase
+      .from("diarias_prestacoes_contas")
+      .update({ parecer, parecer_observacao, parecer_data: hoje() })
+      .in("id", aplicaveis);
+    revalidatePath("/dashboard");
+  }
+
+  return { aplicados: aplicaveis.length, ignorados };
+}

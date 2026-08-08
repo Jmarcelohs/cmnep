@@ -186,3 +186,56 @@ export async function naoAutorizarReembolso(id: string) {
   revalidatePath(`/requerimentos/${id}`);
   revalidatePath("/requerimentos");
 }
+
+export type ResultadoLoteReembolso = {
+  aplicados: number;
+  ignorados: { nome: string; motivo: string }[];
+};
+
+// Chamada diretamente do cliente (não via <form action>) — precisa do
+// resultado (aplicados/ignorados) de volta pra tela. Checa papel e estado
+// no servidor, diferente das ações individuais acima (gate só na UI).
+export async function decidirReembolsosEmLote(
+  ids: string[],
+  decisao: "deferido" | "indeferido" | "analise",
+): Promise<ResultadoLoteReembolso> {
+  const usuario = await getCurrentUsuario();
+  const supabase = await createClient();
+
+  const papelPermitido =
+    usuario?.papel === "ordenador_despesa" ||
+    usuario?.papel === "admin" ||
+    usuario?.papel === "gestor_diarias";
+  if (!usuario || !papelPermitido || ids.length === 0) return { aplicados: 0, ignorados: [] };
+
+  const { data: requerimentos } = await supabase
+    .from("requerimentos_reembolso")
+    .select("id, protocolo, status")
+    .in("id", ids);
+
+  const aplicaveis: string[] = [];
+  const ignorados: { nome: string; motivo: string }[] = [];
+
+  for (const r of requerimentos ?? []) {
+    if (r.status === "deferido" || r.status === "indeferido") {
+      ignorados.push({ nome: r.protocolo, motivo: "já foi decidido" });
+    } else {
+      aplicaveis.push(r.id);
+    }
+  }
+
+  if (aplicaveis.length > 0) {
+    const dados =
+      decisao === "analise"
+        ? { status: "analise" as const }
+        : {
+            status: decisao,
+            decisao: decisao === "deferido" ? ("autorizado" as const) : ("nao_autorizado" as const),
+            decisao_data: hoje(),
+          };
+    await supabase.from("requerimentos_reembolso").update(dados).in("id", aplicaveis);
+    revalidatePath("/requerimentos");
+  }
+
+  return { aplicados: aplicaveis.length, ignorados };
+}

@@ -3,33 +3,12 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { formatarData } from "@/lib/pdf/formato";
 import { calcularRankingSolicitantes } from "@/lib/dashboard/ranking";
-import { buscarPendenciasPrestacaoContas, type ItemPendente } from "@/lib/dashboard/pendencias";
+import { buscarPendenciasPrestacaoContas } from "@/lib/dashboard/pendencias";
 import { buscarDiariasAtrasadas } from "@/lib/dashboard/diarias-atrasadas";
 import { DownloadPdfButton } from "@/components/download-pdf-button";
+import { ListaPendencias } from "./lista-pendencias";
+import { aprovarPrestacoesEmLote, emitirPareceresEmLote } from "../diarias/prestacao-contas-actions";
 import type { StatusRequerimentoInterno } from "@/lib/supabase/database.types";
-
-function ListaPendencias({ titulo, itens }: { titulo: string; itens: ItemPendente[] }) {
-  return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4">
-      <p className="text-sm font-medium text-amber-700">
-        {titulo} ({itens.length})
-      </p>
-      <ul className="mt-2 space-y-1 text-sm">
-        {itens.map((item) => (
-          <li key={item.prestacaoId}>
-            <Link
-              href={`/diarias/${item.solicitacaoId}/prestacao-contas`}
-              className="text-slate-900 hover:underline"
-            >
-              {item.nome}
-            </Link>
-          </li>
-        ))}
-        {itens.length === 0 && <li className="text-slate-400">Nenhuma pendência.</li>}
-      </ul>
-    </div>
-  );
-}
 
 const STATUS_INTERNO_LABEL: Record<StatusRequerimentoInterno, string> = {
   pendente: "Pendente",
@@ -114,6 +93,7 @@ export default async function DashboardPage() {
               <ListaPendencias
                 titulo="Aguardando aprovação"
                 itens={pendencias.aguardandoAprovacaoOrdenador}
+                lote={{ tipo: "aprovacao", executar: aprovarPrestacoesEmLote }}
               />
             )}
             {(usuario?.papel === "tesoureiro" ||
@@ -130,6 +110,7 @@ export default async function DashboardPage() {
               <ListaPendencias
                 titulo="Aguardando parecer do Controle Interno"
                 itens={pendencias.aguardandoParecerControleInterno}
+                lote={{ tipo: "parecer", executar: emitirPareceresEmLote }}
               />
             )}
           </div>
