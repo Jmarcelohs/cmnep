@@ -62,6 +62,12 @@ export default async function PessoasPage({
         >
           Filtrar
         </button>
+        <a
+          href="/api/pessoas/csv"
+          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        >
+          Exportar CSV
+        </a>
       </form>
 
       {error && (
