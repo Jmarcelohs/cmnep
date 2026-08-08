@@ -200,6 +200,15 @@ export function AppShell({
         <div className="m-4 rounded-lg bg-white p-3">
           <Logo />
         </div>
+        <form action="/busca" className="mx-4 mb-2">
+          <input
+            type="text"
+            name="busca"
+            placeholder="Buscar..."
+            aria-label="Buscar em todo o sistema"
+            className="w-full rounded-md border border-white/20 bg-white/10 px-3 py-1.5 text-sm text-white placeholder:text-white/50 focus:border-white/40 focus:outline-none"
+          />
+        </form>
         <NavLinks items={navItems} pathname={pathname} />
         <RodapeUsuario usuario={usuario} />
       </aside>
@@ -217,7 +226,12 @@ export function AppShell({
           </svg>
         </button>
         <Logo className="h-8 w-auto rounded bg-white p-1" />
-        <span className="w-6" />
+        <Link href="/busca" aria-label="Buscar" className="rounded-md p-1 text-white/80 hover:text-white">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m21 21-4.3-4.3" strokeLinecap="round" />
+          </svg>
+        </Link>
       </header>
 
       {/* Menu deslizante (telas pequenas) */}
