@@ -8,6 +8,7 @@ import { MenuAcoes } from "@/components/menu-acoes";
 import { CampoBusca } from "@/components/campo-busca";
 import { Paginacao } from "@/components/paginacao";
 import { buscarIdsPessoasPorNome, construirFiltroBusca } from "@/lib/busca";
+import { buscarDiariasAtrasadas } from "@/lib/dashboard/diarias-atrasadas";
 import { calcularPagina, totalDePaginas } from "@/lib/paginacao";
 import { excluirSolicitacao } from "./actions";
 import { excluirPrestacaoContas } from "./prestacao-contas-actions";
@@ -41,6 +42,8 @@ export default async function DiariasPage({
   const { data: minhaPessoa } = usuario
     ? await supabase.from("pessoas").select("id").eq("usuario_id", usuario.id).maybeSingle()
     : { data: null };
+
+  const diariasAtrasadas = await buscarDiariasAtrasadas(supabase, usuario);
 
   const podeEditarSempre =
     usuario?.papel === "admin" ||
@@ -129,6 +132,18 @@ export default async function DiariasPage({
           Nova solicitação
         </Link>
       </div>
+
+      {diariasAtrasadas.minhas.length > 0 && (
+        <p className="mt-4 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-700">
+          Você tem {diariasAtrasadas.minhas.length}{" "}
+          {diariasAtrasadas.minhas.length === 1 ? "diária" : "diárias"} com prestação de contas
+          atrasada (3+ dias úteis do retorno) —{" "}
+          <Link href="/diarias?prestacao=pendente" className="font-medium underline">
+            ver
+          </Link>
+          .
+        </p>
+      )}
 
       <div className="mt-4 flex flex-wrap gap-2 text-sm">
         {["Solicitado", "Autorizado", "Indeferido"].map((s) => (

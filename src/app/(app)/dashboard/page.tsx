@@ -4,6 +4,7 @@ import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { formatarData } from "@/lib/pdf/formato";
 import { calcularRankingSolicitantes } from "@/lib/dashboard/ranking";
 import { buscarPendenciasPrestacaoContas, type ItemPendente } from "@/lib/dashboard/pendencias";
+import { buscarDiariasAtrasadas } from "@/lib/dashboard/diarias-atrasadas";
 import { DownloadPdfButton } from "@/components/download-pdf-button";
 import type { StatusRequerimentoInterno } from "@/lib/supabase/database.types";
 
@@ -46,6 +47,7 @@ export default async function DashboardPage() {
   const supabase = await createClient();
 
   const pendencias = await buscarPendenciasPrestacaoContas(supabase, usuario);
+  const diariasAtrasadas = await buscarDiariasAtrasadas(supabase, usuario);
 
   const { data: solicitacoes } = await supabase
     .from("diarias_solicitacoes")
@@ -133,6 +135,33 @@ export default async function DashboardPage() {
           </div>
         </div>
       )}
+
+      {diariasAtrasadas.minhas.length > 0 && (
+        <div className="mt-6">
+          <ListaPendencias
+            titulo="Sua prestação de contas está atrasada"
+            itens={diariasAtrasadas.minhas.map((item) => ({
+              prestacaoId: item.solicitacaoId,
+              solicitacaoId: item.solicitacaoId,
+              nome: `${item.nome} (${item.diasUteisAtraso} dias úteis)`,
+            }))}
+          />
+        </div>
+      )}
+
+      {(usuario?.papel === "admin" || usuario?.papel === "gestor_diarias") &&
+        diariasAtrasadas.deOutros.length > 0 && (
+          <div className="mt-6">
+            <ListaPendencias
+              titulo="Prestações de contas atrasadas (equipe)"
+              itens={diariasAtrasadas.deOutros.map((item) => ({
+                prestacaoId: item.solicitacaoId,
+                solicitacaoId: item.solicitacaoId,
+                nome: `${item.nome} (${item.diasUteisAtraso} dias úteis)`,
+              }))}
+            />
+          </div>
+        )}
 
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-lg border border-slate-200 border-t-4 border-t-amber-500 bg-white p-4">
