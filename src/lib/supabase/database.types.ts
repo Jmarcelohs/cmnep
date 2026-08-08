@@ -785,6 +785,24 @@ export interface Database {
           },
         ];
       };
+      oficios_modelos: {
+        Row: {
+          id: string;
+          nome_modelo: string;
+          tipo: TipoOficio;
+          assunto: string;
+          corpo_texto: string;
+          paragrafo_fechamento: string;
+          criado_por: string | null;
+          criado_em: string;
+        };
+        Insert: Partial<Omit<Database["public"]["Tables"]["oficios_modelos"]["Row"], "id">> & {
+          nome_modelo: string;
+          tipo: TipoOficio;
+        };
+        Update: Partial<Database["public"]["Tables"]["oficios_modelos"]["Row"]>;
+        Relationships: [];
+      };
       mensagens_diretas: {
         Row: {
           id: string;

@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { editarOficio } from "../../actions";
+import { salvarModelo } from "../../modelos-actions";
 import { OficioForm } from "../../oficio-form";
 import { OficioAnexosForm } from "../oficio-anexos-form";
 
@@ -10,28 +11,33 @@ export default async function EditarOficioPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; modeloSalvo?: string }>;
 }) {
   const { id } = await params;
-  const { error } = await searchParams;
+  const { error, modeloSalvo } = await searchParams;
   const usuario = await getCurrentUsuario();
   if (usuario?.papel !== "admin" && usuario?.papel !== "ordenador_despesa") redirect("/oficios");
 
   const supabase = await createClient();
-  const [{ data: oficio }, { data: vereadores }, { data: autoridades }, { data: anexos }] = await Promise.all([
-    supabase.from("oficios").select("*").eq("id", id).single(),
-    supabase.from("pessoas").select("nome").eq("categoria", "Vereador").eq("ativo", true).order("nome"),
-    supabase
-      .from("autoridades")
-      .select("tratamento, nome, cargo, cidade_uf")
-      .eq("ativo", true)
-      .order("nome"),
-    supabase
-      .from("oficios_anexos")
-      .select("id, nome_original, tipo, caminho")
-      .eq("oficio_id", id)
-      .order("criado_em", { ascending: true }),
-  ]);
+  const [{ data: oficio }, { data: vereadores }, { data: autoridades }, { data: anexos }, { data: modelos }] =
+    await Promise.all([
+      supabase.from("oficios").select("*").eq("id", id).single(),
+      supabase.from("pessoas").select("nome").eq("categoria", "Vereador").eq("ativo", true).order("nome"),
+      supabase
+        .from("autoridades")
+        .select("tratamento, nome, cargo, cidade_uf")
+        .eq("ativo", true)
+        .order("nome"),
+      supabase
+        .from("oficios_anexos")
+        .select("id, nome_original, tipo, caminho")
+        .eq("oficio_id", id)
+        .order("criado_em", { ascending: true }),
+      supabase
+        .from("oficios_modelos")
+        .select("id, nome_modelo, tipo, assunto, corpo_texto, paragrafo_fechamento")
+        .order("nome_modelo"),
+    ]);
 
   if (!oficio) notFound();
 
@@ -44,12 +50,19 @@ export default async function EditarOficioPage({
       {error && (
         <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
       )}
+      {modeloSalvo && (
+        <p className="mt-4 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+          Modelo salvo.
+        </p>
+      )}
 
       <OficioForm
         action={editarOficio.bind(null, id)}
+        actionSalvarModelo={salvarModelo.bind(null, `/oficios/${id}/editar`)}
         submitLabel="Salvar alterações"
         nomesVereadores={(vereadores ?? []).map((v) => v.nome)}
         autoridades={autoridades ?? []}
+        modelos={modelos ?? []}
         valoresIniciais={{
           tipo: oficio.tipo,
           numero: oficio.numero,

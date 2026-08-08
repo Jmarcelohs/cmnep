@@ -46,17 +46,30 @@ export type AutoridadeQuickPick = {
   cidade_uf: string | null;
 };
 
+export type ModeloQuickPick = {
+  id: string;
+  nome_modelo: string;
+  tipo: TipoOficio;
+  assunto: string;
+  corpo_texto: string;
+  paragrafo_fechamento: string;
+};
+
 export function OficioForm({
   action,
+  actionSalvarModelo,
   valoresIniciais,
   nomesVereadores,
   autoridades = [],
+  modelos = [],
   submitLabel = "Salvar ofício",
 }: {
   action: (formData: FormData) => void;
+  actionSalvarModelo?: (formData: FormData) => void;
   valoresIniciais?: ValoresIniciaisOficio;
   nomesVereadores: string[];
   autoridades?: AutoridadeQuickPick[];
+  modelos?: ModeloQuickPick[];
   submitLabel?: string;
 }) {
   const [tipo, setTipo] = useState<TipoOficio>(valoresIniciais?.tipo ?? "padrao");
@@ -92,6 +105,7 @@ export function OficioForm({
   const [paragrafoFechamento, setParagrafoFechamento] = useState(
     valoresIniciais?.paragrafo_fechamento || PARAGRAFO_FECHAMENTO_PADRAO,
   );
+  const [nomeModelo, setNomeModelo] = useState("");
 
   const exigeAutor = TIPO_EXIGE_AUTOR[tipo];
   const admiteAssociado = TIPO_ADMITE_AUTOR_ASSOCIADO[tipo];
@@ -121,6 +135,40 @@ export function OficioForm({
       {/* Saudação sugerida só vira campo definitivo quando o redator mexe
           nela — senão manda a sugestão calculada na hora do submit. */}
       <input type="hidden" name="saudacao" value={saudacaoExibida} />
+
+      {modelos.length > 0 && (
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+          <label htmlFor="modelo_rapido" className="block text-sm font-medium text-slate-700">
+            Iniciar a partir de um modelo
+          </label>
+          <select
+            id="modelo_rapido"
+            defaultValue=""
+            onChange={(e) => {
+              const modelo = modelos[Number(e.target.value)];
+              if (!modelo) return;
+              setTipo(modelo.tipo);
+              setAssunto(modelo.assunto);
+              setCorpoTexto(modelo.corpo_texto);
+              if (modelo.paragrafo_fechamento) setParagrafoFechamento(modelo.paragrafo_fechamento);
+              e.target.value = "";
+            }}
+            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          >
+            <option value="" disabled>
+              Selecione…
+            </option>
+            {modelos.map((m, i) => (
+              <option key={m.id} value={i}>
+                {m.nome_modelo}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-slate-500">
+            Preenche tipo, assunto, texto e fechamento — destinatário e autor continuam livres pra preencher.
+          </p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div>
@@ -449,12 +497,40 @@ export function OficioForm({
         </div>
       </div>
 
-      <button
-        type="submit"
-        className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white hover:bg-brand-navy-light"
-      >
-        {submitLabel}
-      </button>
+      <div className="flex flex-wrap items-end gap-3">
+        <button
+          type="submit"
+          className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white hover:bg-brand-navy-light"
+        >
+          {submitLabel}
+        </button>
+
+        {actionSalvarModelo && (
+          <div className="flex flex-wrap items-end gap-2 border-l border-slate-200 pl-3">
+            <div>
+              <label htmlFor="nome_modelo" className="block text-xs font-medium text-slate-500">
+                Nome do modelo
+              </label>
+              <input
+                id="nome_modelo"
+                name="nome_modelo"
+                value={nomeModelo}
+                onChange={(e) => setNomeModelo(e.target.value)}
+                placeholder="Ex.: Convite audiência pública"
+                className="mt-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
+              />
+            </div>
+            <button
+              type="submit"
+              formAction={actionSalvarModelo}
+              formNoValidate
+              className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              Salvar como modelo
+            </button>
+          </div>
+        )}
+      </div>
     </form>
   );
 }

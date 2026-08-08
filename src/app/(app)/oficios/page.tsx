@@ -62,12 +62,20 @@ export default async function OficiosPage({
           </p>
         </div>
         {podeCriar && (
-          <Link
-            href="/oficios/novo"
-            className="rounded-md bg-brand-navy px-3 py-2 text-sm font-medium text-white hover:bg-brand-navy-light"
-          >
-            Novo ofício
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/oficios/modelos"
+              className="text-sm font-medium text-brand-navy hover:underline"
+            >
+              Modelos
+            </Link>
+            <Link
+              href="/oficios/novo"
+              className="rounded-md bg-brand-navy px-3 py-2 text-sm font-medium text-white hover:bg-brand-navy-light"
+            >
+              Novo ofício
+            </Link>
+          </div>
         )}
       </div>
 

@@ -12,6 +12,13 @@ export const LEGISLATURA = "Legislatura 2025/2028";
 // já usado no requerimento de reembolso (ver src/lib/reembolso/documento.ts).
 export const SIGNATARIO_OFICIO = PRESIDENTE_PADRAO;
 
+// O editor de texto rico manda HTML mesmo sem texto nenhum (ex.: "<p><br></p>"
+// de um parágrafo vazio) — checar string vazia não basta pra validar
+// obrigatoriedade, precisa olhar o texto sem as tags.
+export function corpoTextoEstaVazio(corpoTextoHtml: string) {
+  return corpoTextoHtml.replace(/<[^>]*>/g, "").trim().length === 0;
+}
+
 export const TIPO_OFICIO_LABEL: Record<TipoOficio, string> = {
   padrao: "Ofício Padrão",
   indicacao: "Indicação",

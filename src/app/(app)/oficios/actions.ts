@@ -4,11 +4,11 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
-import { PARAGRAFO_FECHAMENTO_PADRAO } from "@/lib/oficios/documento";
+import { corpoTextoEstaVazio, PARAGRAFO_FECHAMENTO_PADRAO } from "@/lib/oficios/documento";
 import { sanitizarHtmlDocumento } from "@/lib/sanitizar-html";
 import type { GeneroVereador, TipoOficio, TratamentoOficio } from "@/lib/supabase/database.types";
 
-async function exigirPodeCriar(redirectPath: string) {
+export async function exigirPodeCriar(redirectPath: string) {
   const usuario = await getCurrentUsuario();
   if (
     usuario?.papel !== "admin" &&
@@ -21,7 +21,7 @@ async function exigirPodeCriar(redirectPath: string) {
   return usuario;
 }
 
-async function exigirPodeGerenciar(redirectPath: string) {
+export async function exigirPodeGerenciar(redirectPath: string) {
   const usuario = await getCurrentUsuario();
   if (usuario?.papel !== "admin" && usuario?.papel !== "ordenador_despesa") {
     redirect(redirectPath);
@@ -79,13 +79,6 @@ function lerCampos(formData: FormData) {
     evento_local,
     paragrafo_fechamento,
   };
-}
-
-// O editor de texto rico manda HTML mesmo sem texto nenhum (ex.: "<p><br></p>"
-// de um parágrafo vazio) — checar string vazia não basta pra validar
-// obrigatoriedade, precisa olhar o texto sem as tags.
-function corpoTextoEstaVazio(corpoTextoHtml: string) {
-  return corpoTextoHtml.replace(/<[^>]*>/g, "").trim().length === 0;
 }
 
 export async function criarOficio(formData: FormData) {
