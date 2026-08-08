@@ -51,6 +51,10 @@ export default async function OficiosPage({
     ...(tipo ? { tipo } : {}),
     ...(busca ? { busca } : {}),
   });
+  const paramsCsv = new URLSearchParams({
+    ...(ano ? { ano } : {}),
+    ...(tipo ? { tipo } : {}),
+  }).toString();
 
   return (
     <div>
@@ -119,6 +123,12 @@ export default async function OficiosPage({
         >
           Filtrar
         </button>
+        <a
+          href={`/api/oficios/csv?${paramsCsv}`}
+          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        >
+          Exportar CSV
+        </a>
       </form>
 
       {error && (
