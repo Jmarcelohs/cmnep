@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { apenasDigitos, formatarCpfDigitado, formatarValorDigitado } from "./mascaras";
+import { apenasDigitos, cpfValido, formatarCpfDigitado, formatarValorDigitado } from "./mascaras";
 
 describe("apenasDigitos", () => {
   it("remove tudo que não é dígito", () => {
@@ -64,3 +64,33 @@ describe("formatarValorDigitado", () => {
     expect(formatarValorDigitado("99999999")).toEqual({ texto: "R$ 999.999,99", valor: 999999.99 });
   });
 });
+
+describe("cpfValido", () => {
+  // 111.444.777-35 é um CPF de exemplo clássico usado em documentação e
+  // testes no Brasil (dígitos verificadores corretos), não pertence a
+  // nenhuma pessoa real.
+  it("aceita um CPF com dígito verificador correto, com ou sem máscara", () => {
+    expect(cpfValido("111.444.777-35")).toBe(true);
+    expect(cpfValido("11144477735")).toBe(true);
+  });
+
+  it("rejeita dígito verificador incorreto", () => {
+    expect(cpfValido("111.444.777-36")).toBe(false);
+    expect(cpfValido("123.456.789-00")).toBe(false);
+  });
+
+  it("rejeita sequências de dígito repetido, mesmo que passariam no cálculo", () => {
+    expect(cpfValido("111.111.111-11")).toBe(false);
+    expect(cpfValido("00000000000")).toBe(false);
+  });
+
+  it("rejeita tamanho diferente de 11 dígitos", () => {
+    expect(cpfValido("123")).toBe(false);
+    expect(cpfValido("123456789012")).toBe(false);
+  });
+
+  it("rejeita entrada vazia", () => {
+    expect(cpfValido("")).toBe(false);
+  });
+});
+

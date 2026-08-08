@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Categoria } from "@/lib/supabase/database.types";
-import { apenasDigitos } from "@/lib/reembolso/mascaras";
+import { apenasDigitos, cpfValido } from "@/lib/reembolso/mascaras";
 
 export async function criarPessoa(formData: FormData) {
   const supabase = await createClient();
@@ -18,6 +18,9 @@ export async function criarPessoa(formData: FormData) {
 
   if (!nome || !cargo || !categoria) {
     redirect(`/pessoas/nova?error=${encodeURIComponent("Preencha nome, cargo e categoria")}`);
+  }
+  if (cpf && !cpfValido(cpf)) {
+    redirect(`/pessoas/nova?error=${encodeURIComponent("CPF inválido")}`);
   }
 
   const { data: pessoa, error } = await supabase
@@ -50,6 +53,9 @@ export async function editarPessoa(id: string, formData: FormData) {
 
   if (!nome || !cargo || !categoria) {
     redirect(`/pessoas/${id}/editar?error=${encodeURIComponent("Preencha nome, cargo e categoria")}`);
+  }
+  if (cpf && !cpfValido(cpf)) {
+    redirect(`/pessoas/${id}/editar?error=${encodeURIComponent("CPF inválido")}`);
   }
 
   const { error } = await supabase

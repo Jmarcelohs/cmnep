@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
-import { apenasDigitos } from "@/lib/reembolso/mascaras";
+import { apenasDigitos, cpfValido } from "@/lib/reembolso/mascaras";
 import type { CargoDeclarado, SubassuntoReembolso } from "@/lib/supabase/database.types";
 
 const hoje = () => new Date().toISOString().slice(0, 10);
@@ -42,6 +42,10 @@ export async function criarReembolso(formData: FormData) {
     redirect(
       `/requerimentos/novo?error=${encodeURIComponent("Preencha todos os campos obrigatórios")}`,
     );
+  }
+
+  if (cpf && !cpfValido(cpf)) {
+    redirect(`/requerimentos/novo?error=${encodeURIComponent("CPF inválido")}`);
   }
 
   // Combustível/estacionamento precisa identificar o veículo usado.
@@ -107,6 +111,10 @@ export async function editarReembolso(id: string, formData: FormData) {
 
   if (!protocolo || !data_requerimento) {
     redirect(`/requerimentos/${id}/editar?error=${encodeURIComponent("Informe o protocolo e a data do requerimento")}`);
+  }
+
+  if (cpf && !cpfValido(cpf)) {
+    redirect(`/requerimentos/${id}/editar?error=${encodeURIComponent("CPF inválido")}`);
   }
 
   if (subassunto === "combustivel" && (!placa_veiculo || !modelo_veiculo)) {

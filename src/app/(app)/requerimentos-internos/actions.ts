@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
-import { apenasDigitos } from "@/lib/reembolso/mascaras";
+import { apenasDigitos, cpfValido } from "@/lib/reembolso/mascaras";
 import { getAssunto } from "@/lib/requerimentos-internos/assuntos";
 import type { CargoDeclarado, TipoRequerimentoInterno } from "@/lib/supabase/database.types";
 
@@ -63,7 +63,12 @@ export async function criarRequerimentoInterno(formData: FormData) {
   const campos = lerCampos(formData);
 
   // Nenhum campo é obrigatório — o requerimento é salvo com o que foi
-  // preenchido, sem travar por falta de dado.
+  // preenchido, sem travar por falta de dado. CPF é a única exceção: se
+  // foi digitado, precisa ser um CPF válido.
+  if (campos.cpf && !cpfValido(campos.cpf)) {
+    redirect(`/requerimentos-internos/novo?error=${encodeURIComponent("CPF inválido")}`);
+  }
+
   const assunto = campos.assunto_key ? getAssunto(campos.tipo, campos.assunto_key) : undefined;
   const modoEstruturado = Boolean(assunto?.fields?.length);
 
@@ -121,6 +126,10 @@ export async function criarRequerimentoInterno(formData: FormData) {
 
 export async function editarRequerimentoInterno(id: string, formData: FormData) {
   const campos = lerCampos(formData);
+
+  if (campos.cpf && !cpfValido(campos.cpf)) {
+    redirect(`/requerimentos-internos/${id}/editar?error=${encodeURIComponent("CPF inválido")}`);
+  }
 
   const assunto = campos.assunto_key ? getAssunto(campos.tipo, campos.assunto_key) : undefined;
   const modoEstruturado = Boolean(assunto?.fields?.length);

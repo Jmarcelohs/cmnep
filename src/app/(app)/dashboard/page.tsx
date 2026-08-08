@@ -5,6 +5,7 @@ import { formatarData } from "@/lib/pdf/formato";
 import { calcularRankingSolicitantes } from "@/lib/dashboard/ranking";
 import { buscarPendenciasPrestacaoContas } from "@/lib/dashboard/pendencias";
 import { buscarDiariasAtrasadas } from "@/lib/dashboard/diarias-atrasadas";
+import { buscarPessoasSemCpf } from "@/lib/dashboard/pessoas-sem-cpf";
 import { DownloadPdfButton } from "@/components/download-pdf-button";
 import { ListaPendencias } from "./lista-pendencias";
 import { aprovarPrestacoesEmLote, emitirPareceresEmLote } from "../diarias/prestacao-contas-actions";
@@ -27,6 +28,7 @@ export default async function DashboardPage() {
 
   const pendencias = await buscarPendenciasPrestacaoContas(supabase, usuario);
   const diariasAtrasadas = await buscarDiariasAtrasadas(supabase, usuario);
+  const pessoasSemCpf = await buscarPessoasSemCpf(supabase, usuario);
 
   const { data: solicitacoes } = await supabase
     .from("diarias_solicitacoes")
@@ -141,6 +143,24 @@ export default async function DashboardPage() {
                 nome: `${item.nome} (${item.diasUteisAtraso} dias úteis)`,
               }))}
             />
+          </div>
+        )}
+
+      {(usuario?.papel === "admin" || usuario?.papel === "ordenador_despesa") &&
+        pessoasSemCpf.total > 0 && (
+          <div className="mt-6 rounded-lg border border-slate-200 bg-white p-4">
+            <p className="text-sm font-medium text-amber-700">
+              Pessoas sem CPF cadastrado ({pessoasSemCpf.total})
+            </p>
+            <ul className="mt-2 space-y-1 text-sm">
+              {pessoasSemCpf.pessoas.map((p) => (
+                <li key={p.id}>
+                  <Link href={`/pessoas/${p.id}/editar`} className="text-slate-900 hover:underline">
+                    {p.nome}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 
