@@ -35,6 +35,8 @@ export async function GET(request: NextRequest) {
 
   const tipo = request.nextUrl.searchParams.get("tipo");
   const status = request.nextUrl.searchParams.get("status");
+  const anoParam = request.nextUrl.searchParams.get("ano");
+  const anoSelecionado = anoParam && anoParam !== "todos" ? Number(anoParam) : null;
 
   let query = supabase
     .from("requerimentos_internos")
@@ -44,6 +46,11 @@ export async function GET(request: NextRequest) {
 
   if (tipo) query = query.eq("tipo", tipo as TipoRequerimentoInterno);
   if (status) query = query.eq("status", status as StatusRequerimentoInterno);
+  if (anoSelecionado) {
+    query = query
+      .gte("data_requerimento", `${anoSelecionado}-01-01`)
+      .lt("data_requerimento", `${anoSelecionado + 1}-01-01`);
+  }
 
   const { data: requerimentos, error } = await query;
 

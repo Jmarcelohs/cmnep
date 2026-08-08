@@ -23,13 +23,17 @@ export default async function RequerimentosInternosPage({
     tipo?: string;
     status?: string;
     busca?: string;
+    ano?: string;
     pagina?: string;
     error?: string;
   }>;
 }) {
-  const { tipo, status, busca, pagina: paginaStr, error: errorMsg } = await searchParams;
+  const { tipo, status, busca, ano: anoParam, pagina: paginaStr, error: errorMsg } = await searchParams;
   const supabase = await createClient();
   const usuario = await getCurrentUsuario();
+
+  const anoAtual = new Date().getFullYear();
+  const anoSelecionado = anoParam === "todos" ? null : Number(anoParam) || anoAtual;
 
   const { data: minhaPessoa } = usuario
     ? await supabase.from("pessoas").select("id").eq("usuario_id", usuario.id).maybeSingle()
@@ -64,19 +68,33 @@ export default async function RequerimentosInternosPage({
 
   if (tipo) query = query.eq("tipo", tipo as TipoRequerimentoInterno);
   if (status) query = query.eq("status", status as StatusRequerimentoInterno);
+  if (anoSelecionado) {
+    query = query
+      .gte("data_requerimento", `${anoSelecionado}-01-01`)
+      .lt("data_requerimento", `${anoSelecionado + 1}-01-01`);
+  }
   if (busca) query = query.or(construirFiltroBusca(busca, ["nome", "assunto"]));
 
   const { data: requerimentos, error, count } = await query;
 
+  const { data: todasDatas } = await supabase.from("requerimentos_internos").select("data_requerimento");
+  const anosDisponiveis = Array.from(
+    new Set([anoAtual, ...(todasDatas ?? []).map((d) => Number(d.data_requerimento?.slice(0, 4)))]),
+  )
+    .filter(Boolean)
+    .sort((a, b) => b - a);
+
   const paramsCsv = new URLSearchParams({
     ...(tipo ? { tipo } : {}),
     ...(status ? { status } : {}),
+    ...(anoParam ? { ano: anoParam } : {}),
   }).toString();
 
   const paramsBase = new URLSearchParams({
     ...(tipo ? { tipo } : {}),
     ...(status ? { status } : {}),
     ...(busca ? { busca } : {}),
+    ...(anoParam ? { ano: anoParam } : {}),
   });
 
   return (
@@ -135,6 +153,22 @@ export default async function RequerimentosInternosPage({
             {(Object.keys(STATUS_LABEL) as StatusRequerimentoInterno[]).map((s) => (
               <option key={s} value={s}>
                 {STATUS_LABEL[s]}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="filtro-ano" className="block text-xs font-medium text-slate-500">Ano</label>
+          <select
+            id="filtro-ano"
+            name="ano"
+            defaultValue={anoParam ?? String(anoAtual)}
+            className="mt-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+          >
+            <option value="todos">Todos os anos</option>
+            {anosDisponiveis.map((a) => (
+              <option key={a} value={a}>
+                {a}
               </option>
             ))}
           </select>
