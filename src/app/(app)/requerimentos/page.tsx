@@ -68,6 +68,7 @@ export default async function RequerimentosPage({
     ...(busca ? { busca } : {}),
     ...(anoParam ? { ano: anoParam } : {}),
   });
+  const paramsCsv = paramsBase.toString();
 
   return (
     <div>
@@ -110,6 +111,12 @@ export default async function RequerimentosPage({
         >
           Filtrar
         </button>
+        <a
+          href={`/api/requerimentos/csv?${paramsCsv}`}
+          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        >
+          Exportar CSV
+        </a>
       </form>
 
       {error && (

@@ -120,6 +120,7 @@ export default async function DiariasPage({
     ...(busca ? { busca } : {}),
     ...(anoParam ? { ano: anoParam } : {}),
   });
+  const paramsCsv = paramsBase.toString();
 
   return (
     <div>
@@ -202,6 +203,12 @@ export default async function DiariasPage({
         >
           Filtrar
         </button>
+        <a
+          href={`/api/diarias/csv?${paramsCsv}`}
+          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        >
+          Exportar CSV
+        </a>
       </form>
 
       {error && (
