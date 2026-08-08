@@ -24,13 +24,22 @@ function numeroOuMinimo(valor: string | null) {
 // Ranking de diárias por solicitante, ordenado pelo nº da diária mais
 // recente de cada um em ordem decrescente (não pelo total) — reaproveitado
 // pelo Painel e pela exportação em CSV/PDF, pra não duplicar a mesma
-// agregação em dois lugares.
+// agregação em dois lugares. `ano` opcional restringe a `data_solicitacao`
+// daquele ano (usado pelo Relatório Anual); sem ele, mantém o comportamento
+// de sempre (todo o histórico).
 export async function calcularRankingSolicitantes(
   supabase: SupabaseClient<Database>,
+  ano?: number,
 ): Promise<LinhaRankingSolicitante[]> {
-  const { data: solicitacoes } = await supabase
+  let query = supabase
     .from("diarias_solicitacoes")
     .select("status, total, data_solicitacao, numero_diaria, numero_solicitacao, pessoas(nome)");
+
+  if (ano) {
+    query = query.gte("data_solicitacao", `${ano}-01-01`).lt("data_solicitacao", `${ano + 1}-01-01`);
+  }
+
+  const { data: solicitacoes } = await query;
 
   const porSolicitante = new Map<string, LinhaRankingSolicitante>();
 
