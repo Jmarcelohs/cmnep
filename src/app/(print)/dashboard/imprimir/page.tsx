@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { formatarData, formatarMoeda } from "@/lib/pdf/formato";
 import { calcularRankingSolicitantes } from "@/lib/dashboard/ranking";
+import { agoraBrasilFormatado } from "@/lib/data-brasil";
 import { PrintButton } from "../../print-button";
 import type { StatusRequerimentoInterno } from "@/lib/supabase/database.types";
 
@@ -41,7 +42,7 @@ export default async function ImprimirPainelPage() {
     contagemStatusInterno[r.status as StatusRequerimentoInterno]++;
   }
 
-  const geradoEm = new Date().toLocaleString("pt-BR");
+  const geradoEm = agoraBrasilFormatado();
 
   return (
     <>

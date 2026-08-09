@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { formatarMoeda } from "@/lib/pdf/formato";
 import { calcularRelatorioAnual } from "@/lib/relatorios/anual";
+import { agoraBrasilFormatado } from "@/lib/data-brasil";
 import { GraficoBarrasMensal } from "@/components/grafico-barras-mensal";
 import { PrintButton } from "../../../print-button";
 import type { StatusRequerimentoInterno, StatusRequerimentoReembolso } from "@/lib/supabase/database.types";
@@ -30,7 +31,7 @@ export default async function ImprimirRelatorioAnualPage({
   const supabase = await createClient();
   const relatorio = await calcularRelatorioAnual(supabase, ano);
 
-  const geradoEm = new Date().toLocaleString("pt-BR");
+  const geradoEm = agoraBrasilFormatado();
 
   return (
     <>

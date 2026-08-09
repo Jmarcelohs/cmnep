@@ -5,9 +5,10 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { apenasDigitos, cpfValido } from "@/lib/reembolso/mascaras";
+import { hojeBrasil } from "@/lib/data-brasil";
 import type { CargoDeclarado, SubassuntoReembolso } from "@/lib/supabase/database.types";
 
-const hoje = () => new Date().toISOString().slice(0, 10);
+const hoje = hojeBrasil;
 
 export async function criarReembolso(formData: FormData) {
   const usuario = await getCurrentUsuario();

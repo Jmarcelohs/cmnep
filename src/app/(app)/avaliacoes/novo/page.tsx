@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { getTemplate } from "@/lib/avaliacoes/templates";
+import { hojeBrasil } from "@/lib/data-brasil";
 import { criarAvaliacao } from "../actions";
 import { AvaliacaoForm } from "../avaliacao-form";
 
@@ -52,7 +53,7 @@ export default async function NovaAvaliacaoPage({
                 pessoa_id,
                 ano: String(new Date().getFullYear()),
                 periodo: "trimestre_1",
-                data_avaliacao: new Date().toISOString().slice(0, 10),
+                data_avaliacao: hojeBrasil(),
                 em_estagio_probatorio: true,
                 avaliadores: [],
                 itens: [],

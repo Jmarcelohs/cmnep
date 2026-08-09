@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { calcularResumo, totalItensTemplate } from "@/lib/avaliacoes/calculo";
+import { hojeBrasil } from "@/lib/data-brasil";
 import type { AvaliacaoTemplate } from "@/lib/avaliacoes/templates";
 import type { AvaliadorLancado, Categoria, ConceitoAvaliacao, ItemAvaliacaoLancado, PeriodoAvaliacao } from "@/lib/supabase/database.types";
 
@@ -50,7 +51,7 @@ export function AvaliacaoForm({
   const [ano, setAno] = useState(valoresIniciais?.ano ?? String(new Date().getFullYear()));
   const [periodo, setPeriodo] = useState<PeriodoAvaliacao>(valoresIniciais?.periodo ?? "trimestre_1");
   const [dataAvaliacao, setDataAvaliacao] = useState(
-    valoresIniciais?.data_avaliacao ?? new Date().toISOString().slice(0, 10),
+    valoresIniciais?.data_avaliacao ?? hojeBrasil(),
   );
   const [emEstagioProbatorio, setEmEstagioProbatorio] = useState(
     valoresIniciais?.em_estagio_probatorio ?? true,

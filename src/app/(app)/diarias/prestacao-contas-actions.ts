@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { TESOUREIRO_PADRAO } from "@/lib/diarias/documento";
+import { hojeBrasil } from "@/lib/data-brasil";
 import type { Parecer } from "@/lib/supabase/database.types";
 
 function numero(formData: FormData, campo: string) {
@@ -12,7 +13,7 @@ function numero(formData: FormData, campo: string) {
   return valor ? Number(valor) : 0;
 }
 
-const hoje = () => new Date().toISOString().slice(0, 10);
+const hoje = hojeBrasil;
 
 export async function criarPrestacaoContas(
   solicitacaoId: string,

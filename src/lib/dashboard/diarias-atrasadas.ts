@@ -1,6 +1,7 @@
 import type { createClient } from "@/lib/supabase/server";
 import type { Papel } from "@/lib/supabase/database.types";
 import { diasUteisEntre } from "@/lib/diarias/verificacoes";
+import { hojeBrasil } from "@/lib/data-brasil";
 
 export type ItemAtrasado = {
   solicitacaoId: string;
@@ -65,7 +66,7 @@ export async function buscarDiariasAtrasadas(
     .eq("status", "Autorizado")
     .not("data_chegada", "is", null);
 
-  const hoje = new Date().toISOString().slice(0, 10);
+  const hoje = hojeBrasil();
   const minhas: ItemAtrasado[] = [];
   const deOutros: ItemAtrasado[] = [];
 

@@ -1,6 +1,7 @@
 import type { createClient } from "@/lib/supabase/server";
 import type { Papel, StatusRequerimentoInterno, StatusRequerimentoReembolso } from "@/lib/supabase/database.types";
 import { diasUteisEntre } from "@/lib/diarias/verificacoes";
+import { hojeBrasil } from "@/lib/data-brasil";
 
 export type ItemParado = { id: string; titulo: string; diasUteisParado: number };
 export type RequerimentosParados = { itens: ItemParado[]; total: number };
@@ -33,7 +34,7 @@ export async function buscarReembolsosParados(
     .from("requerimentos_reembolso")
     .select("id, protocolo, status, data_requerimento, pessoas(nome)");
 
-  const hoje = new Date().toISOString().slice(0, 10);
+  const hoje = hojeBrasil();
   const itens: ItemParado[] = [];
 
   for (const linha of data ?? []) {
@@ -60,7 +61,7 @@ export async function buscarRequerimentosInternosParados(
     .from("requerimentos_internos")
     .select("id, numero, ano, nome, status, data_requerimento");
 
-  const hoje = new Date().toISOString().slice(0, 10);
+  const hoje = hojeBrasil();
   const itens: ItemParado[] = [];
 
   for (const linha of data ?? []) {

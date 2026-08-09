@@ -6,9 +6,10 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { apenasDigitos, cpfValido } from "@/lib/reembolso/mascaras";
 import { getAssunto } from "@/lib/requerimentos-internos/assuntos";
+import { hojeBrasil } from "@/lib/data-brasil";
 import type { CargoDeclarado, TipoRequerimentoInterno } from "@/lib/supabase/database.types";
 
-const hoje = () => new Date().toISOString().slice(0, 10);
+const hoje = hojeBrasil;
 
 function lerCampos(formData: FormData) {
   const numeroManual = String(formData.get("numero") ?? "").trim();
