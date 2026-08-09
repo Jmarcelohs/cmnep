@@ -1,4 +1,17 @@
-export default function LegislacaoPage() {
+import { createClient } from "@/lib/supabase/server";
+import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
+import { DocumentosLegislacao } from "./documentos-form";
+
+export default async function LegislacaoPage() {
+  const supabase = await createClient();
+  const usuario = await getCurrentUsuario();
+  const podeGerenciar = usuario?.papel === "admin" || usuario?.papel === "ordenador_despesa";
+
+  const { data: documentos } = await supabase
+    .from("legislacao_documentos")
+    .select("id, titulo, tipo, numero, ano, descricao, caminho, criado_em")
+    .order("criado_em", { ascending: false });
+
   return (
     <div>
       <h1 className="text-xl font-semibold text-brand-navy">Legislação Municipal</h1>
@@ -60,6 +73,8 @@ export default function LegislacaoPage() {
           Abrir o acervo completo ↗
         </a>
       </div>
+
+      <DocumentosLegislacao documentos={documentos ?? []} podeGerenciar={podeGerenciar} />
 
       <p className="mt-4 text-xs text-slate-400">
         Conteúdo mantido por terceiros (leis.org), fora deste sistema — em caso de divergência,

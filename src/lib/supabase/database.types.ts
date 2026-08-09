@@ -43,6 +43,7 @@ export type DecisaoRequerimentoReembolso = "autorizado" | "nao_autorizado";
 export type TipoRequerimentoInterno = "rh" | "presidente" | "geral";
 
 export type TipoOficio = "padrao" | "indicacao" | "requerimento" | "convite";
+export type TipoDocumentoLegislacao = "lei" | "decreto" | "resolucao" | "portaria" | "ato" | "outro";
 
 export type TratamentoOficio = "Excelentíssimo Senhor" | "Excelentíssima Senhora";
 
@@ -784,6 +785,31 @@ export interface Database {
             referencedColumns: ["id"];
           },
         ];
+      };
+      legislacao_documentos: {
+        Row: {
+          id: string;
+          titulo: string;
+          tipo: TipoDocumentoLegislacao;
+          numero: string | null;
+          ano: number | null;
+          descricao: string | null;
+          caminho: string;
+          nome_original: string;
+          tipo_arquivo: TipoAnexoOficio;
+          criado_por: string | null;
+          criado_em: string;
+        };
+        Insert: Partial<Omit<Database["public"]["Tables"]["legislacao_documentos"]["Row"], "id">> & {
+          id?: string;
+          titulo: string;
+          tipo: TipoDocumentoLegislacao;
+          caminho: string;
+          nome_original: string;
+          tipo_arquivo: TipoAnexoOficio;
+        };
+        Update: Partial<Database["public"]["Tables"]["legislacao_documentos"]["Row"]>;
+        Relationships: [];
       };
       oficios_modelos: {
         Row: {
