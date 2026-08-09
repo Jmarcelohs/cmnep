@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { calcularTotalItens } from "@/lib/diarias/calculo";
-import { proximoNumero } from "@/lib/numeracao";
+import { proximoNumero, proximoNumeroSolicitacaoAno } from "@/lib/numeracao";
 import type { Categoria, ModoItemDiaria, TipoDiaria } from "@/lib/supabase/database.types";
 
 type ItemInput = {
@@ -24,7 +24,7 @@ export async function criarSolicitacao(formData: FormData) {
 
   const pessoa_id = String(formData.get("pessoa_id") ?? "");
   let numero_diaria = String(formData.get("numero_diaria") ?? "") || null;
-  const numero_solicitacao = String(formData.get("numero_solicitacao") ?? "") || null;
+  let numero_solicitacao = String(formData.get("numero_solicitacao") ?? "") || null;
   const municipio_destino = String(formData.get("municipio_destino") ?? "");
   const uf_destino = String(formData.get("uf_destino") ?? "") || null;
   const instituicao_destino = String(formData.get("instituicao_destino") ?? "");
@@ -51,6 +51,21 @@ export async function criarSolicitacao(formData: FormData) {
       .not("numero_diaria", "is", null);
     numero_diaria = String(
       proximoNumero((todasNumeradas ?? []).map((s) => s.numero_diaria as string), 189),
+    );
+  }
+
+  if (!numero_solicitacao) {
+    // "Número da solicitação" é sequencial por solicitante, reiniciando a
+    // cada ano novo — mesma convenção já usada na planilha externa de
+    // controle das diárias (coluna "Nº Solic.").
+    const ano = Number(data_solicitacao!.slice(0, 4));
+    const { data: doSolicitante } = await supabase
+      .from("diarias_solicitacoes")
+      .select("numero_solicitacao")
+      .eq("pessoa_id", pessoa_id);
+    numero_solicitacao = proximoNumeroSolicitacaoAno(
+      (doSolicitante ?? []).map((s) => s.numero_solicitacao),
+      ano,
     );
   }
 

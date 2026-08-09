@@ -187,7 +187,7 @@ export function SolicitacaoForm({
             id="numero_solicitacao"
             name="numero_solicitacao"
             defaultValue={valoresIniciais?.numero_solicitacao}
-            placeholder="ex.: 020/2026"
+            placeholder={valoresIniciais ? undefined : "Deixe em branco para gerar automaticamente"}
             className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
         </div>
