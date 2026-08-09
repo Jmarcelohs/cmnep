@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { calcularTotalItens } from "@/lib/diarias/calculo";
+import { proximoNumero } from "@/lib/numeracao";
 import type { Categoria, ModoItemDiaria, TipoDiaria } from "@/lib/supabase/database.types";
 
 type ItemInput = {
@@ -22,7 +23,7 @@ export async function criarSolicitacao(formData: FormData) {
   if (!usuario) redirect("/login");
 
   const pessoa_id = String(formData.get("pessoa_id") ?? "");
-  const numero_diaria = String(formData.get("numero_diaria") ?? "") || null;
+  let numero_diaria = String(formData.get("numero_diaria") ?? "") || null;
   const numero_solicitacao = String(formData.get("numero_solicitacao") ?? "") || null;
   const municipio_destino = String(formData.get("municipio_destino") ?? "");
   const uf_destino = String(formData.get("uf_destino") ?? "") || null;
@@ -39,6 +40,19 @@ export async function criarSolicitacao(formData: FormData) {
   }
 
   const supabase = await createClient();
+
+  if (!numero_diaria) {
+    // Numeração é uma sequência única (não reinicia por ano) — a última
+    // diária numerada manualmente antes desta funcionalidade existir foi a
+    // 188, por isso o fallback começa em 189.
+    const { data: todasNumeradas } = await supabase
+      .from("diarias_solicitacoes")
+      .select("numero_diaria")
+      .not("numero_diaria", "is", null);
+    numero_diaria = String(
+      proximoNumero((todasNumeradas ?? []).map((s) => s.numero_diaria as string), 189),
+    );
+  }
 
   const total = calcularTotalItens(itens);
 

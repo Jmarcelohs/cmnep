@@ -177,7 +177,7 @@ export function SolicitacaoForm({
             id="numero_diaria"
             name="numero_diaria"
             defaultValue={valoresIniciais?.numero_diaria}
-            placeholder="ex.: 161"
+            placeholder={valoresIniciais ? undefined : "Deixe em branco para gerar automaticamente"}
             className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
         </div>
