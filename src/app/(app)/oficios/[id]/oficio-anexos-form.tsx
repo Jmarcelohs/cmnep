@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { validarArquivos } from "@/lib/uploads/validacao";
+import { validarArquivos, sanitizarNomeArquivo } from "@/lib/uploads/validacao";
 import type { TipoAnexoOficio } from "@/lib/supabase/database.types";
 
 type Anexo = {
@@ -66,7 +66,7 @@ export function OficioAnexosForm({ oficioId, anexos }: { oficioId: string; anexo
 
     try {
       for (const arquivo of Array.from(arquivos)) {
-        const caminho = `${oficioId}/${crypto.randomUUID()}-${arquivo.name}`;
+        const caminho = `${oficioId}/${crypto.randomUUID()}-${sanitizarNomeArquivo(arquivo.name)}`;
 
         const { error: erroUpload } = await supabase.storage
           .from("oficios-anexos")

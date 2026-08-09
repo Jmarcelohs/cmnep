@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validarArquivos } from "./validacao";
+import { validarArquivos, sanitizarNomeArquivo } from "./validacao";
 
 function arquivoFalso(nome: string, tamanhoBytes: number, tipo: string): File {
   const conteudo = new Uint8Array(tamanhoBytes);
@@ -41,5 +41,25 @@ describe("validarArquivos", () => {
 
   it("retorna null pra lista vazia", () => {
     expect(validarArquivos([], OPCOES)).toBeNull();
+  });
+});
+
+describe("sanitizarNomeArquivo", () => {
+  it("remove acentuação e substitui espaço/símbolo por hífen", () => {
+    expect(sanitizarNomeArquivo("REGIMENTO INTERNO RESOLUÇÃO Nº35-2022.pdf")).toBe(
+      "REGIMENTO-INTERNO-RESOLUCAO-N-35-2022.pdf",
+    );
+  });
+
+  it("mantém nome já seguro sem alteração", () => {
+    expect(sanitizarNomeArquivo("comprovante-2026.pdf")).toBe("comprovante-2026.pdf");
+  });
+
+  it("não deixa hífens duplicados quando vários caracteres seguidos são substituídos", () => {
+    expect(sanitizarNomeArquivo("foto (1) — cópia.jpg")).toBe("foto-1-copia.jpg");
+  });
+
+  it("preserva ponto da extensão", () => {
+    expect(sanitizarNomeArquivo("ofício.docx")).toBe("oficio.docx");
   });
 });

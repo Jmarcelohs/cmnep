@@ -20,3 +20,15 @@ export function validarArquivos(
   }
   return null;
 }
+
+const REGEX_MARCAS_DIACRITICAS = new RegExp("[\\u0300-\\u036f]", "g");
+
+// O Supabase Storage recusa chaves de objeto com certos caracteres
+// (acentuação, espaço, "º"/"ª", etc.) com erro "Invalid key" — comum em
+// nome de arquivo brasileiro (ex.: "RESOLUÇÃO Nº35-2022.pdf"). Sanitiza só
+// o nome usado no CAMINHO de armazenamento; o nome original (acentuado,
+// como o usuário escolheu) continua guardado à parte pra exibição.
+export function sanitizarNomeArquivo(nome: string): string {
+  const semAcentos = nome.normalize("NFD").replace(REGEX_MARCAS_DIACRITICAS, "");
+  return semAcentos.replace(/[^a-zA-Z0-9._-]/g, "-").replace(/-+/g, "-");
+}

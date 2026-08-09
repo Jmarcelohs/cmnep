@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { validarArquivos } from "@/lib/uploads/validacao";
+import { validarArquivos, sanitizarNomeArquivo } from "@/lib/uploads/validacao";
 import { formatarData } from "@/lib/pdf/formato";
 import type { TipoAnexoOficio, TipoDocumentoLegislacao } from "@/lib/supabase/database.types";
 
@@ -100,7 +100,7 @@ export function DocumentosLegislacao({
 
     try {
       const documentoId = crypto.randomUUID();
-      const caminho = `${documentoId}/${arquivo.name}`;
+      const caminho = `${documentoId}/${sanitizarNomeArquivo(arquivo.name)}`;
 
       const { error: erroUpload } = await supabase.storage
         .from("legislacao-documentos")

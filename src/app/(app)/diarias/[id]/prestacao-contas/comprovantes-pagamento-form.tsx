@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { validarArquivos } from "@/lib/uploads/validacao";
+import { validarArquivos, sanitizarNomeArquivo } from "@/lib/uploads/validacao";
 
 type Comprovante = {
   id: string;
@@ -50,7 +50,7 @@ export function ComprovantesPagamentoForm({
     try {
       for (const arquivo of Array.from(arquivos)) {
         const tipo = arquivo.type === "application/pdf" ? "pdf" : "imagem";
-        const caminho = `${pagamentoId}/${crypto.randomUUID()}-${arquivo.name}`;
+        const caminho = `${pagamentoId}/${crypto.randomUUID()}-${sanitizarNomeArquivo(arquivo.name)}`;
 
         const { error: erroUpload } = await supabase.storage
           .from("pagamentos-anexos")
