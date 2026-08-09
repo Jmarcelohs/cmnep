@@ -14,5 +14,24 @@ export default function manifest(): MetadataRoute.Manifest {
       { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
       { src: "/icons/maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
+    // Atalhos no menu de segurar o ícone (Android/Chrome só — iOS Safari
+    // ainda não suporta). Só os 3 formulários de criação mais usados.
+    shortcuts: [
+      {
+        name: "Nova Diária",
+        url: "/diarias/nova",
+        icons: [{ src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
+      },
+      {
+        name: "Novo Ofício",
+        url: "/oficios/novo",
+        icons: [{ src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
+      },
+      {
+        name: "Novo Reembolso",
+        url: "/requerimentos/novo",
+        icons: [{ src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
+      },
+    ],
   };
 }
