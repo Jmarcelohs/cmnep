@@ -30,13 +30,21 @@ export async function GET(
   }
   const { mocao, autor, associados, assinaturasPorId } = dados;
 
-  const buffer = await gerarDocxMocao({ mocao, autor, associados, assinaturasPorId });
-  const filename = `Moção - ${limparNomeArquivo(mocao.destinatario)} - ${mocao.data_mocao}.docx`;
+  try {
+    const logoRes = await fetch(new URL("/timbrado/logo.png", request.url));
+    const logoBuffer = Buffer.from(await logoRes.arrayBuffer());
 
-  return new NextResponse(Buffer.from(buffer), {
-    headers: {
-      "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "Content-Disposition": `attachment; filename="${filename}"`,
-    },
-  });
+    const buffer = await gerarDocxMocao({ mocao, autor, associados, assinaturasPorId, logoBuffer });
+    const filename = `Moção - ${limparNomeArquivo(mocao.destinatario)} - ${mocao.data_mocao}.docx`;
+
+    return new NextResponse(Buffer.from(buffer), {
+      headers: {
+        "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "Content-Disposition": `attachment; filename="${filename}"`,
+      },
+    });
+  } catch (error) {
+    console.error("Erro ao gerar .docx da moção", error);
+    return NextResponse.json({ error: "Não foi possível gerar o arquivo .docx" }, { status: 500 });
+  }
 }

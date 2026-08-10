@@ -1,5 +1,3 @@
-import fs from "fs";
-import path from "path";
 import sharp from "sharp";
 import {
   AlignmentType,
@@ -166,18 +164,25 @@ export async function gerarDocxMocao({
   autor,
   associados,
   assinaturasPorId,
+  logoBuffer,
 }: {
   mocao: MocaoParaDocx;
   autor: VereadorSignatario;
   associados: VereadorSignatario[];
   assinaturasPorId: Record<string, string | null>;
+  // Bytes da logo (public/timbrado/logo.png) já resolvidos pela rota via
+  // fetch — em produção na Vercel, arquivos de public/ não ficam no
+  // sistema de arquivos da função serverless (são servidos à parte pelo
+  // CDN), então fs.readFileSync(...) funciona local mas quebra em
+  // produção; buscar por HTTP evita essa armadilha, igual já era feito
+  // com as imagens de assinatura.
+  logoBuffer: Buffer;
 }): Promise<Buffer> {
   const signatarios = ordenarSignatarios([autor, ...associados]);
   const associadosNomes = associados.map((v) => v.nome);
   const paisagem = mocao.tipo !== "pesar";
 
-  const logoPath = path.join(process.cwd(), "public", "timbrado", "logo.png");
-  const { data: logoData, width: logoW, height: logoH } = await paraPng(fs.readFileSync(logoPath));
+  const { data: logoData, width: logoW, height: logoH } = await paraPng(logoBuffer);
   const logoDim = escalar(logoW, logoH, 100, 100);
 
   const titulo = mocao.tipo === "pesar" ? "MOÇÃO DE PESAR" : "MOÇÃO DE CONGRATULAÇÃO";
