@@ -60,19 +60,19 @@ describe("ordenarSignatarios", () => {
 });
 
 describe("legendaAssinatura", () => {
-  it("vereador comum, com partido", () => {
+  it("vereador comum — não cita o partido, mesmo cadastrado", () => {
     expect(legendaAssinatura(vereador("Ana", { partido: "PL" }))).toBe(
-      "Vereador da Câmara Municipal de Nepomuceno – PL",
+      "Vereador da Câmara Municipal de Nepomuceno",
     );
   });
 
-  it("vereadora (gênero feminino)", () => {
+  it("vereadora (gênero feminino) — não cita o partido", () => {
     expect(legendaAssinatura(vereador("Ana", { genero: "Vereadora", partido: "PT" }))).toBe(
-      "Vereadora da Câmara Municipal de Nepomuceno – PT",
+      "Vereadora da Câmara Municipal de Nepomuceno",
     );
   });
 
-  it("sem partido, omite o traço", () => {
+  it("sem partido cadastrado", () => {
     expect(legendaAssinatura(vereador("Ana"))).toBe("Vereador da Câmara Municipal de Nepomuceno");
   });
 

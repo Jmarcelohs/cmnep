@@ -62,9 +62,11 @@ export function associadosComPresidenteObrigatorio(
   return jaIncluido ? associados : [...associados, presidenteAtual];
 }
 
+// Sem o partido na legenda — pedido explícito do usuário, mesmo que o
+// vereador tenha partido cadastrado.
 export function legendaAssinatura(v: VereadorSignatario): string {
   if (v.presidente) return `Presidente da ${NOME_CAMARA}`;
-  return `${v.genero} da ${NOME_CAMARA}${v.partido ? ` – ${v.partido}` : ""}`;
+  return `${v.genero} da ${NOME_CAMARA}`;
 }
 
 export type SegmentoMocao = { texto: string; negrito: boolean };
