@@ -45,6 +45,15 @@ export async function GET(
     });
   } catch (error) {
     console.error("Erro ao gerar .docx da moção", error);
-    return NextResponse.json({ error: "Não foi possível gerar o arquivo .docx" }, { status: 500 });
+    // DEBUG temporário — devolve a mensagem/stack real pra diagnosticar
+    // um 500 que só acontece em produção (reproduzido localmente sem
+    // erro). Remover antes de finalizar.
+    return NextResponse.json(
+      {
+        error: "Não foi possível gerar o arquivo .docx",
+        debug: error instanceof Error ? { message: error.message, stack: error.stack } : String(error),
+      },
+      { status: 500 },
+    );
   }
 }
