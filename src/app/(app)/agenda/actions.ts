@@ -77,21 +77,23 @@ export async function editarEvento(id: string, formData: FormData) {
   redirect(`/agenda?mes=${campos.inicio.slice(0, 7)}`);
 }
 
-// criadoPorUsuarioId e mes vêm "bind"ados na tela (mesmo padrão de
+// criadoPorUsuarioId e voltarPara vêm "bind"ados na tela (mesmo padrão de
 // excluirDecretoTituloHonorario.bind(null, id)) — a checagem de
 // permissão roda de novo aqui no servidor (defesa em profundidade: a
 // tela já esconde o botão de quem não pode, mas isso não impede uma
-// chamada direta).
+// chamada direta). voltarPara é a querystring pra manter o modo atual da
+// tela (mês/busca/ver todos) depois do redirect — ex.: "mes=2026-08",
+// "busca=sessao", "todos=1".
 export async function excluirEvento(
   id: string,
   criadoPorUsuarioId: string | null,
-  mes: string,
+  voltarPara: string,
 ) {
   const usuario = await exigirUsuarioLogado("/agenda");
 
   if (!podeExcluirEvento(usuario!, { criadoPorUsuarioId })) {
     redirect(
-      `/agenda?mes=${mes}&error=${encodeURIComponent("Você não tem permissão para excluir esse compromisso")}`,
+      `/agenda?${voltarPara}&error=${encodeURIComponent("Você não tem permissão para excluir esse compromisso")}`,
     );
   }
 
@@ -99,9 +101,9 @@ export async function excluirEvento(
     await excluirEventoGoogle(id);
   } catch (err) {
     const mensagem = err instanceof Error ? err.message : "Não foi possível excluir o compromisso";
-    redirect(`/agenda?mes=${mes}&error=${encodeURIComponent(mensagem)}`);
+    redirect(`/agenda?${voltarPara}&error=${encodeURIComponent(mensagem)}`);
   }
 
   revalidatePath("/agenda");
-  redirect(`/agenda?mes=${mes}`);
+  redirect(`/agenda?${voltarPara}`);
 }

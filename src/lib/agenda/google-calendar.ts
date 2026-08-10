@@ -149,9 +149,13 @@ function paraCorpoGoogle(input: EventoInput) {
 export async function listarEventos({
   inicio,
   fim,
+  busca,
 }: {
   inicio: string;
   fim: string;
+  // Repassado direto pro parâmetro "q" da API do Google — busca livre em
+  // título, descrição, local e participantes.
+  busca?: string;
 }): Promise<EventoAgenda[]> {
   const client = criarClienteAutenticado();
   const params = new URLSearchParams({
@@ -166,6 +170,7 @@ export async function listarEventos({
     orderBy: "startTime",
     maxResults: "250",
   });
+  if (busca?.trim()) params.set("q", busca.trim());
   const dados = await requisitar<GoogleEventsListResponse>(client, {
     url: `${urlEventos()}?${params.toString()}`,
     method: "GET",

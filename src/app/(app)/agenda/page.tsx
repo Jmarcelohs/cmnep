@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { listarEventos, type EventoAgenda } from "@/lib/agenda/google-calendar";
-import { limitesDoMes, mesAtualBrasil, mesAdjacente, nomeMesAno } from "@/lib/agenda/mes";
+import { limitesDoMes, limitesAmplos, mesAtualBrasil, mesAdjacente, nomeMesAno } from "@/lib/agenda/mes";
 import { formatarDiaCompleto, formatarHorario } from "@/lib/agenda/formato";
 import { podeExcluirEvento } from "@/lib/agenda/permissoes";
+import { CampoBusca } from "@/components/campo-busca";
 import { MenuAcoes } from "@/components/menu-acoes";
 import { ExcluirSolicitacaoButton } from "@/components/excluir-solicitacao-button";
 import { excluirEvento } from "./actions";
@@ -11,16 +12,20 @@ import { excluirEvento } from "./actions";
 export default async function AgendaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ mes?: string; error?: string }>;
+  searchParams: Promise<{ mes?: string; busca?: string; todos?: string; error?: string }>;
 }) {
-  const { mes: mesParam, error: errorMsg } = await searchParams;
+  const { mes: mesParam, busca: buscaParam, todos, error: errorMsg } = await searchParams;
   const mes = mesParam || mesAtualBrasil();
+  const busca = buscaParam?.trim() || undefined;
+  // "Modo amplo" cobre passado e futuro (ver contexto em limitesAmplos) —
+  // ativado tanto por uma busca digitada quanto pelo link "Ver todos".
+  const modoAmplo = Boolean(busca) || todos === "1";
   const usuario = await getCurrentUsuario();
 
   let eventos: EventoAgenda[] = [];
   let erroCarregar: string | null = null;
   try {
-    eventos = await listarEventos(limitesDoMes(mes));
+    eventos = await listarEventos({ ...(modoAmplo ? limitesAmplos() : limitesDoMes(mes)), busca });
   } catch (err) {
     erroCarregar = err instanceof Error ? err.message : "Não foi possível carregar a agenda.";
   }
@@ -32,6 +37,10 @@ export default async function AgendaPage({
     eventosPorDia.get(dia)!.push(evento);
   }
   const dias = Array.from(eventosPorDia.keys()).sort();
+
+  // Pra onde a exclusão de um compromisso deve redirecionar de volta,
+  // preservando o modo atual (mês / busca / ver todos).
+  const voltarPara = busca ? `busca=${encodeURIComponent(busca)}` : modoAmplo ? "todos=1" : `mes=${mes}`;
 
   return (
     <div>
@@ -50,21 +59,56 @@ export default async function AgendaPage({
         </Link>
       </div>
 
-      <div className="mt-4 flex items-center justify-center gap-4">
-        <Link
-          href={`/agenda?mes=${mesAdjacente(mes, -1)}`}
-          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
+      <form action="/agenda" className="mt-4 flex flex-wrap items-end gap-3">
+        <CampoBusca
+          defaultValue={busca}
+          placeholder="Buscar por palavra no título, local ou descrição"
+        />
+        <button
+          type="submit"
+          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
         >
-          ← Mês anterior
-        </Link>
-        <span className="text-sm font-medium capitalize text-slate-700">{nomeMesAno(mes)}</span>
-        <Link
-          href={`/agenda?mes=${mesAdjacente(mes, 1)}`}
-          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
-        >
-          Mês seguinte →
-        </Link>
-      </div>
+          Buscar
+        </button>
+        {modoAmplo ? (
+          <Link href="/agenda" className="text-xs text-slate-500 hover:underline">
+            ← Voltar pro mês atual
+          </Link>
+        ) : (
+          <Link href="/agenda?todos=1" className="text-xs text-slate-500 hover:underline">
+            Ver todos os compromissos (passados e futuros)
+          </Link>
+        )}
+      </form>
+
+      {!modoAmplo && (
+        <div className="mt-4 flex items-center justify-center gap-4">
+          <Link
+            href={`/agenda?mes=${mesAdjacente(mes, -1)}`}
+            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
+          >
+            ← Mês anterior
+          </Link>
+          <span className="text-sm font-medium capitalize text-slate-700">{nomeMesAno(mes)}</span>
+          <Link
+            href={`/agenda?mes=${mesAdjacente(mes, 1)}`}
+            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
+          >
+            Mês seguinte →
+          </Link>
+        </div>
+      )}
+      {modoAmplo && (
+        <p className="mt-4 text-center text-sm text-slate-500">
+          {busca ? (
+            <>
+              {eventos.length} resultado(s) para &quot;{busca}&quot;
+            </>
+          ) : (
+            "Todos os compromissos cadastrados"
+          )}
+        </p>
+      )}
 
       {errorMsg && (
         <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{errorMsg}</p>
@@ -110,7 +154,7 @@ export default async function AgendaPage({
                       {podeExcluir && (
                         <ExcluirSolicitacaoButton
                           variant="menu"
-                          action={excluirEvento.bind(null, evento.id, evento.criadoPorUsuarioId, mes)}
+                          action={excluirEvento.bind(null, evento.id, evento.criadoPorUsuarioId, voltarPara)}
                           mensagemConfirmacao={`Excluir "${evento.titulo}"? Essa ação não pode ser desfeita.`}
                         />
                       )}
@@ -123,7 +167,11 @@ export default async function AgendaPage({
         ))}
         {dias.length === 0 && !erroCarregar && (
           <p className="py-6 text-center text-sm text-slate-400">
-            Nenhum compromisso em {nomeMesAno(mes)}.
+            {modoAmplo
+              ? busca
+                ? `Nenhum compromisso encontrado para "${busca}".`
+                : "Nenhum compromisso cadastrado."
+              : `Nenhum compromisso em ${nomeMesAno(mes)}.`}
           </p>
         )}
       </div>

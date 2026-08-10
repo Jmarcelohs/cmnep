@@ -34,6 +34,19 @@ export function limitesDoMes(mesAno: string): { inicio: string; fim: string } {
   };
 }
 
+// Range amplo pra "ver todos os compromissos"/busca — não dá pra pedir
+// pra API um intervalo sem fim, então cobre um período generoso (3 anos
+// pra trás, 3 pra frente) em vez de literalmente "tudo", que já dá conta
+// de qualquer compromisso lançado neste sistema (criado recentemente) e
+// de planejamento futuro razoável.
+export function limitesAmplos(): { inicio: string; fim: string } {
+  const anoAtual = Number(mesAtualBrasil().slice(0, 4));
+  return {
+    inicio: `${anoAtual - 3}-01-01T00:00:00${OFFSET_BRASIL}`,
+    fim: `${anoAtual + 3}-01-01T00:00:00${OFFSET_BRASIL}`,
+  };
+}
+
 export function mesAtualBrasil(): string {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/Sao_Paulo",
