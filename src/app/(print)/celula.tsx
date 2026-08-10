@@ -70,8 +70,8 @@ export function PaginaA4({
     <div
       data-print-pagina
       className={`mx-auto flex ${dimensoes} flex-col bg-white bg-cover bg-no-repeat text-[9pt] text-black shadow-lg print:shadow-none ${
-        quebrarPagina ? "print:break-after-page" : ""
-      }`}
+        orientacao === "paisagem" ? "pagina-a4-paisagem" : ""
+      } ${quebrarPagina ? "print:break-after-page" : ""}`}
       style={{ backgroundImage: `url(${backgroundImage})` }}
     >
       {children}

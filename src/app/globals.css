@@ -34,6 +34,23 @@ body {
   margin: 0;
 }
 
+/* Página nomeada pro timbrado da Moção de Congratulação, que é A4
+   deitado — atribuída via a classe .pagina-a4-paisagem (ver
+   PaginaA4 em src/app/(print)/celula.tsx). Usada com
+   preferCSSPageSize:true no Puppeteer (src/lib/pdf/gerar-pdf.ts)
+   porque a opção landscape do page.pdf() não se mostrou confiável no
+   Chromium empacotado (@sparticuz/chromium-min) usado na Vercel — o
+   PDF saía sempre retrato mesmo com landscape:true, embora funcione
+   localmente com o Chromium completo do pacote puppeteer. */
+@page paisagem {
+  size: A4 landscape;
+  margin: 0;
+}
+
+.pagina-a4-paisagem {
+  page: paisagem;
+}
+
 @media print {
   .no-print {
     display: none !important;

@@ -72,6 +72,12 @@ export async function renderizarPdfDaRota(
       await page.pdf({
         format: "A4",
         landscape: paisagem,
+        // Prioriza o @page do CSS (globals.css) sobre format/landscape —
+        // é o jeito que realmente funcionou pra página paisagem no
+        // Chromium da Vercel (ver comentário em globals.css). Não afeta
+        // as demais rotas: o @page padrão já é A4 retrato, igual a
+        // format:"A4" sem isso.
+        preferCSSPageSize: true,
         printBackground: true,
         margin: { top: "0", right: "0", bottom: "0", left: "0" },
       }),
