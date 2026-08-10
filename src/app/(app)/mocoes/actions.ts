@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
-import type { TipoMocao } from "@/lib/supabase/database.types";
+import type { AutorAssociadoMocao, TipoMocao } from "@/lib/supabase/database.types";
 
 async function exigirOrdenadorOuAdmin(redirectPath: string) {
   const usuario = await getCurrentUsuario();
@@ -38,7 +38,24 @@ function lerCampos(formData: FormData) {
   const autor_partido = String(formData.get("autor_partido") ?? "").trim() || null;
   const justificativa = String(formData.get("justificativa") ?? "").trim();
 
-  return { tipo, data_mocao, destinatario, autor_nome, autor_partido, justificativa };
+  let autores_associados: AutorAssociadoMocao[] = [];
+  try {
+    autores_associados = JSON.parse(String(formData.get("autores_associados") ?? "[]"));
+  } catch {
+    autores_associados = [];
+  }
+  // Descarta entradas sem nome (linha adicionada e deixada em branco).
+  autores_associados = autores_associados.filter((a) => a.nome?.trim());
+
+  return {
+    tipo,
+    data_mocao,
+    destinatario,
+    autor_nome,
+    autor_partido,
+    autores_associados,
+    justificativa,
+  };
 }
 
 export async function criarMocao(formData: FormData) {

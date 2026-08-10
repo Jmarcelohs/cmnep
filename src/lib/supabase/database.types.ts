@@ -72,11 +72,13 @@ export interface AvaliadorLancado {
 
 export type Tratamento = "Sr." | "Sra.";
 
-export type TipoMocao =
-  | "aplauso_congratulacoes"
-  | "pesar_condolencias"
-  | "repudio"
-  | "apoio";
+// Art. 117 do Regimento Interno da Câmara Municipal de Nepomuceno.
+export type TipoMocao = "louvor" | "congratulacoes" | "pesar" | "repudio";
+
+export interface AutorAssociadoMocao {
+  nome: string;
+  partido: string | null;
+}
 
 export interface Database {
   public: {
@@ -739,6 +741,7 @@ export interface Database {
           destinatario: string;
           autor_nome: string;
           autor_partido: string | null;
+          autores_associados: AutorAssociadoMocao[];
           justificativa: string;
           criado_por: string | null;
           criado_em: string;

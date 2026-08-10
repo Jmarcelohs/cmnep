@@ -37,9 +37,15 @@ function linhasDoParagrafo(paragrafo: string): number {
 // (não dá pra saber de antemão qual vai ser a última) e, só na primeira,
 // espaço extra pro título da seção — mais o que for passado em
 // alturaExtraPrimeiraPaginaMM (ex.: uma foto acima do texto).
+//
+// alturaExtraAssinaturaMM aumenta a reserva do bloco de assinatura em toda
+// página (não só na última, pelo mesmo motivo do bloco base) — usado
+// quando o documento tem mais de um signatário (ex.: moção assinada pelo
+// Presidente + autor + vereadores associados, ver mocao-conteudo.tsx).
 export function paginarTextoCorrido(
   paragrafos: string[],
   alturaExtraPrimeiraPaginaMM = 0,
+  alturaExtraAssinaturaMM = 0,
 ): string[][] {
   const paginas: string[][] = [];
   let paginaAtual: string[] = [];
@@ -50,6 +56,7 @@ export function paginarTextoCorrido(
     const budget =
       (ALTURA_UTIL_PAGINA_MM -
         ALTURA_BLOCO_ASSINATURA_MM -
+        alturaExtraAssinaturaMM -
         (primeiraPagina ? ALTURA_TITULO_MM + alturaExtraPrimeiraPaginaMM : 0)) /
       ALTURA_LINHA_MM;
     const linhas = linhasDoParagrafo(paragrafo);

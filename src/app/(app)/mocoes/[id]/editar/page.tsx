@@ -41,6 +41,7 @@ export default async function EditarMocaoPage({
           destinatario: mocao.destinatario,
           autor_nome: mocao.autor_nome,
           autor_partido: mocao.autor_partido ?? "",
+          autores_associados: mocao.autores_associados ?? [],
           justificativa: mocao.justificativa,
         }}
       />

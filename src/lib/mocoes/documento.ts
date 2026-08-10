@@ -1,14 +1,17 @@
 import { dataPorExtenso } from "@/lib/pdf/formato";
+import { PRESIDENTE_PADRAO } from "@/lib/reembolso/documento";
 import type { TipoMocao } from "@/lib/supabase/database.types";
 
 export const NOME_CAMARA = "Câmara Municipal de Nepomuceno";
 export const UF = "MG";
+export const PRESIDENTE = PRESIDENTE_PADRAO;
 
+// Art. 117 do Regimento Interno da Câmara Municipal de Nepomuceno.
 export const LABEL_TIPO_MOCAO: Record<TipoMocao, string> = {
-  aplauso_congratulacoes: "Moção de Aplauso e Congratulações",
-  pesar_condolencias: "Moção de Pesar e Condolências",
+  louvor: "Moção de Louvor",
+  congratulacoes: "Moção de Congratulações",
+  pesar: "Moção de Pesar",
   repudio: "Moção de Repúdio",
-  apoio: "Moção de Apoio",
 };
 
 export function tituloMocao(tipo: TipoMocao) {
@@ -27,14 +30,14 @@ export function fraseApresentacaoMocao({
 }): string {
   const dest = destinatario || "[destinatário]";
   switch (tipo) {
-    case "aplauso_congratulacoes":
-      return `apresenta MOÇÃO DE APLAUSO E CONGRATULAÇÕES a ${dest}, pelos motivos a seguir expostos:`;
-    case "pesar_condolencias":
-      return `apresenta MOÇÃO DE PESAR, com apresentação de condolências, pelo falecimento de ${dest}, pelos motivos a seguir expostos:`;
+    case "louvor":
+      return `apresenta MOÇÃO DE LOUVOR a ${dest}, pelos motivos a seguir expostos:`;
+    case "congratulacoes":
+      return `apresenta MOÇÃO DE CONGRATULAÇÕES a ${dest}, pelos motivos a seguir expostos:`;
+    case "pesar":
+      return `apresenta MOÇÃO DE PESAR pelo falecimento de ${dest}, pelos motivos a seguir expostos:`;
     case "repudio":
       return `apresenta MOÇÃO DE REPÚDIO em relação a ${dest}, pelos motivos a seguir expostos:`;
-    case "apoio":
-      return `apresenta MOÇÃO DE APOIO a ${dest}, pelos motivos a seguir expostos:`;
   }
 }
 
@@ -53,7 +56,7 @@ export function corpoAberturaMocao({
   const partido = autorPartido ? ` (${autorPartido})` : "";
   return (
     `A ${NOME_CAMARA} – ${UF}, por intermédio do(a) Vereador(a) ${autor}${partido}, nos termos ` +
-    `regimentais, ${fraseApresentacaoMocao({ tipo, destinatario })}`
+    `regimentais (art. 117 do Regimento Interno), ${fraseApresentacaoMocao({ tipo, destinatario })}`
   );
 }
 

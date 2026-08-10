@@ -1,7 +1,8 @@
 -- ========================================================================
--- Migration 0039: Moções — honrarias/homenagens (aplauso e congratulações,
--- pesar e condolências, repúdio, apoio) apresentadas por um vereador e
--- votadas em plenário.
+-- Migration 0039: Moções — tipos previstos no art. 117 do Regimento Interno
+-- da Câmara Municipal de Nepomuceno (louvor, congratulações, pesar ou
+-- repúdio), apresentadas por um vereador (podendo ter um ou mais
+-- vereadores associados) e votadas em plenário.
 --
 -- Sem numeração — diferente de Decretos e Ofícios, moção não tem um
 -- registro sequencial gerido por esta ferramenta (confirmado com o
@@ -10,13 +11,18 @@
 
 create table mocoes (
   id uuid primary key default gen_random_uuid(),
-  tipo text not null check (tipo in ('aplauso_congratulacoes', 'pesar_condolencias', 'repudio', 'apoio')),
+  tipo text not null check (tipo in ('louvor', 'congratulacoes', 'pesar', 'repudio')),
   data_mocao date not null default current_date,
 
   destinatario text not null,
 
   autor_nome text not null,
   autor_partido text,
+  -- Vereadores associados ao autor principal (podem ser um ou vários,
+  -- quantidade não fixa) — cada um assina o documento junto do autor e do
+  -- Presidente da Câmara. Mesmo padrão de lista jsonb já usado em
+  -- avaliacoes.avaliadores (0016) pra estrutura repetível sem tabela filha.
+  autores_associados jsonb not null default '[]'::jsonb,
 
   justificativa text not null default '',
 

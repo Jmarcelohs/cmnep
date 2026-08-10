@@ -14,10 +14,10 @@ import { excluirMocao } from "./actions";
 import type { TipoMocao } from "@/lib/supabase/database.types";
 
 const ESTILO_TIPO: Record<TipoMocao, string> = {
-  aplauso_congratulacoes: "bg-emerald-50 text-emerald-700",
-  pesar_condolencias: "bg-slate-100 text-slate-700",
+  louvor: "bg-sky-50 text-sky-700",
+  congratulacoes: "bg-emerald-50 text-emerald-700",
+  pesar: "bg-slate-100 text-slate-700",
   repudio: "bg-red-50 text-red-700",
-  apoio: "bg-sky-50 text-sky-700",
 };
 
 export default async function MocoesPage({
