@@ -72,6 +72,12 @@ export interface AvaliadorLancado {
 
 export type Tratamento = "Sr." | "Sra.";
 
+export type TipoMocao =
+  | "aplauso_congratulacoes"
+  | "pesar_condolencias"
+  | "repudio"
+  | "apoio";
+
 export interface Database {
   public: {
     Tables: {
@@ -723,6 +729,26 @@ export interface Database {
           autor_nome: string;
         };
         Update: Partial<Database["public"]["Tables"]["decretos_titulo_honorario"]["Row"]>;
+        Relationships: [];
+      };
+      mocoes: {
+        Row: {
+          id: string;
+          tipo: TipoMocao;
+          data_mocao: string;
+          destinatario: string;
+          autor_nome: string;
+          autor_partido: string | null;
+          justificativa: string;
+          criado_por: string | null;
+          criado_em: string;
+        };
+        Insert: Partial<Omit<Database["public"]["Tables"]["mocoes"]["Row"], "id">> & {
+          tipo: TipoMocao;
+          destinatario: string;
+          autor_nome: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["mocoes"]["Row"]>;
         Relationships: [];
       };
       oficios: {

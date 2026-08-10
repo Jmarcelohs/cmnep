@@ -1,6 +1,7 @@
 import type { createClient } from "@/lib/supabase/server";
-import type { Papel } from "@/lib/supabase/database.types";
+import type { Papel, TipoMocao } from "@/lib/supabase/database.types";
 import { buscarIdsPessoasPorNome, construirFiltroBusca } from "@/lib/busca";
+import { LABEL_TIPO_MOCAO } from "@/lib/mocoes/documento";
 
 export type ResultadoBusca = {
   id: string;
@@ -39,7 +40,7 @@ export async function buscarGlobal(
   const veDiariasReembolsosVeiculos = usuario?.papel !== "estagiario";
   const idsPessoas = await buscarIdsPessoasPorNome(supabase, termoLimpo);
 
-  const [diarias, reembolsos, internos, oficios, pessoas, decretos, veiculos] = await Promise.all([
+  const [diarias, reembolsos, internos, oficios, pessoas, decretos, mocoes, veiculos] = await Promise.all([
     veDiariasReembolsosVeiculos
       ? supabase
           .from("diarias_solicitacoes")
@@ -73,6 +74,11 @@ export async function buscarGlobal(
       .from("decretos_titulo_honorario")
       .select("id, numero, ano, nome_homenageado")
       .or(construirFiltroBusca(termoLimpo, ["nome_homenageado", "autor_nome"]))
+      .limit(LIMITE_POR_MODULO),
+    supabase
+      .from("mocoes")
+      .select("id, tipo, destinatario, autor_nome")
+      .or(construirFiltroBusca(termoLimpo, ["destinatario", "autor_nome"]))
       .limit(LIMITE_POR_MODULO),
     veDiariasReembolsosVeiculos
       ? supabase
@@ -132,6 +138,14 @@ export async function buscarGlobal(
     href: `/decretos/${d.id}/editar`,
   }));
   if (itensDecretos.length > 0) grupos.push({ titulo: "Decretos", itens: itensDecretos });
+
+  const itensMocoes: ResultadoBusca[] = (mocoes.data ?? []).map((m) => ({
+    id: m.id,
+    titulo: LABEL_TIPO_MOCAO[m.tipo as TipoMocao],
+    subtitulo: `${m.destinatario} — ${m.autor_nome}`,
+    href: `/mocoes/${m.id}/editar`,
+  }));
+  if (itensMocoes.length > 0) grupos.push({ titulo: "Moções", itens: itensMocoes });
 
   const itensVeiculos: ResultadoBusca[] = (veiculos.data ?? []).map((v) => ({
     id: v.id,
