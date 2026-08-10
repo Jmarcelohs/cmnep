@@ -53,6 +53,8 @@ export type StatusRequerimentoInterno = "pendente" | "analise" | "deferido" | "i
 
 export type DecisaoRequerimentoInterno = "autorizado" | "nao_autorizado";
 
+export type StatusSessaoPlenario = "pendente" | "aprovado" | "recusado";
+
 export type PeriodoAvaliacao = "trimestre_1" | "trimestre_2" | "trimestre_3" | "anual";
 
 export type ConceitoAvaliacao = "otimo" | "muito_bom" | "bom" | "regular" | "insuficiente";
@@ -810,6 +812,24 @@ export interface Database {
           tipo_arquivo: TipoAnexoOficio;
         };
         Update: Partial<Database["public"]["Tables"]["legislacao_documentos"]["Row"]>;
+        Relationships: [];
+      };
+      sessoes_plenario_decisoes: {
+        Row: {
+          id: string;
+          resposta_timestamp: string;
+          status: StatusSessaoPlenario;
+          decidido_por: string | null;
+          decidido_em: string | null;
+          evento_agenda_id: string | null;
+          criado_em: string;
+        };
+        Insert: Partial<Omit<Database["public"]["Tables"]["sessoes_plenario_decisoes"]["Row"], "id">> & {
+          id?: string;
+          resposta_timestamp: string;
+          status: StatusSessaoPlenario;
+        };
+        Update: Partial<Database["public"]["Tables"]["sessoes_plenario_decisoes"]["Row"]>;
         Relationships: [];
       };
       oficios_modelos: {

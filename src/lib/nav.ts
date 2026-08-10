@@ -36,6 +36,7 @@ export const NAV_ESTRUTURA: NavEntry[] = [
       { href: "/decretos", label: "Decretos" },
       { href: "/oficios", label: "Ofícios" },
       { href: "/legislacao", label: "Legislação" },
+      { href: "/plenario", label: "Sessão do Plenário", apenas: ["admin", "ordenador_despesa"] },
     ],
   },
   {
