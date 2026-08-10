@@ -43,15 +43,15 @@ function BlocoAssinatura({
 }) {
   return (
     <div className="flex flex-col items-center text-center">
-      <div className="flex h-[16mm] items-end justify-center">
+      <div className="flex h-[11mm] items-end justify-center">
         {assinaturaUrl && (
           // eslint-disable-next-line @next/next/no-img-element -- imagem vem de uma URL assinada do Storage, resolvida no servidor pra essa renderização do PDF
-          <img src={assinaturaUrl} alt="" className="max-h-[16mm] max-w-[50mm] object-contain" />
+          <img src={assinaturaUrl} alt="" className="max-h-[11mm] max-w-[45mm] object-contain" />
         )}
       </div>
-      <div className="w-[55mm] border-t border-black pt-1">
+      <div className="w-[55mm] border-t border-black pt-0.5">
         <p className="font-bold">{signatario.nome}</p>
-        <p className="text-[8pt]">{legendaAssinatura(signatario)}</p>
+        <p className="text-[8pt] leading-tight">{legendaAssinatura(signatario)}</p>
       </div>
     </div>
   );
@@ -65,7 +65,7 @@ function GradeAssinaturas({
   assinaturasPorId: Record<string, string | null>;
 }) {
   return (
-    <div className="grid grid-cols-3 gap-x-4 gap-y-8">
+    <div className="grid grid-cols-3 gap-x-4 gap-y-4">
       {signatarios.map((s) => (
         <BlocoAssinatura key={s.id} signatario={s} assinaturaUrl={assinaturasPorId[s.id] ?? null} />
       ))}
@@ -133,7 +133,7 @@ function PesarConteudo({
   const tratamento = mocao.destinatario_tratamento ?? "Sr.";
   return (
     <PaginaA4 backgroundImage="/timbrado/mocao-pesar.jpg">
-      <div className="ml-[28mm] mr-[28mm] mt-[48mm] flex flex-1 flex-col text-[11pt] leading-relaxed">
+      <div className="ml-[28mm] mr-[28mm] mt-[42mm] flex flex-1 flex-col text-[10.5pt] leading-snug">
         <p>
           <Segmentos
             segmentos={enderecamentoPesarSegmentos({
@@ -143,7 +143,7 @@ function PesarConteudo({
           />
         </p>
 
-        <p className="mt-4 text-justify">
+        <p className="mt-3 text-justify">
           <Segmentos
             segmentos={aberturaPesarSegmentos({
               autorNome: autor.nome,
@@ -155,7 +155,7 @@ function PesarConteudo({
           />
         </p>
 
-        <div className="mt-4 space-y-4">
+        <div className="mt-3 space-y-2">
           {PARAGRAFOS_PESAR_FIXOS.map((p, i) => (
             <p key={i} className="text-justify">
               {p}
@@ -163,9 +163,9 @@ function PesarConteudo({
           ))}
         </div>
 
-        <p className="mt-8">{fechoMocao(mocao.data_mocao)}</p>
+        <p className="mt-4">{fechoMocao(mocao.data_mocao)}</p>
 
-        <div className="mt-10">
+        <div className="mt-5">
           <GradeAssinaturas signatarios={signatarios} assinaturasPorId={assinaturasPorId} />
         </div>
       </div>
