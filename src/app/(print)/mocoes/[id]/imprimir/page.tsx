@@ -55,8 +55,16 @@ export default async function ImprimirMocaoPage({
     }),
   );
 
+  const notaPapel =
+    mocao.tipo === "congratulacoes"
+      ? "Papel fotográfico glossy 230g, paisagem (A4 deitado)"
+      : "Papel sulfite A4 90g, retrato";
+
   return (
     <>
+      <div className="no-print fixed left-6 top-6 max-w-xs rounded-md bg-white px-3 py-2 text-xs text-slate-600 shadow-lg">
+        Imprimir em: <strong>{notaPapel}</strong>
+      </div>
       <PrintButton url={`/api/mocoes/${id}/pdf`} nomeArquivoPadrao={`mocao-${id}.pdf`} />
       <MocaoConteudo mocao={mocao} autor={autor} associados={associados} assinaturasPorId={assinaturasPorId} />
     </>

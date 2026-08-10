@@ -26,6 +26,12 @@ export function cabecalhoContentDisposition(filename: string): string {
 export async function renderizarPdfDaRota(
   request: NextRequest,
   caminhoInterno: string,
+  // Só a Moção de Congratulação usa página A4 deitada hoje (timbrado real
+  // é paisagem — ver mocao-conteudo.tsx). Sem isso, page.pdf() gera uma
+  // página A4 retrato e encolhe o conteúdo de 297mm de largura pra caber
+  // nos 210mm — o PDF parece certo na tela (proporção preservada), mas
+  // sai menor e na orientação errada quando impresso de verdade.
+  paisagem = false,
 ): Promise<Buffer> {
   const cookies = request.cookies.getAll();
   const origin = request.nextUrl.origin;
@@ -39,7 +45,11 @@ export async function renderizarPdfDaRota(
     // (1px) pra posições de sub-pixel na hora de rasterizar o PDF, e elas
     // somem ou ficam apagadas. Em 2, a mesma borda de 1px vira 2 pixels
     // físicos e renderiza nítida — sem precisar engrossar a borda no CSS.
-    await page.setViewport({ width: 1240, height: 1754, deviceScaleFactor: 2 });
+    await page.setViewport({
+      width: paisagem ? 1754 : 1240,
+      height: paisagem ? 1240 : 1754,
+      deviceScaleFactor: 2,
+    });
 
     await page.setCookie(
       ...cookies.map((cookie) => ({
@@ -61,6 +71,7 @@ export async function renderizarPdfDaRota(
     return Buffer.from(
       await page.pdf({
         format: "A4",
+        landscape: paisagem,
         printBackground: true,
         margin: { top: "0", right: "0", bottom: "0", left: "0" },
       }),
@@ -141,10 +152,11 @@ export async function gerarPdfDeRota(
   // PDFs de comprovantes anexados — entram como páginas extras, ao final
   // do documento gerado (ex.: recibos em PDF anexados a um requerimento).
   pdfsParaAnexar: Buffer[] = [],
+  paisagem = false,
 ) {
   let pdfBuffer: Buffer;
   try {
-    pdfBuffer = await renderizarPdfDaRota(request, caminhoInterno);
+    pdfBuffer = await renderizarPdfDaRota(request, caminhoInterno, paisagem);
   } catch {
     return NextResponse.json(
       { error: "Não foi possível renderizar o documento" },

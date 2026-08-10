@@ -35,5 +35,8 @@ export async function GET(
 
   const filename = `Moção - ${limparNomeArquivo(mocao.destinatario)} - ${mocao.data_mocao}.pdf`;
 
-  return gerarPdfDeRota(request, `/mocoes/${id}/imprimir`, filename);
+  // Congratulação usa o timbrado real em papel A4 deitado (paisagem) —
+  // ver comentário em renderizarPdfDaRota sobre por que isso precisa ser
+  // passado explicitamente.
+  return gerarPdfDeRota(request, `/mocoes/${id}/imprimir`, filename, [], mocao.tipo === "congratulacoes");
 }
