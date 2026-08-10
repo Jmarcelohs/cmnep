@@ -1,65 +1,118 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { corpoAberturaMocao, fechoMocao, PRESIDENTE, tituloMocao } from "@/lib/mocoes/documento";
-import type { AutorAssociadoMocao, TipoMocao } from "@/lib/supabase/database.types";
+import {
+  aberturaCongratulacaoSegmentos,
+  aberturaPesarSegmentos,
+  enderecamentoPesarSegmentos,
+  fechoMocao,
+  LABEL_TIPO_MOCAO,
+  legendaAssinatura,
+  ordenarSignatarios,
+  PARAGRAFOS_PESAR_FIXOS,
+  TIPOS_MOCAO_DISPONIVEIS,
+  type VereadorSignatario,
+} from "@/lib/mocoes/documento";
+import type { TipoMocao, Tratamento } from "@/lib/supabase/database.types";
+
+export type VereadorOpcao = {
+  id: string;
+  nome: string;
+  partido: string | null;
+  genero: "Vereador" | "Vereadora";
+  presidente: boolean;
+};
 
 export type ValoresIniciaisMocao = {
   tipo: TipoMocao;
   data_mocao: string;
   destinatario: string;
-  autor_nome: string;
-  autor_partido: string;
-  autores_associados: AutorAssociadoMocao[];
+  destinatario_tratamento: Tratamento;
+  autor_vereador_id: string;
+  associados_vereadores_ids: string[];
   justificativa: string;
 };
 
-const OPCOES_TIPO: { value: TipoMocao; label: string }[] = [
-  { value: "louvor", label: "Louvor" },
-  { value: "congratulacoes", label: "Congratulações" },
-  { value: "pesar", label: "Pesar" },
-  { value: "repudio", label: "Repúdio" },
-];
+function SegmentosPrevia({ segmentos }: { segmentos: { texto: string; negrito: boolean }[] }) {
+  return (
+    <>
+      {segmentos.map((s, i) =>
+        s.negrito ? <strong key={i}>{s.texto}</strong> : <span key={i}>{s.texto}</span>,
+      )}
+    </>
+  );
+}
 
 export function MocaoForm({
   action,
+  vereadores,
   valoresIniciais,
   submitLabel = "Salvar moção",
 }: {
   action: (formData: FormData) => void;
+  vereadores: VereadorOpcao[];
   valoresIniciais?: ValoresIniciaisMocao;
   submitLabel?: string;
 }) {
-  const [tipo, setTipo] = useState<TipoMocao>(valoresIniciais?.tipo ?? "louvor");
+  const [tipo, setTipo] = useState<TipoMocao>(
+    valoresIniciais?.tipo ?? TIPOS_MOCAO_DISPONIVEIS[0],
+  );
   const [dataMocao, setDataMocao] = useState(valoresIniciais?.data_mocao ?? "");
   const [destinatario, setDestinatario] = useState(valoresIniciais?.destinatario ?? "");
-  const [autorNome, setAutorNome] = useState(valoresIniciais?.autor_nome ?? "");
-  const [autorPartido, setAutorPartido] = useState(valoresIniciais?.autor_partido ?? "");
-  const [associados, setAssociados] = useState<AutorAssociadoMocao[]>(
-    valoresIniciais?.autores_associados ?? [],
+  const [destinatarioTratamento, setDestinatarioTratamento] = useState<Tratamento>(
+    valoresIniciais?.destinatario_tratamento ?? "Sr.",
+  );
+  const [autorId, setAutorId] = useState(valoresIniciais?.autor_vereador_id ?? "");
+  const [associadosIds, setAssociadosIds] = useState<Set<string>>(
+    new Set(valoresIniciais?.associados_vereadores_ids ?? []),
   );
   const [justificativa, setJustificativa] = useState(valoresIniciais?.justificativa ?? "");
 
-  const abertura = useMemo(
-    () =>
-      corpoAberturaMocao({
-        tipo,
-        destinatario: destinatario || "—",
-        autorNome: autorNome || "—",
-        autorPartido: autorPartido || null,
-      }),
-    [tipo, destinatario, autorNome, autorPartido],
-  );
+  const autor = vereadores.find((v) => v.id === autorId);
+  const associados = vereadores.filter((v) => associadosIds.has(v.id) && v.id !== autorId);
 
-  function atualizarAssociado(indice: number, campo: "nome" | "partido", valor: string) {
-    setAssociados((atual) =>
-      atual.map((a, i) => (i === indice ? { ...a, [campo]: campo === "partido" ? valor || null : valor } : a)),
-    );
+  function alternarAssociado(id: string) {
+    setAssociadosIds((atual) => {
+      const novo = new Set(atual);
+      if (novo.has(id)) novo.delete(id);
+      else novo.add(id);
+      return novo;
+    });
   }
+
+  const segmentosAbertura = useMemo(() => {
+    if (tipo === "pesar") {
+      return aberturaPesarSegmentos({
+        autorNome: autor?.nome ?? "",
+        autorGenero: autor?.genero ?? "Vereador",
+        associadosNomes: associados.map((v) => v.nome),
+        destinatarioNome: destinatario,
+        destinatarioTratamento,
+      });
+    }
+    return aberturaCongratulacaoSegmentos({
+      autorNome: autor?.nome ?? "",
+      associadosNomes: associados.map((v) => v.nome),
+    });
+  }, [tipo, autor, associados, destinatario, destinatarioTratamento]);
+
+  const signatarios = useMemo(() => {
+    const todos: VereadorSignatario[] = [autor, ...associados]
+      .filter((v): v is VereadorOpcao => Boolean(v))
+      .map((v) => ({
+        id: v.id,
+        nome: v.nome,
+        partido: v.partido,
+        genero: v.genero,
+        presidente: v.presidente,
+        assinaturaCaminho: null,
+      }));
+    return ordenarSignatarios(todos);
+  }, [autor, associados]);
 
   return (
     <form action={action} className="mt-6 space-y-6">
-      <input type="hidden" name="autores_associados" value={JSON.stringify(associados)} />
+      <input type="hidden" name="associados_vereadores_ids" value={JSON.stringify([...associadosIds])} />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
@@ -71,9 +124,9 @@ export function MocaoForm({
             onChange={(e) => setTipo(e.target.value as TipoMocao)}
             className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
           >
-            {OPCOES_TIPO.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
+            {TIPOS_MOCAO_DISPONIVEIS.map((t) => (
+              <option key={t} value={t}>
+                {LABEL_TIPO_MOCAO[t]}
               </option>
             ))}
           </select>
@@ -92,123 +145,134 @@ export function MocaoForm({
         </div>
       </div>
 
-      <div>
-        <label htmlFor="destinatario" className="block text-sm font-medium text-slate-700">
-          Destinatário (pessoa, entidade, órgão etc.)
-        </label>
-        <input
-          id="destinatario"
-          name="destinatario"
-          value={destinatario}
-          onChange={(e) => setDestinatario(e.target.value)}
-          required
-          placeholder="Ex.: Sr. Fulano de Tal, Associação de Moradores do Bairro X"
-          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-          <label htmlFor="autor_nome" className="block text-sm font-medium text-slate-700">Autor (vereador requerente)</label>
-          <input
-            id="autor_nome"
-            name="autor_nome"
-            value={autorNome}
-            onChange={(e) => setAutorNome(e.target.value)}
-            required
-            placeholder="Nome do vereador"
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-          />
-        </div>
-        <div>
-          <label htmlFor="autor_partido" className="block text-sm font-medium text-slate-700">Partido (opcional)</label>
-          <input
-            id="autor_partido"
-            name="autor_partido"
-            value={autorPartido}
-            onChange={(e) => setAutorPartido(e.target.value)}
-            placeholder="Ex.: PL"
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-          />
-        </div>
-      </div>
-
-      <div>
-        <div className="flex items-center justify-between">
-          <label className="block text-sm font-medium text-slate-700">
-            Vereadores associados (opcional)
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="sm:col-span-2">
+          <label htmlFor="destinatario" className="block text-sm font-medium text-slate-700">
+            {tipo === "pesar" ? "Nome do(a) falecido(a)" : "Destinatário (pessoa, entidade, órgão etc.)"}
           </label>
-          <button
-            type="button"
-            onClick={() => setAssociados((atual) => [...atual, { nome: "", partido: null }])}
-            className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
-          >
-            + Adicionar vereador
-          </button>
+          <input
+            id="destinatario"
+            name="destinatario"
+            value={destinatario}
+            onChange={(e) => setDestinatario(e.target.value)}
+            required
+            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
         </div>
-        {associados.length > 0 && (
-          <div className="mt-2 space-y-2">
-            {associados.map((a, i) => (
-              <div key={i} className="flex gap-2">
-                <input
-                  value={a.nome}
-                  onChange={(e) => atualizarAssociado(i, "nome", e.target.value)}
-                  placeholder="Nome do vereador associado"
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-                />
-                <input
-                  value={a.partido ?? ""}
-                  onChange={(e) => atualizarAssociado(i, "partido", e.target.value)}
-                  placeholder="Partido"
-                  className="w-32 rounded-md border border-slate-300 px-3 py-2 text-sm"
-                />
-                <button
-                  type="button"
-                  onClick={() => setAssociados((atual) => atual.filter((_, idx) => idx !== i))}
-                  className="rounded-md border border-red-300 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
-                >
-                  Remover
-                </button>
-              </div>
-            ))}
+        {tipo === "pesar" && (
+          <div>
+            <label htmlFor="destinatario_tratamento" className="block text-sm font-medium text-slate-700">
+              Tratamento
+            </label>
+            <select
+              id="destinatario_tratamento"
+              name="destinatario_tratamento"
+              value={destinatarioTratamento}
+              onChange={(e) => setDestinatarioTratamento(e.target.value as Tratamento)}
+              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            >
+              <option value="Sr.">Sr.</option>
+              <option value="Sra.">Sra.</option>
+            </select>
           </div>
         )}
       </div>
 
       <div>
-        <label htmlFor="justificativa" className="block text-sm font-medium text-slate-700">Justificativa</label>
-        <textarea
-          id="justificativa"
-          name="justificativa"
-          rows={8}
-          value={justificativa}
-          onChange={(e) => setJustificativa(e.target.value)}
+        <label htmlFor="autor_vereador_id" className="block text-sm font-medium text-slate-700">
+          Autor (vereador requerente)
+        </label>
+        <select
+          id="autor_vereador_id"
+          name="autor_vereador_id"
+          value={autorId}
+          onChange={(e) => setAutorId(e.target.value)}
           required
-          placeholder="Motivos da moção — cada parágrafo vira um parágrafo separado no PDF"
           className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-        />
+        >
+          <option value="">Selecione...</option>
+          {vereadores.map((v) => (
+            <option key={v.id} value={v.id}>
+              {v.nome}
+              {v.partido ? ` – ${v.partido}` : ""}
+            </option>
+          ))}
+        </select>
       </div>
+
+      <div>
+        <label className="block text-sm font-medium text-slate-700">
+          Vereadores associados (opcional)
+        </label>
+        <div className="mt-2 grid grid-cols-1 gap-1 sm:grid-cols-2">
+          {vereadores
+            .filter((v) => v.id !== autorId)
+            .map((v) => (
+              <label key={v.id} className="flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={associadosIds.has(v.id)}
+                  onChange={() => alternarAssociado(v.id)}
+                  className="rounded border-slate-300"
+                />
+                {v.nome}
+                {v.partido ? ` – ${v.partido}` : ""}
+              </label>
+            ))}
+        </div>
+      </div>
+
+      {tipo !== "pesar" && (
+        <div>
+          <label htmlFor="justificativa" className="block text-sm font-medium text-slate-700">Justificativa</label>
+          <textarea
+            id="justificativa"
+            name="justificativa"
+            rows={8}
+            value={justificativa}
+            onChange={(e) => setJustificativa(e.target.value)}
+            required
+            placeholder="Motivos da moção — cada parágrafo vira um parágrafo separado no PDF"
+            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+        </div>
+      )}
+      {tipo === "pesar" && (
+        <p className="rounded-md bg-slate-50 px-3 py-2 text-xs text-slate-500">
+          O texto de pêsames é padronizado (ver prévia abaixo) — não há campo de justificativa
+          pra esse tipo.
+        </p>
+      )}
 
       <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
         <p className="text-xs font-semibold uppercase text-slate-500">Prévia do texto padronizado</p>
         <div className="mt-2 space-y-2 text-sm text-slate-700">
-          <p className="text-center font-semibold">{tituloMocao(tipo)}</p>
-          <p>{abertura}</p>
-          {justificativa
-            .split(/\n+/)
-            .map((p) => p.trim())
-            .filter(Boolean)
-            .map((p, i) => (
-              <p key={i}>{p}</p>
-            ))}
+          {tipo === "pesar" && (
+            <p>
+              <SegmentosPrevia
+                segmentos={enderecamentoPesarSegmentos({
+                  destinatarioNome: destinatario,
+                  destinatarioTratamento,
+                })}
+              />
+            </p>
+          )}
+          <p>
+            <SegmentosPrevia segmentos={segmentosAbertura} />
+          </p>
+          {tipo === "congratulacoes" && (
+            <p className="text-center font-semibold">{destinatario.toUpperCase() || "[destinatário]"}</p>
+          )}
+          {tipo === "pesar"
+            ? PARAGRAFOS_PESAR_FIXOS.map((p, i) => <p key={i}>{p}</p>)
+            : justificativa
+                .split(/\n+/)
+                .map((p) => p.trim())
+                .filter(Boolean)
+                .map((p, i) => <p key={i}>{p}</p>)}
           <p className="text-right">{fechoMocao(dataMocao)}</p>
           <p className="mt-4 text-xs text-slate-500">
-            Assinam: {PRESIDENTE} (Presidente), {autorNome || "[autor]"}
-            {associados.filter((a) => a.nome.trim()).length > 0 &&
-              `, ${associados
-                .filter((a) => a.nome.trim())
-                .map((a) => a.nome)
-                .join(", ")}`}
+            Assinam, em ordem: {signatarios.map((s) => `${s.nome} (${legendaAssinatura(s)})`).join("; ") || "—"}
           </p>
         </div>
       </div>

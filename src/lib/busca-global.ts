@@ -77,8 +77,8 @@ export async function buscarGlobal(
       .limit(LIMITE_POR_MODULO),
     supabase
       .from("mocoes")
-      .select("id, tipo, destinatario, autor_nome")
-      .or(construirFiltroBusca(termoLimpo, ["destinatario", "autor_nome"]))
+      .select("id, tipo, destinatario, autor:autor_vereador_id(nome)")
+      .or(construirFiltroBusca(termoLimpo, ["destinatario"]))
       .limit(LIMITE_POR_MODULO),
     veDiariasReembolsosVeiculos
       ? supabase
@@ -142,7 +142,7 @@ export async function buscarGlobal(
   const itensMocoes: ResultadoBusca[] = (mocoes.data ?? []).map((m) => ({
     id: m.id,
     titulo: LABEL_TIPO_MOCAO[m.tipo as TipoMocao],
-    subtitulo: `${m.destinatario} — ${m.autor_nome}`,
+    subtitulo: `${m.destinatario} — ${(m.autor as unknown as { nome: string } | null)?.nome ?? "—"}`,
     href: `/mocoes/${m.id}/editar`,
   }));
   if (itensMocoes.length > 0) grupos.push({ titulo: "Moções", itens: itensMocoes });

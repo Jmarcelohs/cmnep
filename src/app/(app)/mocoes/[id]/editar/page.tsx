@@ -18,7 +18,14 @@ export default async function EditarMocaoPage({
   if (usuario?.papel !== "admin" && usuario?.papel !== "ordenador_despesa") redirect("/mocoes");
 
   const supabase = await createClient();
-  const { data: mocao } = await supabase.from("mocoes").select("*").eq("id", id).single();
+  const [{ data: mocao }, { data: vereadores }] = await Promise.all([
+    supabase.from("mocoes").select("*").eq("id", id).single(),
+    supabase
+      .from("vereadores")
+      .select("id, nome, partido, genero, presidente")
+      .eq("ativo", true)
+      .order("nome"),
+  ]);
 
   if (!mocao) notFound();
 
@@ -34,14 +41,15 @@ export default async function EditarMocaoPage({
 
       <MocaoForm
         action={editarMocao.bind(null, id)}
+        vereadores={vereadores ?? []}
         submitLabel="Salvar alterações"
         valoresIniciais={{
           tipo: mocao.tipo,
           data_mocao: mocao.data_mocao,
           destinatario: mocao.destinatario,
-          autor_nome: mocao.autor_nome,
-          autor_partido: mocao.autor_partido ?? "",
-          autores_associados: mocao.autores_associados ?? [],
+          destinatario_tratamento: mocao.destinatario_tratamento ?? "Sr.",
+          autor_vereador_id: mocao.autor_vereador_id,
+          associados_vereadores_ids: mocao.associados_vereadores_ids ?? [],
           justificativa: mocao.justificativa,
         }}
       />

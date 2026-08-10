@@ -1,106 +1,213 @@
 import { PaginaA4 } from "../celula";
-import { corpoAberturaMocao, fechoMocao, PRESIDENTE, tituloMocao } from "@/lib/mocoes/documento";
-import { paginarTextoCorrido } from "@/lib/pdf/paginacao";
-import type { AutorAssociadoMocao, TipoMocao } from "@/lib/supabase/database.types";
+import {
+  aberturaCongratulacaoSegmentos,
+  aberturaPesarSegmentos,
+  enderecamentoPesarSegmentos,
+  fechoMocao,
+  legendaAssinatura,
+  ordenarSignatarios,
+  PARAGRAFOS_PESAR_FIXOS,
+  type SegmentoMocao,
+  type VereadorSignatario,
+} from "@/lib/mocoes/documento";
+import type { TipoMocao, Tratamento } from "@/lib/supabase/database.types";
 
-type Mocao = {
+export type Mocao = {
   tipo: TipoMocao;
   data_mocao: string;
   destinatario: string;
-  autor_nome: string;
-  autor_partido: string | null;
-  autores_associados: AutorAssociadoMocao[];
+  destinatario_tratamento: Tratamento | null;
   justificativa: string;
 };
 
-// Reserva de altura, por signatário além do autor principal (já coberto
-// pela reserva base de paginarTextoCorrido), pra evitar que o bloco de
-// assinaturas estoure por cima do rodapé do timbrado numa moção com vários
-// vereadores associados — ver comentário em paginarTextoCorrido.
-const ALTURA_POR_SIGNATARIO_EXTRA_MM = 22;
-
-function BlocoAssinatura({ nome, cargo }: { nome: string; cargo: string }) {
+function Segmentos({ segmentos }: { segmentos: SegmentoMocao[] }) {
   return (
-    <div className="mx-auto mt-[8mm] w-[90mm] text-center">
-      <p className="font-bold">{nome}</p>
-      <p>{cargo}</p>
+    <>
+      {segmentos.map((s, i) =>
+        s.negrito ? <strong key={i}>{s.texto}</strong> : <span key={i}>{s.texto}</span>,
+      )}
+    </>
+  );
+}
+
+// Imagem de assinatura escaneada colada acima do nome — se o vereador
+// ainda não tem assinatura cadastrada (ver /vereadores), fica só a linha
+// em branco pra assinatura física por cima, mesma convenção do Parecer de
+// Comissão em decreto-conteudo.tsx.
+function BlocoAssinatura({
+  signatario,
+  assinaturaUrl,
+}: {
+  signatario: VereadorSignatario;
+  assinaturaUrl: string | null;
+}) {
+  return (
+    <div className="flex flex-col items-center text-center">
+      <div className="flex h-[16mm] items-end justify-center">
+        {assinaturaUrl && (
+          // eslint-disable-next-line @next/next/no-img-element -- imagem vem de uma URL assinada do Storage, resolvida no servidor pra essa renderização do PDF
+          <img src={assinaturaUrl} alt="" className="max-h-[16mm] max-w-[50mm] object-contain" />
+        )}
+      </div>
+      <div className="w-[55mm] border-t border-black pt-1">
+        <p className="font-bold">{signatario.nome}</p>
+        <p className="text-[8pt]">{legendaAssinatura(signatario)}</p>
+      </div>
     </div>
   );
 }
 
-function AssinaturasMocao({ mocao }: { mocao: Mocao }) {
+function GradeAssinaturas({
+  signatarios,
+  assinaturasPorId,
+}: {
+  signatarios: VereadorSignatario[];
+  assinaturasPorId: Record<string, string | null>;
+}) {
   return (
-    <div className="mt-[6mm]">
-      <BlocoAssinatura nome={PRESIDENTE} cargo="Presidente da Câmara Municipal de Nepomuceno" />
-      <BlocoAssinatura
-        nome={mocao.autor_nome}
-        cargo={`Vereador(a)${mocao.autor_partido ? ` – ${mocao.autor_partido}` : ""} (Autor)`}
-      />
-      {mocao.autores_associados.map((a, i) => (
-        <BlocoAssinatura
-          key={i}
-          nome={a.nome}
-          cargo={`Vereador(a)${a.partido ? ` – ${a.partido}` : ""}`}
-        />
+    <div className="grid grid-cols-3 gap-x-4 gap-y-8">
+      {signatarios.map((s) => (
+        <BlocoAssinatura key={s.id} signatario={s} assinaturaUrl={assinaturasPorId[s.id] ?? null} />
       ))}
     </div>
   );
 }
 
-export function MocaoConteudo({ mocao }: { mocao: Mocao }) {
-  const abertura = corpoAberturaMocao({
-    tipo: mocao.tipo,
-    destinatario: mocao.destinatario,
-    autorNome: mocao.autor_nome,
-    autorPartido: mocao.autor_partido,
-  });
+function CongratulacaoConteudo({
+  mocao,
+  signatarios,
+  autorNome,
+  associadosNomes,
+  assinaturasPorId,
+}: {
+  mocao: Mocao;
+  signatarios: VereadorSignatario[];
+  autorNome: string;
+  associadosNomes: string[];
+  assinaturasPorId: Record<string, string | null>;
+}) {
+  return (
+    <PaginaA4 orientacao="paisagem" backgroundImage="/timbrado/mocao-congratulacoes.jpg">
+      <div className="ml-[95mm] mr-[12mm] mt-[46mm] flex flex-1 flex-col text-[11pt] leading-relaxed">
+        <p className="text-justify">
+          <Segmentos segmentos={aberturaCongratulacaoSegmentos({ autorNome, associadosNomes })} />
+        </p>
 
-  const paragrafosJustificativa = mocao.justificativa
-    .split(/\n+/)
-    .map((p) => p.trim())
-    .filter(Boolean);
+        <p className="mt-6 text-center text-[18pt] font-bold uppercase">{mocao.destinatario}</p>
 
-  // A justificativa varia de tamanho de uma moção pra outra — divide
-  // dinamicamente em quantas páginas forem necessárias (mesma técnica do
-  // Decreto de Título Honorário), só fechando com data/assinaturas na
-  // última. A reserva de assinatura cresce com o Presidente + cada
-  // vereador associado (o autor principal já está na reserva base).
-  const alturaExtraAssinatura = (1 + mocao.autores_associados.length) * ALTURA_POR_SIGNATARIO_EXTRA_MM;
-  const paginas = paginarTextoCorrido(paragrafosJustificativa, 0, alturaExtraAssinatura);
+        <div className="mt-6 space-y-2">
+          {mocao.justificativa
+            .split(/\n+/)
+            .map((p) => p.trim())
+            .filter(Boolean)
+            .map((p, i) => (
+              <p key={i} className="text-justify">
+                {p}
+              </p>
+            ))}
+        </div>
+
+        <p className="mt-8 text-right">{fechoMocao(mocao.data_mocao)}</p>
+
+        <div className="mt-8">
+          <GradeAssinaturas signatarios={signatarios} assinaturasPorId={assinaturasPorId} />
+        </div>
+      </div>
+    </PaginaA4>
+  );
+}
+
+function PesarConteudo({
+  mocao,
+  signatarios,
+  autor,
+  associadosNomes,
+  assinaturasPorId,
+}: {
+  mocao: Mocao;
+  signatarios: VereadorSignatario[];
+  autor: VereadorSignatario;
+  associadosNomes: string[];
+  assinaturasPorId: Record<string, string | null>;
+}) {
+  const tratamento = mocao.destinatario_tratamento ?? "Sr.";
+  return (
+    <PaginaA4 backgroundImage="/timbrado/mocao-pesar.jpg">
+      <div className="ml-[28mm] mr-[28mm] mt-[48mm] flex flex-1 flex-col text-[11pt] leading-relaxed">
+        <p>
+          <Segmentos
+            segmentos={enderecamentoPesarSegmentos({
+              destinatarioNome: mocao.destinatario,
+              destinatarioTratamento: tratamento,
+            })}
+          />
+        </p>
+
+        <p className="mt-4 text-justify">
+          <Segmentos
+            segmentos={aberturaPesarSegmentos({
+              autorNome: autor.nome,
+              autorGenero: autor.genero,
+              associadosNomes,
+              destinatarioNome: mocao.destinatario,
+              destinatarioTratamento: tratamento,
+            })}
+          />
+        </p>
+
+        <div className="mt-4 space-y-4">
+          {PARAGRAFOS_PESAR_FIXOS.map((p, i) => (
+            <p key={i} className="text-justify">
+              {p}
+            </p>
+          ))}
+        </div>
+
+        <p className="mt-8">{fechoMocao(mocao.data_mocao)}</p>
+
+        <div className="mt-10">
+          <GradeAssinaturas signatarios={signatarios} assinaturasPorId={assinaturasPorId} />
+        </div>
+      </div>
+    </PaginaA4>
+  );
+}
+
+export function MocaoConteudo({
+  mocao,
+  autor,
+  associados,
+  assinaturasPorId,
+}: {
+  mocao: Mocao;
+  autor: VereadorSignatario;
+  associados: VereadorSignatario[];
+  // URL assinada (Storage) por id de vereador, resolvida no servidor —
+  // null quando o vereador ainda não tem assinatura cadastrada.
+  assinaturasPorId: Record<string, string | null>;
+}) {
+  const signatarios = ordenarSignatarios([autor, ...associados]);
+  const associadosNomes = associados.map((v) => v.nome);
+
+  if (mocao.tipo === "pesar") {
+    return (
+      <PesarConteudo
+        mocao={mocao}
+        signatarios={signatarios}
+        autor={autor}
+        associadosNomes={associadosNomes}
+        assinaturasPorId={assinaturasPorId}
+      />
+    );
+  }
 
   return (
-    <>
-      {paginas.map((paragrafos, indice) => {
-        const primeiraPagina = indice === 0;
-        const ultimaPagina = indice === paginas.length - 1;
-        return (
-          <PaginaA4 key={indice} quebrarPagina={!ultimaPagina}>
-            <div className="ml-[30mm] mr-[20mm] mt-[32mm] mb-[26mm] flex flex-1 flex-col text-[12pt] leading-relaxed">
-              {primeiraPagina && (
-                <>
-                  <p className="text-center font-bold">{tituloMocao(mocao.tipo)}</p>
-                  <p className="mt-6 text-justify">{abertura}</p>
-                </>
-              )}
-
-              <div className={`space-y-3 ${primeiraPagina ? "mt-4" : ""}`}>
-                {paragrafos.map((paragrafo, i) => (
-                  <p key={i} className="indent-[1.25cm] text-justify">
-                    {paragrafo}
-                  </p>
-                ))}
-              </div>
-
-              {ultimaPagina && (
-                <>
-                  <p className="mt-8 text-right">{fechoMocao(mocao.data_mocao)}</p>
-                  <AssinaturasMocao mocao={mocao} />
-                </>
-              )}
-            </div>
-          </PaginaA4>
-        );
-      })}
-    </>
+    <CongratulacaoConteudo
+      mocao={mocao}
+      signatarios={signatarios}
+      autorNome={autor.nome}
+      associadosNomes={associadosNomes}
+      assinaturasPorId={assinaturasPorId}
+    />
   );
 }

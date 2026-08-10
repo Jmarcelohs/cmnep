@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
+import { createClient } from "@/lib/supabase/server";
 import { criarMocao } from "../actions";
 import { MocaoForm } from "../mocao-form";
 
@@ -18,6 +19,13 @@ export default async function NovaMocaoPage({
   )
     redirect("/mocoes");
 
+  const supabase = await createClient();
+  const { data: vereadores } = await supabase
+    .from("vereadores")
+    .select("id, nome, partido, genero, presidente")
+    .eq("ativo", true)
+    .order("nome");
+
   return (
     <div>
       <h1 className="text-xl font-semibold text-brand-navy">Nova moção</h1>
@@ -29,7 +37,7 @@ export default async function NovaMocaoPage({
         <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
       )}
 
-      <MocaoForm action={criarMocao} />
+      <MocaoForm action={criarMocao} vereadores={vereadores ?? []} />
     </div>
   );
 }

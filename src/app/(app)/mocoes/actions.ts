@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
-import type { AutorAssociadoMocao, TipoMocao } from "@/lib/supabase/database.types";
+import type { TipoMocao, Tratamento } from "@/lib/supabase/database.types";
 
 async function exigirOrdenadorOuAdmin(redirectPath: string) {
   const usuario = await getCurrentUsuario();
@@ -34,39 +34,52 @@ function lerCampos(formData: FormData) {
   const tipo = String(formData.get("tipo") ?? "") as TipoMocao;
   const data_mocao = String(formData.get("data_mocao") ?? "");
   const destinatario = String(formData.get("destinatario") ?? "").trim();
-  const autor_nome = String(formData.get("autor_nome") ?? "").trim();
-  const autor_partido = String(formData.get("autor_partido") ?? "").trim() || null;
-  const justificativa = String(formData.get("justificativa") ?? "").trim();
+  // Só relevante pro tipo 'pesar' — nos demais tipos fica null.
+  const destinatario_tratamento =
+    tipo === "pesar" ? (String(formData.get("destinatario_tratamento") ?? "Sr.") as Tratamento) : null;
+  const autor_vereador_id = String(formData.get("autor_vereador_id") ?? "").trim();
+  // 'pesar' usa texto de pêsames fixo (ver PARAGRAFOS_PESAR_FIXOS) — não
+  // tem campo de justificativa no formulário pra esse tipo.
+  const justificativa = tipo === "pesar" ? "" : String(formData.get("justificativa") ?? "").trim();
 
-  let autores_associados: AutorAssociadoMocao[] = [];
+  let associados_vereadores_ids: string[] = [];
   try {
-    autores_associados = JSON.parse(String(formData.get("autores_associados") ?? "[]"));
+    associados_vereadores_ids = JSON.parse(String(formData.get("associados_vereadores_ids") ?? "[]"));
   } catch {
-    autores_associados = [];
+    associados_vereadores_ids = [];
   }
-  // Descarta entradas sem nome (linha adicionada e deixada em branco).
-  autores_associados = autores_associados.filter((a) => a.nome?.trim());
+  associados_vereadores_ids = associados_vereadores_ids.filter(
+    (id) => typeof id === "string" && id && id !== autor_vereador_id,
+  );
 
   return {
     tipo,
     data_mocao,
     destinatario,
-    autor_nome,
-    autor_partido,
-    autores_associados,
+    destinatario_tratamento,
+    autor_vereador_id,
+    associados_vereadores_ids,
     justificativa,
   };
+}
+
+function validarCampos(campos: ReturnType<typeof lerCampos>): string | null {
+  if (!campos.tipo || !campos.data_mocao || !campos.destinatario || !campos.autor_vereador_id) {
+    return "Preencha o tipo, a data, o destinatário e o autor";
+  }
+  if (campos.tipo !== "pesar" && !campos.justificativa) {
+    return "Preencha a justificativa";
+  }
+  return null;
 }
 
 export async function criarMocao(formData: FormData) {
   const usuario = await exigirPodeCriarMocao("/mocoes");
 
   const campos = lerCampos(formData);
-
-  if (!campos.tipo || !campos.data_mocao || !campos.destinatario || !campos.autor_nome) {
-    redirect(
-      `/mocoes/novo?error=${encodeURIComponent("Preencha o tipo, a data, o destinatário e o autor")}`,
-    );
+  const erroValidacao = validarCampos(campos);
+  if (erroValidacao) {
+    redirect(`/mocoes/novo?error=${encodeURIComponent(erroValidacao)}`);
   }
 
   const supabase = await createClient();
@@ -88,11 +101,9 @@ export async function editarMocao(id: string, formData: FormData) {
   await exigirOrdenadorOuAdmin(`/mocoes/${id}/editar`);
 
   const campos = lerCampos(formData);
-
-  if (!campos.tipo || !campos.data_mocao || !campos.destinatario || !campos.autor_nome) {
-    redirect(
-      `/mocoes/${id}/editar?error=${encodeURIComponent("Preencha o tipo, a data, o destinatário e o autor")}`,
-    );
+  const erroValidacao = validarCampos(campos);
+  if (erroValidacao) {
+    redirect(`/mocoes/${id}/editar?error=${encodeURIComponent(erroValidacao)}`);
   }
 
   const supabase = await createClient();

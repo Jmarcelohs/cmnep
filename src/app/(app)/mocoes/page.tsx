@@ -36,12 +36,17 @@ export default async function MocoesPage({
 
   let query = supabase
     .from("mocoes")
-    .select("id, tipo, data_mocao, destinatario, autor_nome, autor_partido", { count: "exact" })
+    .select(
+      "id, tipo, data_mocao, destinatario, autor:autor_vereador_id(nome, partido)",
+      { count: "exact" },
+    )
     .order("data_mocao", { ascending: false })
     .range(de, ate);
 
   if (tipo) query = query.eq("tipo", tipo as TipoMocao);
-  if (busca) query = query.or(construirFiltroBusca(busca, ["destinatario", "autor_nome"]));
+  // Autor não é mais texto livre (vem do cadastro de Vereadores via
+  // join) — a busca aqui cobre só o destinatário.
+  if (busca) query = query.or(construirFiltroBusca(busca, ["destinatario"]));
 
   const { data: mocoes, error, count } = await query;
 
@@ -138,8 +143,8 @@ export default async function MocoesPage({
                 </td>
                 <td className="px-4 py-2 text-slate-700">{m.destinatario}</td>
                 <td className="px-4 py-2 text-slate-700">
-                  {m.autor_nome}
-                  {m.autor_partido && ` – ${m.autor_partido}`}
+                  {m.autor?.nome ?? "—"}
+                  {m.autor?.partido && ` – ${m.autor.partido}`}
                 </td>
                 <td className="px-4 py-2">
                   <MenuAcoes>

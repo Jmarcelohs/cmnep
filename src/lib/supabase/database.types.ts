@@ -75,11 +75,6 @@ export type Tratamento = "Sr." | "Sra.";
 // Art. 117 do Regimento Interno da Câmara Municipal de Nepomuceno.
 export type TipoMocao = "louvor" | "congratulacoes" | "pesar" | "repudio";
 
-export interface AutorAssociadoMocao {
-  nome: string;
-  partido: string | null;
-}
-
 export interface Database {
   public: {
     Tables: {
@@ -733,15 +728,32 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["decretos_titulo_honorario"]["Row"]>;
         Relationships: [];
       };
+      vereadores: {
+        Row: {
+          id: string;
+          nome: string;
+          partido: string | null;
+          genero: GeneroVereador;
+          presidente: boolean;
+          assinatura_caminho: string | null;
+          ativo: boolean;
+          criado_em: string;
+        };
+        Insert: Partial<Omit<Database["public"]["Tables"]["vereadores"]["Row"], "id">> & {
+          nome: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["vereadores"]["Row"]>;
+        Relationships: [];
+      };
       mocoes: {
         Row: {
           id: string;
           tipo: TipoMocao;
           data_mocao: string;
           destinatario: string;
-          autor_nome: string;
-          autor_partido: string | null;
-          autores_associados: AutorAssociadoMocao[];
+          destinatario_tratamento: Tratamento | null;
+          autor_vereador_id: string;
+          associados_vereadores_ids: string[];
           justificativa: string;
           criado_por: string | null;
           criado_em: string;
@@ -749,10 +761,18 @@ export interface Database {
         Insert: Partial<Omit<Database["public"]["Tables"]["mocoes"]["Row"], "id">> & {
           tipo: TipoMocao;
           destinatario: string;
-          autor_nome: string;
+          autor_vereador_id: string;
         };
         Update: Partial<Database["public"]["Tables"]["mocoes"]["Row"]>;
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "mocoes_autor_vereador_id_fkey";
+            columns: ["autor_vereador_id"];
+            isOneToOne: false;
+            referencedRelation: "vereadores";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       oficios: {
         Row: {

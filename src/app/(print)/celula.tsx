@@ -54,17 +54,25 @@ export function TabelaGrid({
 export function PaginaA4({
   children,
   quebrarPagina = true,
+  // 'paisagem' pras Moções de Congratulação, cujo timbrado real é uma
+  // página A4 deitada (ver mocao-conteudo.tsx) — todo o resto do sistema
+  // usa retrato.
+  orientacao = "retrato",
+  backgroundImage = "/timbrado/pagina-a4.jpg",
 }: {
   children: React.ReactNode;
   quebrarPagina?: boolean;
+  orientacao?: "retrato" | "paisagem";
+  backgroundImage?: string;
 }) {
+  const dimensoes = orientacao === "paisagem" ? "h-[210mm] w-[297mm]" : "h-[297mm] w-[210mm]";
   return (
     <div
       data-print-pagina
-      className={`mx-auto flex h-[297mm] w-[210mm] flex-col bg-white bg-cover bg-no-repeat text-[9pt] text-black shadow-lg print:shadow-none ${
+      className={`mx-auto flex ${dimensoes} flex-col bg-white bg-cover bg-no-repeat text-[9pt] text-black shadow-lg print:shadow-none ${
         quebrarPagina ? "print:break-after-page" : ""
       }`}
-      style={{ backgroundImage: "url(/timbrado/pagina-a4.jpg)" }}
+      style={{ backgroundImage: `url(${backgroundImage})` }}
     >
       {children}
     </div>

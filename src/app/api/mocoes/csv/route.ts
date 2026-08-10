@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
 
   let query = supabase
     .from("mocoes")
-    .select("tipo, data_mocao, destinatario, autor_nome, autor_partido")
+    .select("tipo, data_mocao, destinatario, autor:autor_vereador_id(nome, partido)")
     .order("data_mocao", { ascending: false });
 
   if (tipo) query = query.eq("tipo", tipo as TipoMocao);
@@ -43,8 +43,8 @@ export async function GET(request: NextRequest) {
       formatarData(m.data_mocao),
       LABEL_TIPO_MOCAO[m.tipo as TipoMocao],
       m.destinatario,
-      m.autor_nome,
-      m.autor_partido,
+      m.autor?.nome,
+      m.autor?.partido,
     ]
       .map((campo) => csvEscape(String(campo ?? "")))
       .join(","),

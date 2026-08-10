@@ -1,8 +1,9 @@
 -- ========================================================================
--- Migration 0039: Moções — tipos previstos no art. 117 do Regimento Interno
+-- Migration 0040: Moções — tipos previstos no art. 117 do Regimento Interno
 -- da Câmara Municipal de Nepomuceno (louvor, congratulações, pesar ou
--- repúdio), apresentadas por um vereador (podendo ter um ou mais
--- vereadores associados) e votadas em plenário.
+-- repúdio). Autor e vereadores associados referenciam o cadastro de
+-- Vereadores (0039) em vez de texto livre, pra poder colar a imagem da
+-- assinatura de cada um automaticamente no PDF.
 --
 -- Sem numeração — diferente de Decretos e Ofícios, moção não tem um
 -- registro sequencial gerido por esta ferramenta (confirmado com o
@@ -15,14 +16,17 @@ create table mocoes (
   data_mocao date not null default current_date,
 
   destinatario text not null,
+  -- Só usado no tipo 'pesar' hoje (endereçamento "À Família do Senhor/da
+  -- Senhora X" e "pelo falecimento do Senhor/da Senhora X") — null nos
+  -- demais tipos, que não tratam o destinatário dessa forma.
+  destinatario_tratamento text check (destinatario_tratamento in ('Sr.', 'Sra.')),
 
-  autor_nome text not null,
-  autor_partido text,
+  autor_vereador_id uuid not null references vereadores(id),
   -- Vereadores associados ao autor principal (podem ser um ou vários,
-  -- quantidade não fixa) — cada um assina o documento junto do autor e do
-  -- Presidente da Câmara. Mesmo padrão de lista jsonb já usado em
+  -- quantidade não fixa) — array de ids de vereadores(id), cada um assina
+  -- o documento. Mesmo padrão de lista jsonb já usado em
   -- avaliacoes.avaliadores (0016) pra estrutura repetível sem tabela filha.
-  autores_associados jsonb not null default '[]'::jsonb,
+  associados_vereadores_ids jsonb not null default '[]'::jsonb,
 
   justificativa text not null default '',
 
