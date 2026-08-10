@@ -755,6 +755,7 @@ export interface Database {
           autor_vereador_id: string;
           associados_vereadores_ids: string[];
           justificativa: string;
+          lote_id: string | null;
           criado_por: string | null;
           criado_em: string;
         };

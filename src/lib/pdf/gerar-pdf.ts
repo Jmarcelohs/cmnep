@@ -23,68 +23,95 @@ export function cabecalhoContentDisposition(filename: string): string {
   return `attachment; filename="${fallbackAscii}"; filename*=UTF-8''${utf8}`;
 }
 
-export async function renderizarPdfDaRota(
-  request: NextRequest,
-  caminhoInterno: string,
+type RotaParaRenderizar = {
+  caminhoInterno: string;
   // Só a Moção de Congratulação usa página A4 deitada hoje (timbrado real
   // é paisagem — ver mocao-conteudo.tsx). Sem isso, page.pdf() gera uma
   // página A4 retrato e encolhe o conteúdo de 297mm de largura pra caber
   // nos 210mm — o PDF parece certo na tela (proporção preservada), mas
   // sai menor e na orientação errada quando impresso de verdade.
-  paisagem = false,
-): Promise<Buffer> {
+  paisagem?: boolean;
+};
+
+// Renderiza uma ou mais rotas internas em PDF reaproveitando o mesmo
+// navegador — usado tanto pelo download de um documento único quanto pelo
+// ZIP em lote de Moções (ver /api/mocoes/lote/[loteId]/zip), onde abrir um
+// Chromium novo por documento seria lento e desperdiçaria o tempo de
+// execução da function na Vercel.
+export async function renderizarPdfsDeRotas(
+  request: NextRequest,
+  rotas: RotaParaRenderizar[],
+): Promise<Buffer[]> {
   const cookies = request.cookies.getAll();
   const origin = request.nextUrl.origin;
 
   const browser = await launchBrowser();
 
   try {
-    const page = await browser.newPage();
+    const buffers: Buffer[] = [];
+    for (const { caminhoInterno, paisagem = false } of rotas) {
+      const page = await browser.newPage();
 
-    // deviceScaleFactor 1 (padrão) faz o Chromium arredondar bordas finas
-    // (1px) pra posições de sub-pixel na hora de rasterizar o PDF, e elas
-    // somem ou ficam apagadas. Em 2, a mesma borda de 1px vira 2 pixels
-    // físicos e renderiza nítida — sem precisar engrossar a borda no CSS.
-    await page.setViewport({
-      width: paisagem ? 1754 : 1240,
-      height: paisagem ? 1240 : 1754,
-      deviceScaleFactor: 2,
-    });
+      // deviceScaleFactor 1 (padrão) faz o Chromium arredondar bordas
+      // finas (1px) pra posições de sub-pixel na hora de rasterizar o
+      // PDF, e elas somem ou ficam apagadas. Em 2, a mesma borda de 1px
+      // vira 2 pixels físicos e renderiza nítida — sem precisar engrossar
+      // a borda no CSS.
+      await page.setViewport({
+        width: paisagem ? 1754 : 1240,
+        height: paisagem ? 1240 : 1754,
+        deviceScaleFactor: 2,
+      });
 
-    await page.setCookie(
-      ...cookies.map((cookie) => ({
-        name: cookie.name,
-        value: cookie.value,
-        domain: request.nextUrl.hostname,
-        path: "/",
-      })),
-    );
+      await page.setCookie(
+        ...cookies.map((cookie) => ({
+          name: cookie.name,
+          value: cookie.value,
+          domain: request.nextUrl.hostname,
+          path: "/",
+        })),
+      );
 
-    const response = await page.goto(`${origin}${caminhoInterno}`, {
-      waitUntil: "networkidle0",
-    });
+      const response = await page.goto(`${origin}${caminhoInterno}`, {
+        waitUntil: "networkidle0",
+      });
 
-    if (!response || response.status() >= 400) {
-      throw new Error("Não foi possível renderizar o documento");
+      if (!response || response.status() >= 400) {
+        throw new Error("Não foi possível renderizar o documento");
+      }
+
+      buffers.push(
+        Buffer.from(
+          await page.pdf({
+            format: "A4",
+            landscape: paisagem,
+            // Prioriza o @page do CSS (globals.css) sobre format/landscape
+            // — é o jeito que realmente funcionou pra página paisagem no
+            // Chromium da Vercel (ver comentário em globals.css). Não
+            // afeta as demais rotas: o @page padrão já é A4 retrato,
+            // igual a format:"A4" sem isso.
+            preferCSSPageSize: true,
+            printBackground: true,
+            margin: { top: "0", right: "0", bottom: "0", left: "0" },
+          }),
+        ),
+      );
+
+      await page.close();
     }
-
-    return Buffer.from(
-      await page.pdf({
-        format: "A4",
-        landscape: paisagem,
-        // Prioriza o @page do CSS (globals.css) sobre format/landscape —
-        // é o jeito que realmente funcionou pra página paisagem no
-        // Chromium da Vercel (ver comentário em globals.css). Não afeta
-        // as demais rotas: o @page padrão já é A4 retrato, igual a
-        // format:"A4" sem isso.
-        preferCSSPageSize: true,
-        printBackground: true,
-        margin: { top: "0", right: "0", bottom: "0", left: "0" },
-      }),
-    );
+    return buffers;
   } finally {
     await browser.close();
   }
+}
+
+export async function renderizarPdfDaRota(
+  request: NextRequest,
+  caminhoInterno: string,
+  paisagem = false,
+): Promise<Buffer> {
+  const [buffer] = await renderizarPdfsDeRotas(request, [{ caminhoInterno, paisagem }]);
+  return buffer;
 }
 
 // Mescla PDFs extras (ex.: comprovantes em PDF anexados a um requerimento)
