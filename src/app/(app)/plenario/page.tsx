@@ -81,7 +81,7 @@ export default async function PlenarioPage({
 
   return (
     <div>
-      <h1 className="text-xl font-semibold text-brand-navy">Sessão do Plenário</h1>
+      <h1 className="text-xl font-semibold text-brand-navy">Cessão do Plenário</h1>
       <p className="mt-1 text-sm text-slate-500">
         Solicitações de uso/empréstimo do Plenário e seus equipamentos, recebidas pelo{" "}
         <a
