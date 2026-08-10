@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { buscarMocaoCompleta } from "@/lib/mocoes/dados-completos";
 import { gerarDocxMocao } from "@/lib/mocoes/gerar-docx";
+import { cabecalhoContentDisposition } from "@/lib/pdf/gerar-pdf";
 
 export const maxDuration = 60;
 
@@ -40,20 +41,11 @@ export async function GET(
     return new NextResponse(Buffer.from(buffer), {
       headers: {
         "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "Content-Disposition": `attachment; filename="${filename}"`,
+        "Content-Disposition": cabecalhoContentDisposition(filename, "docx"),
       },
     });
   } catch (error) {
     console.error("Erro ao gerar .docx da moção", error);
-    // DEBUG temporário — devolve a mensagem/stack real pra diagnosticar
-    // um 500 que só acontece em produção (reproduzido localmente sem
-    // erro). Remover antes de finalizar.
-    return NextResponse.json(
-      {
-        error: "Não foi possível gerar o arquivo .docx",
-        debug: error instanceof Error ? { message: error.message, stack: error.stack } : String(error),
-      },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Não foi possível gerar o arquivo .docx" }, { status: 500 });
   }
 }

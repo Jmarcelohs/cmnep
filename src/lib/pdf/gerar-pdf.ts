@@ -12,13 +12,16 @@ export function slugify(texto: string) {
 
 // Monta o cabeçalho Content-Disposition com acentos/espaços/caracteres
 // especiais no nome do arquivo baixado (ex.: "Solicitação de Diária...pdf").
-// Só "filename=" com UTF-8 cru não é garantido em todo cliente HTTP, então
-// manda os dois: um nome ASCII seguro como fallback (filename=) e o nome
-// de verdade, codificado conforme RFC 5987 (filename*=), que os
-// navegadores atuais usam preferencialmente.
-export function cabecalhoContentDisposition(filename: string): string {
-  const semExtensao = filename.replace(/\.pdf$/i, "");
-  const fallbackAscii = `${slugify(semExtensao)}.pdf`;
+// Cabeçalhos HTTP só aceitam ByteString (Latin-1) — um "filename=" com
+// UTF-8 cru (acentos, travessão "—" etc.) quebra a construção do
+// Response inteira, não só a exibição do nome. Por isso manda os dois:
+// um nome ASCII seguro como fallback (filename=) e o nome de verdade,
+// codificado conforme RFC 5987 (filename*=), que os navegadores atuais
+// usam preferencialmente.
+export function cabecalhoContentDisposition(filename: string, extensao = "pdf"): string {
+  const regexExtensao = new RegExp(`\\.${extensao}$`, "i");
+  const semExtensao = filename.replace(regexExtensao, "");
+  const fallbackAscii = `${slugify(semExtensao)}.${extensao}`;
   const utf8 = encodeURIComponent(filename);
   return `attachment; filename="${fallbackAscii}"; filename*=UTF-8''${utf8}`;
 }
