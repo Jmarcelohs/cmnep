@@ -43,16 +43,25 @@ type GoogleEvent = {
 type GoogleEventsListResponse = { items?: GoogleEvent[] };
 
 function criarClienteAutenticado(): JWT {
-  const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-  const chaveB64 = process.env.GOOGLE_SERVICE_ACCOUNT_KEY_B64;
+  const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL?.trim();
+  const chaveB64 = process.env.GOOGLE_SERVICE_ACCOUNT_KEY_B64?.trim();
   if (!email || !chaveB64) {
     throw new Error("Variáveis de ambiente da conta de serviço do Google não configuradas");
   }
-  return new JWT({
-    email,
-    key: Buffer.from(chaveB64, "base64").toString("utf8"),
-    scopes: [ESCOPO],
-  });
+
+  const key = Buffer.from(chaveB64, "base64").toString("utf8");
+  // Colar manualmente uma string de milhares de caracteres num painel
+  // web é um jeito fácil de perder um pedaço no meio ou colar quebrado
+  // — sem essa checagem, o erro só aparece depois, como um "DECODER
+  // routines::unsupported" do OpenSSL sem nenhuma pista de qual
+  // variável está errada.
+  if (!key.includes("-----BEGIN PRIVATE KEY-----")) {
+    throw new Error(
+      "A chave da conta de serviço do Google (GOOGLE_SERVICE_ACCOUNT_KEY_B64) parece corrompida ou incompleta — confira se o valor foi colado inteiro, sem quebras no meio.",
+    );
+  }
+
+  return new JWT({ email, key, scopes: [ESCOPO] });
 }
 
 function urlEventos(id?: string): string {
