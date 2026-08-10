@@ -126,12 +126,15 @@ function GradeAssinaturas({
 }
 
 // Fonte/tamanhos do corpo (12pt, entrelinha 1,15) reproduzem o documento
-// real de Congratulação usado como referência — a fonte original do
-// documento (Maiandra GD) não é uma fonte padrão do sistema operacional
-// nem foi incorporada ao .docx, então usamos a mesma pilha segura
-// (Arial/Helvetica) já usada no resto do sistema em vez de arriscar um
-// fallback imprevisível do Chromium na Vercel.
-const FONTE_CORPO = "Arial, Helvetica, sans-serif";
+// real de Congratulação usado como referência. A fonte original (Maiandra
+// GD) é uma fonte comercial da Monotype licenciada junto com o
+// Windows/Office — embutir o arquivo real no site redistribuiria esse
+// arquivo publicamente (qualquer um poderia baixá-lo pela URL), o que
+// pode violar os termos de licença. Nunito (Google Fonts, licença OFL
+// livre) é o substituto: mesma família humanista arredondada, boa
+// legibilidade em corpo de texto — auto-hospedada via @fontsource (ver
+// layout.tsx do grupo de impressão).
+const FONTE_CORPO = "Nunito, Arial, Helvetica, sans-serif";
 
 function CongratulacaoConteudo({
   mocao,
