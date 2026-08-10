@@ -106,10 +106,20 @@ function horaColuna(cabecalho: string[], linha: unknown[], nome: string): string
 // stringificado (ex.: "46203.57151100694"), que funcionaria como chave
 // única mas é ilegível e arrisca diferenças de precisão de ponto
 // flutuante entre leituras.
+//
+// Algumas linhas foram lançadas manualmente na planilha (não vieram do
+// formulário) e por isso não têm "Carimbo de data/hora" — nesses casos
+// caímos pra "Data da Solicitação" (só data, sem hora) como aproximação,
+// em vez de deixar a linha sem timestamp válido (o que quebraria a
+// numeração sequencial por ano).
 function timestampColuna(cabecalho: string[], linha: unknown[], nome: string): string {
   const valor = coluna(cabecalho, linha, nome);
-  if (typeof valor !== "number") return textoColuna(cabecalho, linha, nome);
-  return `${serialParaData(valor)}T${serialParaHora(valor)}`;
+  if (typeof valor === "number") return `${serialParaData(valor)}T${serialParaHora(valor)}`;
+
+  const fallback = coluna(cabecalho, linha, "Data da Solicitação");
+  if (typeof fallback === "number") return `${serialParaData(fallback)}T00:00:00`;
+
+  return textoColuna(cabecalho, linha, nome);
 }
 
 function paraSolicitacao(cabecalho: string[], linha: unknown[]): SolicitacaoPlenario {
