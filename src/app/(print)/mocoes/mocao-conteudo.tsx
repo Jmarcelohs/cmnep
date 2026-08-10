@@ -30,79 +30,51 @@ function Segmentos({ segmentos }: { segmentos: SegmentoMocao[] }) {
   );
 }
 
-// Tamanho da imagem/texto da assinatura escalado pela quantidade de
-// linhas da grade — o Presidente assina obrigatoriamente toda moção
-// (art. 117 do Regimento Interno), então o número de signatários varia
-// bastante de uma moção pra outra; no limite, os 11 vereadores da Casa
-// assinando juntos (4 linhas) precisam caber numa página só. A
-// Congratulação tem bem menos altura de página disponível que o Pesar
-// (A4 paisagem = 210mm vs retrato = 297mm, com um texto de abertura +
-// nome do homenageado em 36pt acima da grade), então usa um orçamento
-// mais conservador.
-//
-// No Pesar, a logo da Câmara fica no rodapé (~196mm de uma página de
-// 297mm) — testado ao vivo com 1 linha (24mm, folga confortável), 2
-// linhas (18mm), 3 linhas (16mm, folga confortável) e 4 linhas/11
-// signatários (12mm sobrepunha a legenda da última linha na logo; 8mm
-// com texto reduzido resolveu).
-function tamanhoAssinatura(
-  totalSignatarios: number,
-  orientacao: "retrato" | "paisagem",
-): { maxH: string; maxW: string; gap: string; nomeSize: string; cargoSize: string } {
-  const linhas = Math.ceil(totalSignatarios / 3);
-  const padrao = { nomeSize: "10pt", cargoSize: "7pt" };
-  const compacto = { nomeSize: "8pt", cargoSize: "6pt" };
-  if (orientacao === "paisagem") {
-    if (linhas <= 1) return { maxH: "20mm", maxW: "55mm", gap: "gap-y-2", ...padrao };
-    if (linhas === 2) return { maxH: "13mm", maxW: "48mm", gap: "gap-y-1", ...padrao };
-    if (linhas === 3) return { maxH: "9mm", maxW: "38mm", gap: "gap-y-1", ...padrao };
-    return { maxH: "6mm", maxW: "30mm", gap: "gap-y-0.5", ...compacto };
-  }
-  if (linhas <= 1) return { maxH: "24mm", maxW: "60mm", gap: "gap-y-4", ...padrao };
-  if (linhas === 2) return { maxH: "18mm", maxW: "55mm", gap: "gap-y-2", ...padrao };
-  if (linhas === 3) return { maxH: "16mm", maxW: "50mm", gap: "gap-y-2", ...padrao };
-  return { maxH: "8mm", maxW: "34mm", gap: "gap-y-1", ...compacto };
-}
+// Tamanho de assinatura padronizado por comparação direta com um
+// documento real já emitido pela Câmara (Congratulação — Camila Rezende
+// Batista Moreira, medido em ~17-18mm de altura de imagem) — usado fixo
+// pros dois tipos, sem reduzir conforme o número de signatários. Em
+// moções com muitos signatários (ex.: os 11 vereadores da Casa
+// assinando juntos) isso pode fazer a assinatura invadir o nome/cargo
+// abaixo dela, exatamente como acontece no próprio documento real usado
+// de referência — aceito conscientemente pra manter a moção padronizada
+// com o modelo original.
+const ASSINATURA_ALTURA = "16mm";
+const ASSINATURA_LARGURA = "50mm";
 
 // Imagem de assinatura escaneada colada acima do nome — se o vereador
 // ainda não tem assinatura cadastrada (ver /vereadores), fica só a linha
 // em branco pra assinatura física por cima, mesma convenção do Parecer de
-// Comissão em decreto-conteudo.tsx. Fonte/tamanhos (Calibri 10pt no nome,
-// 7pt no cargo, nome sem negrito) reproduzem o documento real de
-// Congratulação usado como referência de padronização.
+// Comissão em decreto-conteudo.tsx. Fonte/tamanhos (10pt no nome, 7pt no
+// cargo, nome sem negrito) reproduzem o documento real de Congratulação
+// usado como referência de padronização.
 function BlocoAssinatura({
   signatario,
   assinaturaUrl,
-  maxH,
-  maxW,
-  nomeSize,
-  cargoSize,
 }: {
   signatario: VereadorSignatario;
   assinaturaUrl: string | null;
-  maxH: string;
-  maxW: string;
-  nomeSize: string;
-  cargoSize: string;
 }) {
   return (
     <div className="flex flex-col items-center text-center">
-      <div className="flex items-end justify-center" style={{ height: maxH }}>
+      <div className="flex items-end justify-center" style={{ height: ASSINATURA_ALTURA }}>
         {assinaturaUrl && (
           // eslint-disable-next-line @next/next/no-img-element -- imagem vem de uma URL assinada do Storage, resolvida no servidor pra essa renderização do PDF
           <img
             src={assinaturaUrl}
             alt=""
             className="object-contain"
-            style={{ maxHeight: maxH, maxWidth: maxW }}
+            style={{ maxHeight: ASSINATURA_ALTURA, maxWidth: ASSINATURA_LARGURA }}
           />
         )}
       </div>
-      <div className="w-[55mm] border-t border-black pt-0.5" style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>
-        <p style={{ fontSize: nomeSize }}>{signatario.nome}</p>
-        <p className="leading-tight" style={{ fontSize: cargoSize }}>
-          {legendaAssinatura(signatario)}
-        </p>
+      {/* Coluna alargada de 55mm pra 64mm — a 55mm, "Vereador da Câmara
+          Municipal de Nepomuceno" (sem o partido, removido a pedido do
+          usuário) quebrava em 2 linhas; no documento real cabe numa linha
+          só. */}
+      <div className="w-[64mm] border-t border-black pt-0.5" style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>
+        <p className="text-[10pt]">{signatario.nome}</p>
+        <p className="text-[7pt] leading-tight">{legendaAssinatura(signatario)}</p>
       </div>
     </div>
   );
@@ -111,25 +83,14 @@ function BlocoAssinatura({
 function GradeAssinaturas({
   signatarios,
   assinaturasPorId,
-  orientacao,
 }: {
   signatarios: VereadorSignatario[];
   assinaturasPorId: Record<string, string | null>;
-  orientacao: "retrato" | "paisagem";
 }) {
-  const { maxH, maxW, gap, nomeSize, cargoSize } = tamanhoAssinatura(signatarios.length, orientacao);
   return (
-    <div className={`grid grid-cols-3 gap-x-4 ${gap}`}>
+    <div className="grid grid-cols-3 gap-x-4 gap-y-8">
       {signatarios.map((s) => (
-        <BlocoAssinatura
-          key={s.id}
-          signatario={s}
-          assinaturaUrl={assinaturasPorId[s.id] ?? null}
-          maxH={maxH}
-          maxW={maxW}
-          nomeSize={nomeSize}
-          cargoSize={cargoSize}
-        />
+        <BlocoAssinatura key={s.id} signatario={s} assinaturaUrl={assinaturasPorId[s.id] ?? null} />
       ))}
     </div>
   );
@@ -161,19 +122,24 @@ function CongratulacaoConteudo({
 }) {
   return (
     <PaginaA4 orientacao="paisagem" backgroundImage="/timbrado/mocao-congratulacoes.jpg">
+      {/* Margens ajustadas por medição direta no documento real (89,5mm a
+          289,8mm de área útil) — com a margem original de 95mm/12mm, a
+          frase de abertura quebrava numa linha a mais que no documento
+          real (a fonte Nunito é um pouco mais larga que a Maiandra GD
+          original por caractere). */}
       <div
-        className="ml-[95mm] mr-[12mm] mt-[55mm] flex flex-1 flex-col text-[12pt] leading-[1.15]"
+        className="ml-[90mm] mr-[7mm] mt-[46mm] flex flex-1 flex-col text-[12pt] leading-[1.15]"
         style={{ fontFamily: FONTE_CORPO }}
       >
         <p className="text-justify">
           <Segmentos segmentos={aberturaCongratulacaoSegmentos({ autorNome, associadosNomes })} />
         </p>
 
-        <p className="mt-3 text-center text-[36pt] font-bold uppercase leading-[1.05]">
+        <p className="mt-6 text-center text-[36pt] font-bold uppercase leading-[1.05]">
           {mocao.destinatario}
         </p>
 
-        <div className="mt-3 space-y-1">
+        <div className="mt-6 space-y-2">
           {mocao.justificativa
             .split(/\n+/)
             .map((p) => p.trim())
@@ -185,14 +151,10 @@ function CongratulacaoConteudo({
             ))}
         </div>
 
-        <p className="mt-3 text-right">{fechoMocao(mocao.data_mocao)}</p>
+        <p className="mt-8 text-right">{fechoMocao(mocao.data_mocao)}</p>
 
-        <div className="mt-2">
-          <GradeAssinaturas
-            signatarios={signatarios}
-            assinaturasPorId={assinaturasPorId}
-            orientacao="paisagem"
-          />
+        <div className="mt-8">
+          <GradeAssinaturas signatarios={signatarios} assinaturasPorId={assinaturasPorId} />
         </div>
       </div>
     </PaginaA4>
@@ -216,7 +178,7 @@ function PesarConteudo({
   return (
     <PaginaA4 backgroundImage="/timbrado/mocao-pesar.jpg">
       <div
-        className="ml-[28mm] mr-[28mm] mt-[40mm] flex flex-1 flex-col text-[12pt] leading-[1.15]"
+        className="ml-[28mm] mr-[28mm] mt-[48mm] flex flex-1 flex-col text-[12pt] leading-[1.15]"
         style={{ fontFamily: FONTE_CORPO }}
       >
         <p>
@@ -228,7 +190,7 @@ function PesarConteudo({
           />
         </p>
 
-        <p className="mt-2 text-justify">
+        <p className="mt-4 text-justify">
           <Segmentos
             segmentos={aberturaPesarSegmentos({
               autorNome: autor.nome,
@@ -240,7 +202,7 @@ function PesarConteudo({
           />
         </p>
 
-        <div className="mt-2 space-y-1">
+        <div className="mt-4 space-y-4">
           {PARAGRAFOS_PESAR_FIXOS.map((p, i) => (
             <p key={i} className="text-justify">
               {p}
@@ -248,14 +210,10 @@ function PesarConteudo({
           ))}
         </div>
 
-        <p className="mt-3">{fechoMocao(mocao.data_mocao)}</p>
+        <p className="mt-8">{fechoMocao(mocao.data_mocao)}</p>
 
-        <div className="mt-2">
-          <GradeAssinaturas
-            signatarios={signatarios}
-            assinaturasPorId={assinaturasPorId}
-            orientacao="retrato"
-          />
+        <div className="mt-10">
+          <GradeAssinaturas signatarios={signatarios} assinaturasPorId={assinaturasPorId} />
         </div>
       </div>
     </PaginaA4>
