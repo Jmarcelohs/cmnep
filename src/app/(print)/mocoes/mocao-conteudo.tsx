@@ -41,6 +41,11 @@ function Segmentos({ segmentos }: { segmentos: SegmentoMocao[] }) {
 // mais conservador — testado ao vivo com 5 signatários (2 linhas) e um
 // nome de homenageado longo (3 linhas) sem estourar pra uma segunda
 // página.
+//
+// No Pesar, a logo da Câmara fica no rodapé (~196mm de uma página de
+// 297mm) — testado ao vivo com 1 linha (24mm, folga confortável), 2
+// linhas (24mm sobrepunha a legenda da 2ª linha na logo; 18mm resolveu)
+// e 3 linhas (16mm, folga confortável).
 function tamanhoAssinatura(
   totalSignatarios: number,
   orientacao: "retrato" | "paisagem",
@@ -51,7 +56,8 @@ function tamanhoAssinatura(
     if (linhas === 2) return { maxH: "13mm", maxW: "48mm", gap: "gap-y-1" };
     return { maxH: "9mm", maxW: "38mm", gap: "gap-y-1" };
   }
-  if (linhas <= 2) return { maxH: "24mm", maxW: "60mm", gap: "gap-y-4" };
+  if (linhas <= 1) return { maxH: "24mm", maxW: "60mm", gap: "gap-y-4" };
+  if (linhas === 2) return { maxH: "18mm", maxW: "55mm", gap: "gap-y-2" };
   if (linhas === 3) return { maxH: "16mm", maxW: "50mm", gap: "gap-y-2" };
   return { maxH: "12mm", maxW: "42mm", gap: "gap-y-1" };
 }
@@ -143,7 +149,7 @@ function CongratulacaoConteudo({
   return (
     <PaginaA4 orientacao="paisagem" backgroundImage="/timbrado/mocao-congratulacoes.jpg">
       <div
-        className="ml-[95mm] mr-[12mm] mt-[55mm] flex flex-1 flex-col text-[12pt] leading-[1.15]"
+        className="ml-[95mm] mr-[12mm] mt-[52mm] flex flex-1 flex-col text-[12pt] leading-[1.15]"
         style={{ fontFamily: FONTE_CORPO }}
       >
         <p className="text-justify">
