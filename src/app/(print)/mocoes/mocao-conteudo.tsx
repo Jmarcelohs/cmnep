@@ -126,9 +126,10 @@ function CongratulacaoConteudo({
           289,8mm de área útil) — com a margem original de 95mm/12mm, a
           frase de abertura quebrava numa linha a mais que no documento
           real (a fonte Nunito é um pouco mais larga que a Maiandra GD
-          original por caractere). */}
+          original por caractere). Um pouco mais estreita que a medição
+          bruta pra realmente fechar em 3 linhas como no original. */}
       <div
-        className="ml-[90mm] mr-[7mm] mt-[46mm] flex flex-1 flex-col text-[12pt] leading-[1.15]"
+        className="ml-[87mm] mr-[5mm] mt-[46mm] flex flex-1 flex-col text-[12pt] leading-[1.15]"
         style={{ fontFamily: FONTE_CORPO }}
       >
         <p className="text-justify">
