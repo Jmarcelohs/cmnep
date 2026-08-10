@@ -149,7 +149,7 @@ function CongratulacaoConteudo({
   return (
     <PaginaA4 orientacao="paisagem" backgroundImage="/timbrado/mocao-congratulacoes.jpg">
       <div
-        className="ml-[95mm] mr-[12mm] mt-[52mm] flex flex-1 flex-col text-[12pt] leading-[1.15]"
+        className="ml-[95mm] mr-[12mm] mt-[55mm] flex flex-1 flex-col text-[12pt] leading-[1.15]"
         style={{ fontFamily: FONTE_CORPO }}
       >
         <p className="text-justify">
