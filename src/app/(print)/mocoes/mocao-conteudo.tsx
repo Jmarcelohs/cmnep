@@ -35,11 +35,22 @@ function Segmentos({ segmentos }: { segmentos: SegmentoMocao[] }) {
 // Regimento Interno), então o número de signatários varia bastante de
 // uma moção pra outra; sem isso, uma moção com muitos vereadores
 // associados estouraria o espaço disponível antes do rodapé do timbrado.
-// Com até 2 linhas (6 signatários), usa o tamanho de referência medido
-// num documento real da Câmara (~57x26mm); a partir da 3ª linha, encolhe
-// pra continuar cabendo numa página só.
-function tamanhoAssinatura(totalSignatarios: number): { maxH: string; maxW: string; gap: string } {
+// A Congratulação tem bem menos altura de página disponível que o Pesar
+// (A4 paisagem = 210mm vs retrato = 297mm, com um texto de abertura +
+// nome do homenageado em 36pt acima da grade), então usa um orçamento
+// mais conservador — testado ao vivo com 5 signatários (2 linhas) e um
+// nome de homenageado longo (3 linhas) sem estourar pra uma segunda
+// página.
+function tamanhoAssinatura(
+  totalSignatarios: number,
+  orientacao: "retrato" | "paisagem",
+): { maxH: string; maxW: string; gap: string } {
   const linhas = Math.ceil(totalSignatarios / 3);
+  if (orientacao === "paisagem") {
+    if (linhas <= 1) return { maxH: "20mm", maxW: "55mm", gap: "gap-y-2" };
+    if (linhas === 2) return { maxH: "13mm", maxW: "48mm", gap: "gap-y-1" };
+    return { maxH: "9mm", maxW: "38mm", gap: "gap-y-1" };
+  }
   if (linhas <= 2) return { maxH: "24mm", maxW: "60mm", gap: "gap-y-4" };
   if (linhas === 3) return { maxH: "16mm", maxW: "50mm", gap: "gap-y-2" };
   return { maxH: "12mm", maxW: "42mm", gap: "gap-y-1" };
@@ -86,11 +97,13 @@ function BlocoAssinatura({
 function GradeAssinaturas({
   signatarios,
   assinaturasPorId,
+  orientacao,
 }: {
   signatarios: VereadorSignatario[];
   assinaturasPorId: Record<string, string | null>;
+  orientacao: "retrato" | "paisagem";
 }) {
-  const { maxH, maxW, gap } = tamanhoAssinatura(signatarios.length);
+  const { maxH, maxW, gap } = tamanhoAssinatura(signatarios.length, orientacao);
   return (
     <div className={`grid grid-cols-3 gap-x-4 ${gap}`}>
       {signatarios.map((s) => (
@@ -137,11 +150,11 @@ function CongratulacaoConteudo({
           <Segmentos segmentos={aberturaCongratulacaoSegmentos({ autorNome, associadosNomes })} />
         </p>
 
-        <p className="mt-6 text-center text-[36pt] font-bold uppercase leading-tight">
+        <p className="mt-4 text-center text-[36pt] font-bold uppercase leading-[1.05]">
           {mocao.destinatario}
         </p>
 
-        <div className="mt-6 space-y-2">
+        <div className="mt-4 space-y-2">
           {mocao.justificativa
             .split(/\n+/)
             .map((p) => p.trim())
@@ -153,10 +166,14 @@ function CongratulacaoConteudo({
             ))}
         </div>
 
-        <p className="mt-8 text-right">{fechoMocao(mocao.data_mocao)}</p>
+        <p className="mt-5 text-right">{fechoMocao(mocao.data_mocao)}</p>
 
-        <div className="mt-6">
-          <GradeAssinaturas signatarios={signatarios} assinaturasPorId={assinaturasPorId} />
+        <div className="mt-4">
+          <GradeAssinaturas
+            signatarios={signatarios}
+            assinaturasPorId={assinaturasPorId}
+            orientacao="paisagem"
+          />
         </div>
       </div>
     </PaginaA4>
@@ -215,7 +232,11 @@ function PesarConteudo({
         <p className="mt-4">{fechoMocao(mocao.data_mocao)}</p>
 
         <div className="mt-4">
-          <GradeAssinaturas signatarios={signatarios} assinaturasPorId={assinaturasPorId} />
+          <GradeAssinaturas
+            signatarios={signatarios}
+            assinaturasPorId={assinaturasPorId}
+            orientacao="retrato"
+          />
         </div>
       </div>
     </PaginaA4>
