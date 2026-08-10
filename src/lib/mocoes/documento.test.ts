@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   aberturaCongratulacaoSegmentos,
   aberturaPesarSegmentos,
+  associadosComPresidenteObrigatorio,
   enderecamentoPesarSegmentos,
   fechoMocao,
   legendaAssinatura,
@@ -156,5 +157,36 @@ describe("aberturaPesarSegmentos", () => {
 describe("fechoMocao", () => {
   it("formata a data por extenso, com ponto final", () => {
     expect(fechoMocao("2026-05-11")).toBe("Nepomuceno, 11 de maio de 2026.");
+  });
+});
+
+describe("associadosComPresidenteObrigatorio", () => {
+  const presidente = vereador("Tullio", { presidente: true });
+
+  it("adiciona o Presidente se ele não estiver na lista", () => {
+    const associados = [vereador("Ana")];
+    const resultado = associadosComPresidenteObrigatorio({ id: "Mário" }, associados, presidente);
+    expect(resultado.map((v) => v.nome)).toEqual(["Ana", "Tullio"]);
+  });
+
+  it("não duplica se o Presidente já estiver nos associados", () => {
+    const associados = [vereador("Ana"), presidente];
+    const resultado = associadosComPresidenteObrigatorio({ id: "Mário" }, associados, presidente);
+    expect(resultado).toHaveLength(2);
+  });
+
+  it("não adiciona se o Presidente for o próprio autor", () => {
+    const associados = [vereador("Ana")];
+    const resultado = associadosComPresidenteObrigatorio(
+      { id: presidente.id },
+      associados,
+      presidente,
+    );
+    expect(resultado).toEqual(associados);
+  });
+
+  it("sem presidente cadastrado, devolve a lista original", () => {
+    const associados = [vereador("Ana")];
+    expect(associadosComPresidenteObrigatorio({ id: "Mário" }, associados, null)).toBe(associados);
   });
 });

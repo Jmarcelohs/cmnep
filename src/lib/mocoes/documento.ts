@@ -46,6 +46,22 @@ export function ordenarSignatarios(signatarios: VereadorSignatario[]): VereadorS
   return presidente ? [...semPresidente, presidente] : semPresidente;
 }
 
+// O Presidente assina toda moção por exigência do art. 117 do Regimento
+// Interno, esteja ele listado como autor/associado ou não — devolve os
+// associados com o Presidente incluído (sem duplicar, se ele já for o
+// autor ou já estiver na lista). Usado tanto na prévia do formulário
+// quanto no PDF, pra prévia e PDF final nunca divergirem em quem assina.
+export function associadosComPresidenteObrigatorio(
+  autor: { id: string },
+  associados: VereadorSignatario[],
+  presidenteAtual: VereadorSignatario | null,
+): VereadorSignatario[] {
+  if (!presidenteAtual) return associados;
+  const jaIncluido =
+    presidenteAtual.id === autor.id || associados.some((a) => a.id === presidenteAtual.id);
+  return jaIncluido ? associados : [...associados, presidenteAtual];
+}
+
 export function legendaAssinatura(v: VereadorSignatario): string {
   if (v.presidente) return `Presidente da ${NOME_CAMARA}`;
   return `${v.genero} da ${NOME_CAMARA}${v.partido ? ` – ${v.partido}` : ""}`;

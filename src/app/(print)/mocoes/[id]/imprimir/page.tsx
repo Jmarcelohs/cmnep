@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PrintButton } from "../../../print-button";
 import { MocaoConteudo } from "../../mocao-conteudo";
-import type { VereadorSignatario } from "@/lib/mocoes/documento";
+import { associadosComPresidenteObrigatorio, type VereadorSignatario } from "@/lib/mocoes/documento";
 
 const BUCKET = "vereadores-assinaturas";
 
@@ -18,10 +18,20 @@ export default async function ImprimirMocaoPage({
   if (!mocao) notFound();
 
   const idsVereadores = [mocao.autor_vereador_id, ...mocao.associados_vereadores_ids];
-  const { data: vereadores } = await supabase
-    .from("vereadores")
-    .select("id, nome, partido, genero, presidente, assinatura_caminho")
-    .in("id", idsVereadores);
+  // Busca em duas queries — vereadores do lote + o Presidente atual — em
+  // vez de uma só, já que ele pode não estar entre os ids salvos na
+  // moção (ver associadosComPresidenteObrigatorio abaixo).
+  const [{ data: vereadores }, { data: presidenteAtual }] = await Promise.all([
+    supabase
+      .from("vereadores")
+      .select("id, nome, partido, genero, presidente, assinatura_caminho")
+      .in("id", idsVereadores),
+    supabase
+      .from("vereadores")
+      .select("id, nome, partido, genero, presidente, assinatura_caminho")
+      .eq("presidente", true)
+      .maybeSingle(),
+  ]);
 
   const porId = new Map((vereadores ?? []).map((v) => [v.id, v]));
   const paraSignatario = (id: string): VereadorSignatario | null => {
@@ -39,9 +49,25 @@ export default async function ImprimirMocaoPage({
 
   const autor = paraSignatario(mocao.autor_vereador_id);
   if (!autor) notFound();
-  const associados = mocao.associados_vereadores_ids
+  const associadosSalvos = mocao.associados_vereadores_ids
     .map(paraSignatario)
     .filter((v): v is VereadorSignatario => Boolean(v));
+  // O Presidente assina toda moção por exigência do Regimento Interno,
+  // mesmo quando não foi selecionado como autor/associado ao criá-la.
+  const associados = associadosComPresidenteObrigatorio(
+    autor,
+    associadosSalvos,
+    presidenteAtual
+      ? {
+          id: presidenteAtual.id,
+          nome: presidenteAtual.nome,
+          partido: presidenteAtual.partido,
+          genero: presidenteAtual.genero,
+          presidente: presidenteAtual.presidente,
+          assinaturaCaminho: presidenteAtual.assinatura_caminho,
+        }
+      : null,
+  );
 
   const assinaturasPorId: Record<string, string | null> = {};
   await Promise.all(

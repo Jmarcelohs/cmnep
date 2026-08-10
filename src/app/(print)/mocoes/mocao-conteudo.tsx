@@ -30,28 +30,54 @@ function Segmentos({ segmentos }: { segmentos: SegmentoMocao[] }) {
   );
 }
 
+// Tamanho da imagem da assinatura escalado pela quantidade de linhas da
+// grade — o Presidente assina obrigatoriamente toda moção (art. 117 do
+// Regimento Interno), então o número de signatários varia bastante de
+// uma moção pra outra; sem isso, uma moção com muitos vereadores
+// associados estouraria o espaço disponível antes do rodapé do timbrado.
+// Com até 2 linhas (6 signatários), usa o tamanho de referência medido
+// num documento real da Câmara (~57x26mm); a partir da 3ª linha, encolhe
+// pra continuar cabendo numa página só.
+function tamanhoAssinatura(totalSignatarios: number): { maxH: string; maxW: string; gap: string } {
+  const linhas = Math.ceil(totalSignatarios / 3);
+  if (linhas <= 2) return { maxH: "24mm", maxW: "60mm", gap: "gap-y-4" };
+  if (linhas === 3) return { maxH: "16mm", maxW: "50mm", gap: "gap-y-2" };
+  return { maxH: "12mm", maxW: "42mm", gap: "gap-y-1" };
+}
+
 // Imagem de assinatura escaneada colada acima do nome — se o vereador
 // ainda não tem assinatura cadastrada (ver /vereadores), fica só a linha
 // em branco pra assinatura física por cima, mesma convenção do Parecer de
-// Comissão em decreto-conteudo.tsx.
+// Comissão em decreto-conteudo.tsx. Fonte/tamanhos (Calibri 10pt no nome,
+// 7pt no cargo, nome sem negrito) reproduzem o documento real de
+// Congratulação usado como referência de padronização.
 function BlocoAssinatura({
   signatario,
   assinaturaUrl,
+  maxH,
+  maxW,
 }: {
   signatario: VereadorSignatario;
   assinaturaUrl: string | null;
+  maxH: string;
+  maxW: string;
 }) {
   return (
     <div className="flex flex-col items-center text-center">
-      <div className="flex h-[11mm] items-end justify-center">
+      <div className="flex items-end justify-center" style={{ height: maxH }}>
         {assinaturaUrl && (
           // eslint-disable-next-line @next/next/no-img-element -- imagem vem de uma URL assinada do Storage, resolvida no servidor pra essa renderização do PDF
-          <img src={assinaturaUrl} alt="" className="max-h-[11mm] max-w-[45mm] object-contain" />
+          <img
+            src={assinaturaUrl}
+            alt=""
+            className="object-contain"
+            style={{ maxHeight: maxH, maxWidth: maxW }}
+          />
         )}
       </div>
-      <div className="w-[55mm] border-t border-black pt-0.5">
-        <p className="font-bold">{signatario.nome}</p>
-        <p className="text-[8pt] leading-tight">{legendaAssinatura(signatario)}</p>
+      <div className="w-[55mm] border-t border-black pt-0.5" style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>
+        <p className="text-[10pt]">{signatario.nome}</p>
+        <p className="text-[7pt] leading-tight">{legendaAssinatura(signatario)}</p>
       </div>
     </div>
   );
@@ -64,14 +90,29 @@ function GradeAssinaturas({
   signatarios: VereadorSignatario[];
   assinaturasPorId: Record<string, string | null>;
 }) {
+  const { maxH, maxW, gap } = tamanhoAssinatura(signatarios.length);
   return (
-    <div className="grid grid-cols-3 gap-x-4 gap-y-4">
+    <div className={`grid grid-cols-3 gap-x-4 ${gap}`}>
       {signatarios.map((s) => (
-        <BlocoAssinatura key={s.id} signatario={s} assinaturaUrl={assinaturasPorId[s.id] ?? null} />
+        <BlocoAssinatura
+          key={s.id}
+          signatario={s}
+          assinaturaUrl={assinaturasPorId[s.id] ?? null}
+          maxH={maxH}
+          maxW={maxW}
+        />
       ))}
     </div>
   );
 }
+
+// Fonte/tamanhos do corpo (12pt, entrelinha 1,15) reproduzem o documento
+// real de Congratulação usado como referência — a fonte original do
+// documento (Maiandra GD) não é uma fonte padrão do sistema operacional
+// nem foi incorporada ao .docx, então usamos a mesma pilha segura
+// (Arial/Helvetica) já usada no resto do sistema em vez de arriscar um
+// fallback imprevisível do Chromium na Vercel.
+const FONTE_CORPO = "Arial, Helvetica, sans-serif";
 
 function CongratulacaoConteudo({
   mocao,
@@ -88,12 +129,17 @@ function CongratulacaoConteudo({
 }) {
   return (
     <PaginaA4 orientacao="paisagem" backgroundImage="/timbrado/mocao-congratulacoes.jpg">
-      <div className="ml-[95mm] mr-[12mm] mt-[46mm] flex flex-1 flex-col text-[11pt] leading-relaxed">
+      <div
+        className="ml-[95mm] mr-[12mm] mt-[55mm] flex flex-1 flex-col text-[12pt] leading-[1.15]"
+        style={{ fontFamily: FONTE_CORPO }}
+      >
         <p className="text-justify">
           <Segmentos segmentos={aberturaCongratulacaoSegmentos({ autorNome, associadosNomes })} />
         </p>
 
-        <p className="mt-6 text-center text-[18pt] font-bold uppercase">{mocao.destinatario}</p>
+        <p className="mt-6 text-center text-[36pt] font-bold uppercase leading-tight">
+          {mocao.destinatario}
+        </p>
 
         <div className="mt-6 space-y-2">
           {mocao.justificativa
@@ -109,7 +155,7 @@ function CongratulacaoConteudo({
 
         <p className="mt-8 text-right">{fechoMocao(mocao.data_mocao)}</p>
 
-        <div className="mt-8">
+        <div className="mt-6">
           <GradeAssinaturas signatarios={signatarios} assinaturasPorId={assinaturasPorId} />
         </div>
       </div>
@@ -133,7 +179,10 @@ function PesarConteudo({
   const tratamento = mocao.destinatario_tratamento ?? "Sr.";
   return (
     <PaginaA4 backgroundImage="/timbrado/mocao-pesar.jpg">
-      <div className="ml-[28mm] mr-[28mm] mt-[42mm] flex flex-1 flex-col text-[10.5pt] leading-snug">
+      <div
+        className="ml-[28mm] mr-[28mm] mt-[40mm] flex flex-1 flex-col text-[12pt] leading-[1.15]"
+        style={{ fontFamily: FONTE_CORPO }}
+      >
         <p>
           <Segmentos
             segmentos={enderecamentoPesarSegmentos({
@@ -165,7 +214,7 @@ function PesarConteudo({
 
         <p className="mt-4">{fechoMocao(mocao.data_mocao)}</p>
 
-        <div className="mt-5">
+        <div className="mt-4">
           <GradeAssinaturas signatarios={signatarios} assinaturasPorId={assinaturasPorId} />
         </div>
       </div>

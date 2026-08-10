@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import {
   aberturaCongratulacaoSegmentos,
   aberturaPesarSegmentos,
+  associadosComPresidenteObrigatorio,
   enderecamentoPesarSegmentos,
   fechoMocao,
   LABEL_TIPO_MOCAO,
@@ -69,7 +70,32 @@ export function MocaoForm({
   const [justificativa, setJustificativa] = useState(valoresIniciais?.justificativa ?? "");
 
   const autor = vereadores.find((v) => v.id === autorId);
-  const associados = vereadores.filter((v) => associadosIds.has(v.id) && v.id !== autorId);
+  const associadosSelecionados = vereadores.filter(
+    (v) => associadosIds.has(v.id) && v.id !== autorId,
+  );
+
+  function paraSignatario(v: VereadorOpcao): VereadorSignatario {
+    return {
+      id: v.id,
+      nome: v.nome,
+      partido: v.partido,
+      genero: v.genero,
+      presidente: v.presidente,
+      assinaturaCaminho: null,
+    };
+  }
+
+  // O Presidente assina toda moção por exigência do Regimento Interno,
+  // mesmo que não tenha sido marcado como autor/associado — a prévia
+  // reflete isso pra nunca divergir do PDF final (ver imprimir/page.tsx).
+  const presidenteVereador = vereadores.find((v) => v.presidente);
+  const associados = autor
+    ? associadosComPresidenteObrigatorio(
+        autor,
+        associadosSelecionados.map(paraSignatario),
+        presidenteVereador ? paraSignatario(presidenteVereador) : null,
+      )
+    : associadosSelecionados.map(paraSignatario);
 
   function alternarAssociado(id: string) {
     setAssociadosIds((atual) => {
@@ -97,16 +123,7 @@ export function MocaoForm({
   }, [tipo, autor, associados, destinatario, destinatarioTratamento]);
 
   const signatarios = useMemo(() => {
-    const todos: VereadorSignatario[] = [autor, ...associados]
-      .filter((v): v is VereadorOpcao => Boolean(v))
-      .map((v) => ({
-        id: v.id,
-        nome: v.nome,
-        partido: v.partido,
-        genero: v.genero,
-        presidente: v.presidente,
-        assinaturaCaminho: null,
-      }));
+    const todos = autor ? [paraSignatario(autor), ...associados] : associados;
     return ordenarSignatarios(todos);
   }, [autor, associados]);
 
@@ -204,6 +221,10 @@ export function MocaoForm({
         <label className="block text-sm font-medium text-slate-700">
           Vereadores associados (opcional)
         </label>
+        <p className="mt-1 text-xs text-slate-500">
+          O Presidente assina automaticamente todas as moções (art. 117 do Regimento Interno) —
+          não precisa marcá-lo aqui.
+        </p>
         <div className="mt-2 grid grid-cols-1 gap-1 sm:grid-cols-2">
           {vereadores
             .filter((v) => v.id !== autorId)
