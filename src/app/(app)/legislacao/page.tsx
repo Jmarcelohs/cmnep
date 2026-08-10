@@ -1,16 +1,30 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
+import { construirFiltroBusca } from "@/lib/busca";
 import { DocumentosLegislacao } from "./documentos-form";
 
-export default async function LegislacaoPage() {
+export default async function LegislacaoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ busca?: string }>;
+}) {
+  const { busca } = await searchParams;
   const supabase = await createClient();
   const usuario = await getCurrentUsuario();
   const podeGerenciar = usuario?.papel === "admin" || usuario?.papel === "ordenador_despesa";
 
-  const { data: documentos } = await supabase
+  let query = supabase
     .from("legislacao_documentos")
-    .select("id, titulo, tipo, numero, ano, descricao, caminho, criado_em")
+    .select("id, titulo, tipo, numero, ano, descricao, caminho, nome_original, criado_em")
     .order("criado_em", { ascending: false });
+
+  if (busca?.trim()) {
+    query = query.or(
+      construirFiltroBusca(busca.trim(), ["titulo", "descricao", "numero", "conteudo_texto"]),
+    );
+  }
+
+  const { data: documentos } = await query;
 
   return (
     <div>
@@ -74,7 +88,7 @@ export default async function LegislacaoPage() {
         </a>
       </div>
 
-      <DocumentosLegislacao documentos={documentos ?? []} podeGerenciar={podeGerenciar} />
+      <DocumentosLegislacao documentos={documentos ?? []} podeGerenciar={podeGerenciar} busca={busca} />
 
       <p className="mt-4 text-xs text-slate-400">
         Conteúdo mantido por terceiros (leis.org), fora deste sistema — em caso de divergência,

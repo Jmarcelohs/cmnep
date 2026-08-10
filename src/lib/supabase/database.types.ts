@@ -797,6 +797,7 @@ export interface Database {
           caminho: string;
           nome_original: string;
           tipo_arquivo: TipoAnexoOficio;
+          conteudo_texto: string | null;
           criado_por: string | null;
           criado_em: string;
         };

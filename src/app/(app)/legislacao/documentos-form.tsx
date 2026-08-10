@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { validarArquivos, sanitizarNomeArquivo } from "@/lib/uploads/validacao";
 import { formatarData } from "@/lib/pdf/formato";
+import { CampoBusca } from "@/components/campo-busca";
 import type { TipoAnexoOficio, TipoDocumentoLegislacao } from "@/lib/supabase/database.types";
 
 export type Documento = {
@@ -15,6 +16,7 @@ export type Documento = {
   ano: number | null;
   descricao: string | null;
   caminho: string;
+  nome_original: string;
   criado_em: string;
 };
 
@@ -52,9 +54,11 @@ function tipoArquivoDoMime(mime: string): TipoAnexoOficio {
 export function DocumentosLegislacao({
   documentos,
   podeGerenciar,
+  busca,
 }: {
   documentos: Documento[];
   podeGerenciar: boolean;
+  busca?: string;
 }) {
   const [titulo, setTitulo] = useState("");
   const [tipo, setTipo] = useState<TipoDocumentoLegislacao>("lei");
@@ -107,6 +111,7 @@ export function DocumentosLegislacao({
         .upload(caminho, arquivo);
       if (erroUpload) throw erroUpload;
 
+      const tipoArquivo = tipoArquivoDoMime(arquivo.type);
       const { error: erroInsert } = await supabase.from("legislacao_documentos").insert({
         id: documentoId,
         titulo: titulo.trim(),
@@ -116,9 +121,19 @@ export function DocumentosLegislacao({
         descricao: descricao.trim() || null,
         caminho,
         nome_original: arquivo.name,
-        tipo_arquivo: tipoArquivoDoMime(arquivo.type),
+        tipo_arquivo: tipoArquivo,
       });
       if (erroInsert) throw erroInsert;
+
+      if (tipoArquivo === "pdf") {
+        try {
+          await fetch(`/api/legislacao/${documentoId}/extrair-texto`, { method: "POST" });
+        } catch {
+          // Upload já concluído — se a extração falhar, o documento só
+          // fica sem busca por conteúdo (ainda buscável por título/
+          // descrição/número).
+        }
+      }
 
       limparFormulario();
       router.refresh();
@@ -149,6 +164,18 @@ export function DocumentosLegislacao({
     window.open(data.signedUrl, "_blank", "noopener,noreferrer");
   }
 
+  async function handleBaixar(doc: Documento) {
+    const supabase = createClient();
+    const { data, error } = await supabase.storage
+      .from("legislacao-documentos")
+      .createSignedUrl(doc.caminho, 300, { download: doc.nome_original });
+    if (error || !data) {
+      setErro("Não foi possível baixar o arquivo.");
+      return;
+    }
+    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+  }
+
   return (
     <div className="mt-4 rounded-lg border border-slate-200 bg-white p-6">
       <h2 className="text-sm font-semibold text-slate-900">
@@ -157,6 +184,32 @@ export function DocumentosLegislacao({
       <p className="mt-1 text-xs text-slate-500">
         Leis, decretos, resoluções ou outros documentos que ainda não estão no acervo do leis.org.
       </p>
+
+      <form action="/legislacao" className="mt-3 flex flex-wrap items-end gap-2">
+        <CampoBusca
+          id="busca-legislacao"
+          defaultValue={busca}
+          label="Buscar nos documentos cadastrados"
+          placeholder="Palavra no título, número ou dentro do PDF..."
+        />
+        <button
+          type="submit"
+          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        >
+          Buscar
+        </button>
+        {busca && (
+          <a href="/legislacao" className="text-xs text-slate-500 hover:underline">
+            limpar busca
+          </a>
+        )}
+      </form>
+      {busca && (
+        <p className="mt-2 text-xs text-slate-500">
+          {documentos.length} resultado(s) para &quot;{busca}&quot; — busca inclui o texto dentro
+          dos PDFs cadastrados.
+        </p>
+      )}
 
       <ul className="mt-3 divide-y divide-slate-100">
         {documentos.map((doc) => (
@@ -176,15 +229,24 @@ export function DocumentosLegislacao({
                 {doc.descricao && ` — ${doc.descricao}`}
               </p>
             </div>
-            {podeGerenciar && (
+            <div className="flex shrink-0 items-center gap-3">
               <button
                 type="button"
-                onClick={() => handleExcluir(doc)}
-                className="shrink-0 text-xs text-red-600 hover:text-red-800"
+                onClick={() => handleBaixar(doc)}
+                className="text-xs text-brand-navy hover:underline"
               >
-                excluir
+                baixar
               </button>
-            )}
+              {podeGerenciar && (
+                <button
+                  type="button"
+                  onClick={() => handleExcluir(doc)}
+                  className="text-xs text-red-600 hover:text-red-800"
+                >
+                  excluir
+                </button>
+              )}
+            </div>
           </li>
         ))}
         {documentos.length === 0 && (
