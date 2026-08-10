@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { createClient } from "@/lib/supabase/server";
 import { listarSolicitacoesPlenario, type SolicitacaoPlenario } from "@/lib/plenario/google-sheets";
+import { numerarSolicitacoes } from "@/lib/plenario/numeracao";
 import { formatarData } from "@/lib/pdf/formato";
 import { MenuAcoes } from "@/components/menu-acoes";
 import { aprovarSolicitacaoPlenario, recusarSolicitacaoPlenario } from "./actions";
@@ -61,9 +62,12 @@ export default async function PlenarioPage({
     (decisoes ?? []).map((d) => [d.resposta_timestamp, d]),
   );
 
+  const numeros = numerarSolicitacoes(solicitacoes);
+
   const linhas = solicitacoes
     .map((s) => ({
       solicitacao: s,
+      numero: numeros.get(s.respostaTimestamp) ?? "—",
       status: decisaoPorTimestamp.get(s.respostaTimestamp)?.status ?? "pendente",
     }))
     .filter((l) => {
@@ -131,9 +135,9 @@ export default async function PlenarioPage({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {linhas.map(({ solicitacao: s, status }) => (
+            {linhas.map(({ solicitacao: s, numero, status }) => (
               <tr key={s.respostaTimestamp} className="hover:bg-slate-50">
-                <td className="px-4 py-2 text-slate-700">{s.numeroRequerimento || "—"}</td>
+                <td className="px-4 py-2 text-slate-700">{numero}</td>
                 <td className="px-4 py-2 text-slate-900">
                   {s.dataDesejada && formatarData(s.dataDesejada)}
                   <br />

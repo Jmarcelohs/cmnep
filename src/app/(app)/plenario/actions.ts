@@ -6,6 +6,7 @@ import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { createClient } from "@/lib/supabase/server";
 import { hojeBrasil } from "@/lib/data-brasil";
 import { listarSolicitacoesPlenario } from "@/lib/plenario/google-sheets";
+import { numerarSolicitacoes } from "@/lib/plenario/numeracao";
 import { criarEvento } from "@/lib/agenda/google-calendar";
 
 async function exigirOrdenadorOuAdmin(redirectPath: string) {
@@ -28,12 +29,16 @@ export async function aprovarSolicitacaoPlenario(respostaTimestamp: string) {
   if (!solicitacao) {
     redirect(`/plenario?error=${encodeURIComponent("Solicitação não encontrada na planilha")}`);
   }
+  // Número sequencial calculado por nós (ver src/lib/plenario/numeracao.ts)
+  // — a planilha só tem "Número do Requerimento" preenchido em parte dos
+  // pedidos, então esse é o número de referência de verdade do sistema.
+  const numero = numerarSolicitacoes(solicitacoes).get(respostaTimestamp) ?? "";
 
   const supabase = await createClient();
 
   try {
     const eventoId = await criarEvento({
-      titulo: `Uso do Plenário — ${solicitacao!.instituicao || solicitacao!.nomeSolicitante}`,
+      titulo: `Uso do Plenário nº ${numero} — ${solicitacao!.instituicao || solicitacao!.nomeSolicitante}`,
       descricao: [
         `Finalidade: ${solicitacao!.finalidade}`,
         `Tipo de evento: ${solicitacao!.tipoEvento}`,
@@ -41,8 +46,6 @@ export async function aprovarSolicitacaoPlenario(respostaTimestamp: string) {
           `Participantes estimados: ${solicitacao!.numeroParticipantes}`,
         solicitacao!.equipamentos && `Equipamentos: ${solicitacao!.equipamentos}`,
         `Solicitante: ${solicitacao!.nomeSolicitante} — CPF/CNPJ ${solicitacao!.cpfCnpj} — tel. ${solicitacao!.telefone}`,
-        solicitacao!.numeroRequerimento &&
-          `Nº do requerimento: ${solicitacao!.numeroRequerimento}`,
       ]
         .filter(Boolean)
         .join("\n"),
