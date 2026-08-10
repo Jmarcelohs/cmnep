@@ -28,7 +28,15 @@ export default async function PlenarioPage({
   searchParams: Promise<{ aba?: string; error?: string }>;
 }) {
   const usuario = await getCurrentUsuario();
-  if (usuario?.papel !== "admin" && usuario?.papel !== "ordenador_despesa") redirect("/dashboard");
+  const podeVerPagina =
+    usuario?.papel === "admin" ||
+    usuario?.papel === "ordenador_despesa" ||
+    usuario?.papel === "servidor";
+  if (!podeVerPagina) redirect("/dashboard");
+  // Ver é liberado pra servidor também (só pra terem conhecimento dos
+  // pedidos) — decidir (aprovar/recusar) continua restrito, os pedidos
+  // trazem CPF/CNPJ e telefone de terceiros.
+  const podeDecidir = usuario?.papel === "admin" || usuario?.papel === "ordenador_despesa";
 
   const { aba: abaParam, error: errorMsg } = await searchParams;
   const aba: Aba =
@@ -147,7 +155,7 @@ export default async function PlenarioPage({
                   </span>
                 </td>
                 <td className="px-4 py-2">
-                  {status === "pendente" ? (
+                  {status === "pendente" && podeDecidir ? (
                     <MenuAcoes>
                       <form action={aprovarSolicitacaoPlenario.bind(null, s.respostaTimestamp)}>
                         <button
