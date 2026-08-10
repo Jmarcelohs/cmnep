@@ -42,6 +42,19 @@ function Segmentos({ segmentos }: { segmentos: SegmentoMocao[] }) {
 const ASSINATURA_ALTURA = "16mm";
 const ASSINATURA_LARGURA = "50mm";
 
+// Largura da coluna de assinatura, por orientação — não dá pra usar a
+// mesma largura nos dois tipos porque a Pesar é retrato (210mm) e a
+// Congratulação é paisagem (297mm). Com 3 colunas + os 28mm de margem de
+// cada lado da Pesar, cada coluna real tem só ~48,5mm de largura
+// disponível; usar os 64mm da Congratulação ali faz o texto de uma
+// coluna invadir a de baixo (confirmado ao vivo). 63mm cabe justo nos
+// ~63,85mm disponíveis na Congratulação; 46mm fica dentro dos ~48,5mm da
+// Pesar com uma pequena folga.
+const LARGURA_COLUNA: Record<"retrato" | "paisagem", string> = {
+  paisagem: "63mm",
+  retrato: "46mm",
+};
+
 // Imagem de assinatura escaneada colada acima do nome — se o vereador
 // ainda não tem assinatura cadastrada (ver /vereadores), fica só a linha
 // em branco pra assinatura física por cima, mesma convenção do Parecer de
@@ -51,9 +64,11 @@ const ASSINATURA_LARGURA = "50mm";
 function BlocoAssinatura({
   signatario,
   assinaturaUrl,
+  larguraColuna,
 }: {
   signatario: VereadorSignatario;
   assinaturaUrl: string | null;
+  larguraColuna: string;
 }) {
   return (
     <div className="flex flex-col items-center text-center">
@@ -68,11 +83,7 @@ function BlocoAssinatura({
           />
         )}
       </div>
-      {/* Coluna alargada de 55mm pra 64mm — a 55mm, "Vereador da Câmara
-          Municipal de Nepomuceno" (sem o partido, removido a pedido do
-          usuário) quebrava em 2 linhas; no documento real cabe numa linha
-          só. */}
-      <div className="w-[64mm] border-t border-black pt-0.5" style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>
+      <div className="border-t border-black pt-0.5" style={{ width: larguraColuna, fontFamily: "Arial, Helvetica, sans-serif" }}>
         <p className="text-[10pt]">{signatario.nome}</p>
         <p className="text-[7pt] leading-tight">{legendaAssinatura(signatario)}</p>
       </div>
@@ -83,14 +94,21 @@ function BlocoAssinatura({
 function GradeAssinaturas({
   signatarios,
   assinaturasPorId,
+  orientacao,
 }: {
   signatarios: VereadorSignatario[];
   assinaturasPorId: Record<string, string | null>;
+  orientacao: "retrato" | "paisagem";
 }) {
   return (
     <div className="grid grid-cols-3 gap-x-4 gap-y-8">
       {signatarios.map((s) => (
-        <BlocoAssinatura key={s.id} signatario={s} assinaturaUrl={assinaturasPorId[s.id] ?? null} />
+        <BlocoAssinatura
+          key={s.id}
+          signatario={s}
+          assinaturaUrl={assinaturasPorId[s.id] ?? null}
+          larguraColuna={LARGURA_COLUNA[orientacao]}
+        />
       ))}
     </div>
   );
@@ -155,7 +173,11 @@ function CongratulacaoConteudo({
         <p className="mt-8 text-right">{fechoMocao(mocao.data_mocao)}</p>
 
         <div className="mt-8">
-          <GradeAssinaturas signatarios={signatarios} assinaturasPorId={assinaturasPorId} />
+          <GradeAssinaturas
+            signatarios={signatarios}
+            assinaturasPorId={assinaturasPorId}
+            orientacao="paisagem"
+          />
         </div>
       </div>
     </PaginaA4>
@@ -214,7 +236,11 @@ function PesarConteudo({
         <p className="mt-8">{fechoMocao(mocao.data_mocao)}</p>
 
         <div className="mt-10">
-          <GradeAssinaturas signatarios={signatarios} assinaturasPorId={assinaturasPorId} />
+          <GradeAssinaturas
+            signatarios={signatarios}
+            assinaturasPorId={assinaturasPorId}
+            orientacao="retrato"
+          />
         </div>
       </div>
     </PaginaA4>
