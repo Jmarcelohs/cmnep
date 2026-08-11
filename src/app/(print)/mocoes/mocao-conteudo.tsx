@@ -82,6 +82,26 @@ function tamanhoAssinatura(
 // nesse caso extremo.
 const LIMIAR_COMPACTO = 10;
 
+// No modo compacto, um nome de homenageado longo (nome de instituição,
+// por exemplo) pode quebrar em 4 linhas mesmo já reduzido a 26pt — testado
+// ao vivo com 10 signatários + um nome de ~100 caracteres, o que estourava
+// pra 2 páginas mesmo com a grade de 4 colunas. Acima desse limiar de
+// caracteres, encolhe mais um degrau (20pt) pra tentar segurar em 3 linhas
+// e devolver espaço vertical suficiente pra grade inteira caber numa
+// página só.
+const LIMIAR_NOME_MUITO_LONGO = 55;
+
+function tamanhoNomeHomenageado(
+  destinatario: string,
+  compacto: boolean,
+): { fontSize: string; margemTopo: string } {
+  if (!compacto) return { fontSize: "36pt", margemTopo: "mt-6" };
+  if (destinatario.length > LIMIAR_NOME_MUITO_LONGO) {
+    return { fontSize: "20pt", margemTopo: "mt-2" };
+  }
+  return { fontSize: "26pt", margemTopo: "mt-3" };
+}
+
 // Imagem de assinatura escaneada colada acima do nome — se o vereador
 // ainda não tem assinatura cadastrada (ver /vereadores), fica só a linha
 // em branco pra assinatura física por cima, mesma convenção do Parecer de
@@ -172,6 +192,7 @@ function CongratulacaoConteudo({
   // página só (ver ASSINATURA_COMPACTA/LIMIAR_COMPACTO). Com menos
   // signatários, tudo segue igual ao documento real de referência.
   const compacto = signatarios.length >= LIMIAR_COMPACTO;
+  const nomeHomenageado = tamanhoNomeHomenageado(mocao.destinatario, compacto);
 
   return (
     <PaginaA4 orientacao="paisagem" backgroundImage="/timbrado/mocao-congratulacoes.jpg">
@@ -190,7 +211,8 @@ function CongratulacaoConteudo({
         </p>
 
         <p
-          className={`text-center font-bold uppercase leading-[1.05] ${compacto ? "mt-3 text-[26pt]" : "mt-6 text-[36pt]"}`}
+          className={`text-center font-bold uppercase leading-[1.05] ${nomeHomenageado.margemTopo}`}
+          style={{ fontSize: nomeHomenageado.fontSize }}
         >
           {mocao.destinatario}
         </p>
