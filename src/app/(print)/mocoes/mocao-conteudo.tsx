@@ -34,6 +34,7 @@ type TamanhoAssinatura = {
   altura: string;
   largura: string;
   coluna: string;
+  colunas: number;
   gap: string;
   nomeSize: string;
   cargoSize: string;
@@ -50,19 +51,20 @@ type TamanhoAssinatura = {
 // ~48,5mm disponíveis; usar os 63mm da Congratulação faz o texto de uma
 // coluna invadir a de baixo (confirmado ao vivo).
 const ASSINATURA_PADRAO: Record<"retrato" | "paisagem", TamanhoAssinatura> = {
-  paisagem: { altura: "16mm", largura: "50mm", coluna: "63mm", gap: "gap-y-8", nomeSize: "10pt", cargoSize: "7pt" },
-  retrato: { altura: "16mm", largura: "50mm", coluna: "46mm", gap: "gap-y-8", nomeSize: "10pt", cargoSize: "7pt" },
+  paisagem: { altura: "16mm", largura: "50mm", coluna: "63mm", colunas: 3, gap: "gap-y-8", nomeSize: "10pt", cargoSize: "7pt" },
+  retrato: { altura: "16mm", largura: "50mm", coluna: "46mm", colunas: 3, gap: "gap-y-8", nomeSize: "10pt", cargoSize: "7pt" },
 };
 
 // Só entra em cena com os 11 vereadores da Casa assinando juntos (4
-// linhas na grade, o máximo possível no sistema) — nesse caso extremo, o
-// tamanho padrão acima (medido no documento real, que só tinha 5
-// signatários) estoura pra uma segunda página. Sem uma referência real
-// pra esse caso específico, reduzido só o necessário pra caber numa
-// página só — testado ao vivo.
+// linhas numa grade de 3 colunas, o máximo possível no sistema) — nesse
+// caso extremo, o tamanho padrão acima (medido no documento real, que só
+// tinha 5 signatários) estoura pra uma segunda página. A solução não é
+// só encolher a assinatura: passando pra 4 colunas, os 11 signatários
+// cabem em só 3 linhas (em vez de 4), sobrando espaço suficiente pra usar
+// uma imagem bem maior do que a versão anterior (6mm) — testado ao vivo.
 const ASSINATURA_COMPACTA: Record<"retrato" | "paisagem", TamanhoAssinatura> = {
-  paisagem: { altura: "6mm", largura: "30mm", coluna: "40mm", gap: "gap-y-0.5", nomeSize: "8pt", cargoSize: "6pt" },
-  retrato: { altura: "8mm", largura: "34mm", coluna: "40mm", gap: "gap-y-1", nomeSize: "8pt", cargoSize: "6pt" },
+  paisagem: { altura: "13mm", largura: "40mm", coluna: "44mm", colunas: 4, gap: "gap-y-2", nomeSize: "9pt", cargoSize: "6.5pt" },
+  retrato: { altura: "14mm", largura: "42mm", coluna: "32mm", colunas: 4, gap: "gap-y-2", nomeSize: "9pt", cargoSize: "6.5pt" },
 };
 
 function tamanhoAssinatura(
@@ -72,6 +74,13 @@ function tamanhoAssinatura(
   const linhas = Math.ceil(totalSignatarios / 3);
   return linhas >= 4 ? ASSINATURA_COMPACTA[orientacao] : ASSINATURA_PADRAO[orientacao];
 }
+
+// A partir desse total de signatários, a Congratulação entra no modo
+// compacto (grade de 4 colunas — ver ASSINATURA_COMPACTA) — usado tanto
+// pra decidir o tamanho da assinatura quanto pra encolher o nome do
+// homenageado e os espaçamentos ao redor, liberando mais espaço vertical
+// nesse caso extremo.
+const LIMIAR_COMPACTO = 10;
 
 // Imagem de assinatura escaneada colada acima do nome — se o vereador
 // ainda não tem assinatura cadastrada (ver /vereadores), fica só a linha
@@ -125,7 +134,7 @@ function GradeAssinaturas({
 }) {
   const tamanho = tamanhoAssinatura(signatarios.length, orientacao);
   return (
-    <div className={`grid grid-cols-3 gap-x-4 ${tamanho.gap}`}>
+    <div className={`grid gap-x-4 ${tamanho.gap}`} style={{ gridTemplateColumns: `repeat(${tamanho.colunas}, 1fr)` }}>
       {signatarios.map((s) => (
         <BlocoAssinatura key={s.id} signatario={s} assinaturaUrl={assinaturasPorId[s.id] ?? null} tamanho={tamanho} />
       ))}
@@ -157,6 +166,13 @@ function CongratulacaoConteudo({
   associadosNomes: string[];
   assinaturasPorId: Record<string, string | null>;
 }) {
+  // A partir de 10 signatários (Presidente incluído automaticamente), o
+  // nome do homenageado encolhe e os espaçamentos apertam — abre espaço
+  // vertical extra pra grade de assinaturas de 4 colunas caber numa
+  // página só (ver ASSINATURA_COMPACTA/LIMIAR_COMPACTO). Com menos
+  // signatários, tudo segue igual ao documento real de referência.
+  const compacto = signatarios.length >= LIMIAR_COMPACTO;
+
   return (
     <PaginaA4 orientacao="paisagem" backgroundImage="/timbrado/mocao-congratulacoes.jpg">
       {/* Margens ajustadas por medição direta no documento real (89,5mm a
@@ -173,11 +189,13 @@ function CongratulacaoConteudo({
           <Segmentos segmentos={aberturaCongratulacaoSegmentos({ autorNome, associadosNomes })} />
         </p>
 
-        <p className="mt-6 text-center text-[36pt] font-bold uppercase leading-[1.05]">
+        <p
+          className={`text-center font-bold uppercase leading-[1.05] ${compacto ? "mt-3 text-[26pt]" : "mt-6 text-[36pt]"}`}
+        >
           {mocao.destinatario}
         </p>
 
-        <div className="mt-6 space-y-2">
+        <div className={`space-y-2 ${compacto ? "mt-3" : "mt-6"}`}>
           {mocao.justificativa
             .split(/\n+/)
             .map((p) => p.trim())
@@ -189,9 +207,9 @@ function CongratulacaoConteudo({
             ))}
         </div>
 
-        <p className="mt-8 text-right">{fechoMocao(mocao.data_mocao)}</p>
+        <p className={`text-right ${compacto ? "mt-4" : "mt-8"}`}>{fechoMocao(mocao.data_mocao)}</p>
 
-        <div className="mt-8">
+        <div className={compacto ? "mt-4" : "mt-8"}>
           <GradeAssinaturas
             signatarios={signatarios}
             assinaturasPorId={assinaturasPorId}
