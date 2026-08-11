@@ -60,6 +60,11 @@ export default async function LoteMocoesPage({
                       url={`/api/mocoes/${m.id}/pdf`}
                       nomeArquivoPadrao={`mocao-${m.id}.pdf`}
                     />
+                    <DownloadPdfButton
+                      url={`/api/mocoes/${m.id}/docx`}
+                      nomeArquivoPadrao={`mocao-${m.id}.docx`}
+                      label="Baixar Word"
+                    />
                     <Link
                       href={`/mocoes/${m.id}/editar`}
                       className="text-xs font-medium text-slate-600 hover:text-brand-navy"

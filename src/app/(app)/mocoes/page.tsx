@@ -161,6 +161,12 @@ export default async function MocoesPage({
                       url={`/api/mocoes/${m.id}/pdf`}
                       nomeArquivoPadrao={`mocao-${m.id}.pdf`}
                     />
+                    <DownloadPdfButton
+                      variant="menu"
+                      url={`/api/mocoes/${m.id}/docx`}
+                      nomeArquivoPadrao={`mocao-${m.id}.docx`}
+                      label="Baixar Word"
+                    />
                     {podeGerenciar && (
                       <>
                         <Link
