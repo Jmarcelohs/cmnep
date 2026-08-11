@@ -30,30 +30,48 @@ function Segmentos({ segmentos }: { segmentos: SegmentoMocao[] }) {
   );
 }
 
+type TamanhoAssinatura = {
+  altura: string;
+  largura: string;
+  coluna: string;
+  gap: string;
+  nomeSize: string;
+  cargoSize: string;
+};
+
 // Tamanho de assinatura padronizado por comparação direta com um
 // documento real já emitido pela Câmara (Congratulação — Camila Rezende
 // Batista Moreira, medido em ~17-18mm de altura de imagem) — usado fixo
-// pros dois tipos, sem reduzir conforme o número de signatários. Em
-// moções com muitos signatários (ex.: os 11 vereadores da Casa
-// assinando juntos) isso pode fazer a assinatura invadir o nome/cargo
-// abaixo dela, exatamente como acontece no próprio documento real usado
-// de referência — aceito conscientemente pra manter a moção padronizada
-// com o modelo original.
-const ASSINATURA_ALTURA = "16mm";
-const ASSINATURA_LARGURA = "50mm";
-
-// Largura da coluna de assinatura, por orientação — não dá pra usar a
-// mesma largura nos dois tipos porque a Pesar é retrato (210mm) e a
-// Congratulação é paisagem (297mm). Com 3 colunas + os 28mm de margem de
-// cada lado da Pesar, cada coluna real tem só ~48,5mm de largura
-// disponível; usar os 64mm da Congratulação ali faz o texto de uma
-// coluna invadir a de baixo (confirmado ao vivo). 63mm cabe justo nos
-// ~63,85mm disponíveis na Congratulação; 46mm fica dentro dos ~48,5mm da
-// Pesar com uma pequena folga.
-const LARGURA_COLUNA: Record<"retrato" | "paisagem", string> = {
-  paisagem: "63mm",
-  retrato: "46mm",
+// independente do número de signatários, pra manter a moção idêntica ao
+// modelo original. A largura da coluna de texto difere por orientação:
+// não dá pra usar a mesma largura nos dois tipos porque a Pesar é
+// retrato (210mm) e a Congratulação é paisagem (297mm) — com 3 colunas +
+// os 28mm de margem de cada lado da Pesar, cada coluna ali tem só
+// ~48,5mm disponíveis; usar os 63mm da Congratulação faz o texto de uma
+// coluna invadir a de baixo (confirmado ao vivo).
+const ASSINATURA_PADRAO: Record<"retrato" | "paisagem", TamanhoAssinatura> = {
+  paisagem: { altura: "16mm", largura: "50mm", coluna: "63mm", gap: "gap-y-8", nomeSize: "10pt", cargoSize: "7pt" },
+  retrato: { altura: "16mm", largura: "50mm", coluna: "46mm", gap: "gap-y-8", nomeSize: "10pt", cargoSize: "7pt" },
 };
+
+// Só entra em cena com os 11 vereadores da Casa assinando juntos (4
+// linhas na grade, o máximo possível no sistema) — nesse caso extremo, o
+// tamanho padrão acima (medido no documento real, que só tinha 5
+// signatários) estoura pra uma segunda página. Sem uma referência real
+// pra esse caso específico, reduzido só o necessário pra caber numa
+// página só — testado ao vivo.
+const ASSINATURA_COMPACTA: Record<"retrato" | "paisagem", TamanhoAssinatura> = {
+  paisagem: { altura: "6mm", largura: "30mm", coluna: "40mm", gap: "gap-y-0.5", nomeSize: "8pt", cargoSize: "6pt" },
+  retrato: { altura: "8mm", largura: "34mm", coluna: "40mm", gap: "gap-y-1", nomeSize: "8pt", cargoSize: "6pt" },
+};
+
+function tamanhoAssinatura(
+  totalSignatarios: number,
+  orientacao: "retrato" | "paisagem",
+): TamanhoAssinatura {
+  const linhas = Math.ceil(totalSignatarios / 3);
+  return linhas >= 4 ? ASSINATURA_COMPACTA[orientacao] : ASSINATURA_PADRAO[orientacao];
+}
 
 // Imagem de assinatura escaneada colada acima do nome — se o vereador
 // ainda não tem assinatura cadastrada (ver /vereadores), fica só a linha
@@ -64,28 +82,33 @@ const LARGURA_COLUNA: Record<"retrato" | "paisagem", string> = {
 function BlocoAssinatura({
   signatario,
   assinaturaUrl,
-  larguraColuna,
+  tamanho,
 }: {
   signatario: VereadorSignatario;
   assinaturaUrl: string | null;
-  larguraColuna: string;
+  tamanho: TamanhoAssinatura;
 }) {
   return (
     <div className="flex flex-col items-center text-center">
-      <div className="flex items-end justify-center" style={{ height: ASSINATURA_ALTURA }}>
+      <div className="flex items-end justify-center" style={{ height: tamanho.altura }}>
         {assinaturaUrl && (
           // eslint-disable-next-line @next/next/no-img-element -- imagem vem de uma URL assinada do Storage, resolvida no servidor pra essa renderização do PDF
           <img
             src={assinaturaUrl}
             alt=""
             className="object-contain"
-            style={{ maxHeight: ASSINATURA_ALTURA, maxWidth: ASSINATURA_LARGURA }}
+            style={{ maxHeight: tamanho.altura, maxWidth: tamanho.largura }}
           />
         )}
       </div>
-      <div className="border-t border-black pt-0.5" style={{ width: larguraColuna, fontFamily: "Arial, Helvetica, sans-serif" }}>
-        <p className="text-[10pt]">{signatario.nome}</p>
-        <p className="text-[7pt] leading-tight">{legendaAssinatura(signatario)}</p>
+      <div
+        className="border-t border-black pt-0.5"
+        style={{ width: tamanho.coluna, fontFamily: "Arial, Helvetica, sans-serif" }}
+      >
+        <p style={{ fontSize: tamanho.nomeSize }}>{signatario.nome}</p>
+        <p className="leading-tight" style={{ fontSize: tamanho.cargoSize }}>
+          {legendaAssinatura(signatario)}
+        </p>
       </div>
     </div>
   );
@@ -100,15 +123,11 @@ function GradeAssinaturas({
   assinaturasPorId: Record<string, string | null>;
   orientacao: "retrato" | "paisagem";
 }) {
+  const tamanho = tamanhoAssinatura(signatarios.length, orientacao);
   return (
-    <div className="grid grid-cols-3 gap-x-4 gap-y-8">
+    <div className={`grid grid-cols-3 gap-x-4 ${tamanho.gap}`}>
       {signatarios.map((s) => (
-        <BlocoAssinatura
-          key={s.id}
-          signatario={s}
-          assinaturaUrl={assinaturasPorId[s.id] ?? null}
-          larguraColuna={LARGURA_COLUNA[orientacao]}
-        />
+        <BlocoAssinatura key={s.id} signatario={s} assinaturaUrl={assinaturasPorId[s.id] ?? null} tamanho={tamanho} />
       ))}
     </div>
   );
