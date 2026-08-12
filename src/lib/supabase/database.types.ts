@@ -901,6 +901,100 @@ export interface Database {
           },
         ];
       };
+      dotacoes_orcamentarias: {
+        Row: {
+          id: string;
+          ficha: number;
+          orgao_codigo: string;
+          orgao_nome: string;
+          unidade_codigo: string;
+          unidade_nome: string;
+          subfuncao_codigo: string;
+          subfuncao_nome: string;
+          programa_codigo: string;
+          programa_nome: string;
+          projeto_atividade_codigo: string;
+          projeto_atividade_nome: string;
+          elemento_codigo: string;
+          elemento_nome: string;
+          fonte_codigo: string;
+          fonte_nome: string;
+          saldo_referencia: number | null;
+          saldo_referencia_em: string | null;
+          ativo: boolean;
+          criado_em: string;
+        };
+        Insert: Partial<Omit<Database["public"]["Tables"]["dotacoes_orcamentarias"]["Row"], "id">> & {
+          ficha: number;
+          orgao_codigo: string;
+          orgao_nome: string;
+          unidade_codigo: string;
+          unidade_nome: string;
+          subfuncao_codigo: string;
+          subfuncao_nome: string;
+          programa_codigo: string;
+          programa_nome: string;
+          projeto_atividade_codigo: string;
+          projeto_atividade_nome: string;
+          elemento_codigo: string;
+          elemento_nome: string;
+          fonte_codigo: string;
+          fonte_nome: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["dotacoes_orcamentarias"]["Row"]>;
+        Relationships: [];
+      };
+      suplementacoes_orcamentarias: {
+        Row: {
+          id: string;
+          data_ato: string;
+          numero_decreto: string | null;
+          data_decreto: string | null;
+          criado_por: string | null;
+          criado_em: string;
+        };
+        Insert: Partial<
+          Omit<Database["public"]["Tables"]["suplementacoes_orcamentarias"]["Row"], "id">
+        > & {
+          data_ato: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["suplementacoes_orcamentarias"]["Row"]>;
+        Relationships: [];
+      };
+      suplementacoes_itens: {
+        Row: {
+          id: string;
+          suplementacao_id: string;
+          ficha_id: string;
+          tipo: "destino" | "origem";
+          valor: number;
+          ordem: number;
+          criado_em: string;
+        };
+        Insert: Partial<Omit<Database["public"]["Tables"]["suplementacoes_itens"]["Row"], "id">> & {
+          suplementacao_id: string;
+          ficha_id: string;
+          tipo: "destino" | "origem";
+          valor: number;
+        };
+        Update: Partial<Database["public"]["Tables"]["suplementacoes_itens"]["Row"]>;
+        Relationships: [
+          {
+            foreignKeyName: "suplementacoes_itens_suplementacao_id_fkey";
+            columns: ["suplementacao_id"];
+            isOneToOne: false;
+            referencedRelation: "suplementacoes_orcamentarias";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "suplementacoes_itens_ficha_id_fkey";
+            columns: ["ficha_id"];
+            isOneToOne: false;
+            referencedRelation: "dotacoes_orcamentarias";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       legislacao_documentos: {
         Row: {
           id: string;

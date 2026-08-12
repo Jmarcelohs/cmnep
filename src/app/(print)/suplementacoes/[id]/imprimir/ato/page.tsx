@@ -1,0 +1,32 @@
+import { notFound } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { buscarSuplementacaoCompleta } from "@/lib/suplementacoes/dados";
+import { PrintButton } from "../../../../print-button";
+import { AtoMesaDiretoraConteudo } from "../../../ato-mesa-diretora-conteudo";
+
+export default async function ImprimirAtoPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const supabase = await createClient();
+
+  const dados = await buscarSuplementacaoCompleta(supabase, id);
+  if (!dados) notFound();
+  const { suplementacao, itensDestino, itensOrigem } = dados;
+
+  return (
+    <>
+      <PrintButton
+        url={`/api/suplementacoes/${id}/ato/pdf`}
+        nomeArquivoPadrao={`ato-mesa-diretora-${id}.pdf`}
+      />
+      <AtoMesaDiretoraConteudo
+        dataAto={suplementacao.data_ato}
+        itensDestino={itensDestino}
+        itensOrigem={itensOrigem}
+      />
+    </>
+  );
+}
