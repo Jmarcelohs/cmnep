@@ -29,7 +29,12 @@ export default async function EditarSuplementacaoPage({
   if (!dados) notFound();
   const { suplementacao, itensDestino, itensOrigem } = dados;
 
-  const fichas = (dotacoes ?? []).map((d) => ({ id: d.id, ficha: d.ficha, rotulo: rotuloFicha(d) }));
+  const fichas = (dotacoes ?? []).map((d) => ({
+    id: d.id,
+    ficha: d.ficha,
+    rotulo: rotuloFicha(d),
+    dotacao: d,
+  }));
 
   return (
     <div>
@@ -74,6 +79,8 @@ export default async function EditarSuplementacaoPage({
           data_ato: suplementacao.data_ato,
           numero_decreto: suplementacao.numero_decreto ?? "",
           data_decreto: suplementacao.data_decreto ?? suplementacao.data_ato,
+          corpo_ato_html: suplementacao.corpo_ato_html ?? "",
+          corpo_decreto_html: suplementacao.corpo_decreto_html ?? "",
           itensDestino: itensDestino.map((i) => ({ fichaId: i.dotacao.id, valor: String(i.valor) })),
           itensOrigem: itensOrigem.map((i) => ({ fichaId: i.dotacao.id, valor: String(i.valor) })),
         }}

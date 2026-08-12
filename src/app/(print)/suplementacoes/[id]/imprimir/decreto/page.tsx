@@ -25,6 +25,7 @@ export default async function ImprimirDecretoPage({
       <DecretoSuplementacaoConteudo
         numeroDecreto={suplementacao.numero_decreto || "___"}
         dataDecreto={suplementacao.data_decreto || suplementacao.data_ato}
+        corpoHtml={suplementacao.corpo_decreto_html}
         itensDestino={itensDestino}
         itensOrigem={itensOrigem}
       />

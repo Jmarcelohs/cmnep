@@ -950,6 +950,8 @@ export interface Database {
           data_ato: string;
           numero_decreto: string | null;
           data_decreto: string | null;
+          corpo_ato_html: string | null;
+          corpo_decreto_html: string | null;
           criado_por: string | null;
           criado_em: string;
         };

@@ -2,11 +2,19 @@
 
 import { useMemo, useState } from "react";
 import { formatarMoeda } from "@/lib/pdf/formato";
+import { RichTextEditor } from "@/components/rich-text-editor";
+import {
+  montarCorpoAtoPadrao,
+  montarCorpoDecretoPadrao,
+  type DotacaoOrcamentaria,
+  type ItemSuplementacao,
+} from "@/lib/suplementacoes/documento";
 
 export type FichaOpcao = {
   id: string;
   ficha: number;
   rotulo: string;
+  dotacao: DotacaoOrcamentaria;
 };
 
 type Linha = { fichaId: string; valor: string };
@@ -15,12 +23,30 @@ export type ValoresIniciaisSuplementacao = {
   data_ato: string;
   numero_decreto: string;
   data_decreto: string;
+  corpo_ato_html: string;
+  corpo_decreto_html: string;
   itensDestino: Linha[];
   itensOrigem: Linha[];
 };
 
 function totalLinhas(linhas: Linha[]): number {
   return linhas.reduce((soma, l) => soma + (Number(l.valor) || 0), 0);
+}
+
+// Resolve as linhas do formulário (só fichaId + valor em texto) pras fichas
+// completas (com a classificação orçamentária inteira) — o que
+// montarCorpoAtoPadrao/montarCorpoDecretoPadrao precisam pra montar o texto
+// padrão. Ignora linhas ainda incompletas (ficha não escolhida ou valor
+// zerado/inválido) em vez de travar a prévia enquanto o usuário preenche.
+function resolverItens(linhas: Linha[], fichas: FichaOpcao[]): ItemSuplementacao[] {
+  return linhas
+    .map((l): ItemSuplementacao | null => {
+      const opcao = fichas.find((f) => f.id === l.fichaId);
+      const valor = Number(l.valor);
+      if (!opcao || !(valor > 0)) return null;
+      return { valor, dotacao: opcao.dotacao };
+    })
+    .filter((item): item is ItemSuplementacao => item !== null);
 }
 
 function ListaLinhas({
@@ -121,6 +147,56 @@ export function SuplementacaoForm({
   const totalOrigem = useMemo(() => totalLinhas(itensOrigem), [itensOrigem]);
   const totaisBatem = totalDestino > 0 && Math.abs(totalDestino - totalOrigem) < 0.01;
 
+  const itensDestinoResolvidos = useMemo(
+    () => resolverItens(itensDestino, fichas),
+    [itensDestino, fichas],
+  );
+  const itensOrigemResolvidos = useMemo(
+    () => resolverItens(itensOrigem, fichas),
+    [itensOrigem, fichas],
+  );
+
+  // Texto do Ato/Decreto (título, ementa, preâmbulo, Art.1º/2º/3º) — vem
+  // pré-preenchido com o texto padrão remontado a partir das fichas
+  // escolhidas, mas fica livre pra editar/formatar antes de salvar. Só
+  // resincroniza automaticamente com o padrão enquanto o campo não foi
+  // tocado à mão — depois disso, só via "Restaurar texto padrão" (mesmo
+  // padrão da saudação sugerida em oficio-de-form.tsx), senão qualquer
+  // ajuste de ficha apagaria uma edição manual em andamento.
+  const corpoAtoPadrao = useMemo(
+    () =>
+      montarCorpoAtoPadrao({
+        dataAto,
+        itensDestino: itensDestinoResolvidos,
+        itensOrigem: itensOrigemResolvidos,
+      }),
+    [dataAto, itensDestinoResolvidos, itensOrigemResolvidos],
+  );
+  const corpoDecretoPadrao = useMemo(
+    () =>
+      montarCorpoDecretoPadrao({
+        numeroDecreto,
+        dataDecreto,
+        itensDestino: itensDestinoResolvidos,
+        itensOrigem: itensOrigemResolvidos,
+      }),
+    [numeroDecreto, dataDecreto, itensDestinoResolvidos, itensOrigemResolvidos],
+  );
+
+  // Igual ao padrão da saudação sugerida em oficio-de-form.tsx: enquanto o
+  // campo não foi tocado à mão, o valor exibido é sempre o padrão recém
+  // calculado (acompanha ficha/data mudando) — sem precisar de um efeito
+  // pra "sincronizar" estado, só computa direto no render.
+  const [corpoAto, setCorpoAto] = useState(valoresIniciais?.corpo_ato_html ?? "");
+  const [corpoAtoTocado, setCorpoAtoTocado] = useState(Boolean(valoresIniciais?.corpo_ato_html));
+  const [corpoDecreto, setCorpoDecreto] = useState(valoresIniciais?.corpo_decreto_html ?? "");
+  const [corpoDecretoTocado, setCorpoDecretoTocado] = useState(
+    Boolean(valoresIniciais?.corpo_decreto_html),
+  );
+
+  const corpoAtoExibido = corpoAtoTocado ? corpoAto : corpoAtoPadrao;
+  const corpoDecretoExibido = corpoDecretoTocado ? corpoDecreto : corpoDecretoPadrao;
+
   return (
     <form action={action} className="mt-6 space-y-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -210,6 +286,60 @@ export function SuplementacaoForm({
           ? `Os totais batem — ${formatarMoeda(totalDestino)}.`
           : "Os totais de destino e origem precisam ser iguais antes de salvar."}
       </p>
+
+      <div>
+        <div className="flex items-center justify-between">
+          <label className="block text-sm font-medium text-slate-700">Texto do Ato</label>
+          <button
+            type="button"
+            onClick={() => setCorpoAtoTocado(false)}
+            className="text-xs font-medium text-brand-navy hover:underline"
+          >
+            Restaurar texto padrão
+          </button>
+        </div>
+        <p className="mt-1 text-xs text-slate-500">
+          Pré-preenchido a partir das fichas escolhidas acima — formate ou reescreva à vontade antes
+          de gerar o PDF. Ajustar as fichas depois não atualiza esse texto sozinho.
+        </p>
+        <div className="mt-1">
+          <RichTextEditor
+            name="corpo_ato_html"
+            value={corpoAtoExibido}
+            onChange={(html) => {
+              setCorpoAtoTocado(true);
+              setCorpoAto(html);
+            }}
+          />
+        </div>
+      </div>
+
+      <div>
+        <div className="flex items-center justify-between">
+          <label className="block text-sm font-medium text-slate-700">Texto do Decreto</label>
+          <button
+            type="button"
+            onClick={() => setCorpoDecretoTocado(false)}
+            className="text-xs font-medium text-brand-navy hover:underline"
+          >
+            Restaurar texto padrão
+          </button>
+        </div>
+        <p className="mt-1 text-xs text-slate-500">
+          Mesma ideia do texto do Ato, com a redação do Decreto — se o número ainda não foi
+          preenchido, sai como &quot;___&quot; até você restaurar o padrão de novo depois.
+        </p>
+        <div className="mt-1">
+          <RichTextEditor
+            name="corpo_decreto_html"
+            value={corpoDecretoExibido}
+            onChange={(html) => {
+              setCorpoDecretoTocado(true);
+              setCorpoDecreto(html);
+            }}
+          />
+        </div>
+      </div>
 
       <button
         type="submit"

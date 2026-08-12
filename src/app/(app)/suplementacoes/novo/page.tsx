@@ -21,7 +21,12 @@ export default async function NovaSuplementacaoPage({
     .eq("ativo", true)
     .order("ficha");
 
-  const fichas = (dotacoes ?? []).map((d) => ({ id: d.id, ficha: d.ficha, rotulo: rotuloFicha(d) }));
+  const fichas = (dotacoes ?? []).map((d) => ({
+    id: d.id,
+    ficha: d.ficha,
+    rotulo: rotuloFicha(d),
+    dotacao: d,
+  }));
 
   return (
     <div>

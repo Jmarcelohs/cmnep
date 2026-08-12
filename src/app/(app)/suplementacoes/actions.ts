@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
+import { sanitizarHtmlDocumento } from "@/lib/sanitizar-html";
 
 // Movimento orçamentário/contábil — fora de Secretaria e Decretos,
 // restrito a admin (hoje só o próprio usuário admin cadastrado, ver
@@ -37,8 +38,24 @@ function lerCampos(formData: FormData) {
   const data_decreto = String(formData.get("data_decreto") ?? "").trim() || null;
   const itensDestino = lerLinhas(formData, "itens_destino");
   const itensOrigem = lerLinhas(formData, "itens_origem");
+  // Sanitiza de novo aqui (o editor já sanitiza no cliente, mas nunca
+  // confia no que chega de fora — mesma convenção dos Ofícios). Vazio vira
+  // null: gerarPdfDeRota então remonta o texto padrão a partir das fichas
+  // (ver montarCorpoAtoPadrao/montarCorpoDecretoPadrao).
+  const corpo_ato_html =
+    sanitizarHtmlDocumento(String(formData.get("corpo_ato_html") ?? "")).trim() || null;
+  const corpo_decreto_html =
+    sanitizarHtmlDocumento(String(formData.get("corpo_decreto_html") ?? "")).trim() || null;
 
-  return { data_ato, numero_decreto, data_decreto, itensDestino, itensOrigem };
+  return {
+    data_ato,
+    numero_decreto,
+    data_decreto,
+    corpo_ato_html,
+    corpo_decreto_html,
+    itensDestino,
+    itensOrigem,
+  };
 }
 
 // O <input type="date"> nativo aceita perder foco com o ano incompleto
@@ -105,6 +122,8 @@ export async function criarSuplementacao(formData: FormData) {
       data_ato: campos.data_ato,
       numero_decreto: campos.numero_decreto,
       data_decreto: campos.data_decreto,
+      corpo_ato_html: campos.corpo_ato_html,
+      corpo_decreto_html: campos.corpo_decreto_html,
       criado_por: usuario!.id,
     })
     .select("id")
@@ -144,6 +163,8 @@ export async function editarSuplementacao(id: string, formData: FormData) {
       data_ato: campos.data_ato,
       numero_decreto: campos.numero_decreto,
       data_decreto: campos.data_decreto,
+      corpo_ato_html: campos.corpo_ato_html,
+      corpo_decreto_html: campos.corpo_decreto_html,
     })
     .eq("id", id);
 

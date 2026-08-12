@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
-import type { ItemSuplementacao } from "@/app/(print)/suplementacoes/artigos-suplementacao";
+import type { ItemSuplementacao } from "@/lib/suplementacoes/documento";
 
 // Busca a suplementação + seus itens já com a ficha (dotação) resolvida —
 // reaproveitado tanto pelas páginas de impressão (Ato/Decreto) quanto pela

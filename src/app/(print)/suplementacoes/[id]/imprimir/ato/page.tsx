@@ -24,6 +24,7 @@ export default async function ImprimirAtoPage({
       />
       <AtoMesaDiretoraConteudo
         dataAto={suplementacao.data_ato}
+        corpoHtml={suplementacao.corpo_ato_html}
         itensDestino={itensDestino}
         itensOrigem={itensOrigem}
       />

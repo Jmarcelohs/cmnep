@@ -1,4 +1,4 @@
-import { formatarMoeda, valorPorExtenso } from "@/lib/pdf/formato";
+import { dataPorExtenso, formatarMoeda, valorPorExtenso } from "@/lib/pdf/formato";
 import type { Database } from "@/lib/supabase/database.types";
 
 export const NOME_CAMARA = "Câmara Municipal de Nepomuceno";
@@ -83,4 +83,116 @@ export function rotuloFicha(dotacao: DotacaoOrcamentaria): string {
 export function valorPorExtensoMinusculo(valor: number): string {
   const texto = valorPorExtenso(valor);
   return texto.charAt(0).toLowerCase() + texto.slice(1);
+}
+
+export type ItemSuplementacao = {
+  valor: number;
+  dotacao: DotacaoOrcamentaria;
+};
+
+// Um bloco "I / Ficha N / <7 linhas da classificação> / Total: R$X" — junta
+// tudo num <p> só com <br> entre as linhas (não um <p> por linha) pra não
+// abrir espaço extra de parágrafo entre elas. É a mesma informação do
+// modelo real, só sem o efeito visual de pontilhado antes do valor (não dá
+// pra reproduzir isso com as tags/estilos que o editor de texto rico e o
+// sanitizador permitem — ver TAGS_PERMITIDAS em sanitizar-html.ts) — vira
+// texto puro "Total: R$X" pra caber no conjunto de tags aceitas, já que
+// esse texto agora pode ser editado livremente (não é mais gerado à parte).
+function linhaItemHtml(item: ItemSuplementacao, indice: number): string {
+  const linhas = segmentosFicha(item.dotacao);
+  const ultima = linhas[linhas.length - 1];
+  const partes = [
+    numeroRomano(indice + 1),
+    `Ficha ${item.dotacao.ficha}`,
+    ...linhas.map((l) => `${l.codigo} ${l.nome}`),
+    `${ultima.codigo} ${ultima.nome} ${formatarMoeda(item.valor)}`,
+    `Total: ${formatarMoeda(item.valor)}`,
+  ];
+  return `<p>${partes.join("<br>")}</p>`;
+}
+
+function corpoArtigoHtml(itens: ItemSuplementacao[], introHtml: string): string {
+  const totalGeral = itens.reduce((soma, i) => soma + i.valor, 0);
+  const itensHtml = itens.map((item, i) => linhaItemHtml(item, i)).join("");
+  const totalGeralHtml =
+    itens.length > 1 ? `<p><strong>Total Geral: ${formatarMoeda(totalGeral)}</strong></p>` : "";
+  return introHtml + itensHtml + totalGeralHtml;
+}
+
+// HTML padrão (título + ementa + preâmbulo + Art.1º/2º/3º) pro corpo do
+// Ato — pré-preenche o editor de texto rico na hora de criar/editar uma
+// suplementação e serve de "restaurar padrão" e de fallback pra registros
+// salvos antes da suplementação ganhar texto editável (ver migration
+// 0048). Compatível só com as tags que o sanitizador aceita (ver
+// sanitizar-html.ts) — sem isso, o texto salvo perderia a formatação ao
+// passar pelo sanitizador antes de virar PDF.
+export function montarCorpoAtoPadrao({
+  dataAto,
+  itensDestino,
+  itensOrigem,
+}: {
+  dataAto: string;
+  itensDestino: ItemSuplementacao[];
+  itensOrigem: ItemSuplementacao[];
+}): string {
+  const valorTotal = itensDestino.reduce((soma, i) => soma + i.valor, 0);
+  const dataFormatada = dataAto ? dataPorExtenso(dataAto).toUpperCase() : "___";
+
+  const titulo = `<p style="text-align:center"><strong>ATO DA MESA DIRETORA DE ${dataFormatada}</strong></p>`;
+  const subtitulo =
+    '<p style="text-align:right"><strong>Abre crédito suplementar no Orçamento vigente da Câmara Municipal.</strong></p>';
+  const preambulo =
+    '<p style="text-align:justify">A Mesa Diretora da Câmara Municipal de Nepomuceno, conforme lhe faculta o art. 67, inciso VI da Lei Orgânica Municipal, por determinação do art. 42 da Lei Federal 4.320/64, RESOLVE:</p>';
+
+  const art1Intro = `<p style="text-indent:1.25cm;text-align:justify"><strong>Art.1º</strong> Abrir crédito adicional do tipo suplementar no orçamento vigente da Câmara Municipal de Nepomuceno no valor total de ${formatarMoeda(valorTotal)} (${valorPorExtensoMinusculo(valorTotal)}) sob as seguintes classificações orçamentárias:</p>`;
+  const art2Intro = `<p style="text-indent:1.25cm;text-align:justify"><strong>Art.2º</strong> A origem dos recursos dos créditos suplementares autorizados no art. 1º que totaliza ${formatarMoeda(valorTotal)} (${valorPorExtensoMinusculo(valorTotal)}) será a anulação parcial das seguintes dotações do Orçamento da Câmara Municipal de Nepomuceno:</p>`;
+  const art3 =
+    '<p style="text-indent:1.25cm;text-align:justify"><strong>Art.3º</strong> Este ato entra em vigor na data da sua publicação, revogando as disposições em contrário.</p>';
+
+  return (
+    titulo +
+    subtitulo +
+    preambulo +
+    corpoArtigoHtml(itensDestino, art1Intro) +
+    corpoArtigoHtml(itensOrigem, art2Intro) +
+    art3
+  );
+}
+
+// Mesma lógica do Ato, com a redação do Decreto (Prefeito/"DECRETA",
+// sem ponto final na ementa — reproduz o modelo real).
+export function montarCorpoDecretoPadrao({
+  numeroDecreto,
+  dataDecreto,
+  itensDestino,
+  itensOrigem,
+}: {
+  numeroDecreto: string;
+  dataDecreto: string;
+  itensDestino: ItemSuplementacao[];
+  itensOrigem: ItemSuplementacao[];
+}): string {
+  const valorTotal = itensDestino.reduce((soma, i) => soma + i.valor, 0);
+  const dataFormatada = dataDecreto ? dataPorExtenso(dataDecreto).toUpperCase() : "___";
+  const numero = numeroDecreto.trim() || "___";
+
+  const titulo = `<p style="text-align:center"><strong>DECRETO Nº ${numero} DE ${dataFormatada}</strong></p>`;
+  const subtitulo =
+    '<p style="text-align:right"><strong>Abre crédito adicional suplementar no Orçamento vigente da Câmara Municipal</strong></p>';
+  const preambulo =
+    '<p style="text-align:justify">O Prefeito Municipal de Nepomuceno, no uso de suas atribuições legais e ratificando ato da mesa diretora da Câmara Municipal, DECRETA:</p>';
+
+  const art1Intro = `<p style="text-indent:1.25cm;text-align:justify"><strong>Art.1º</strong> Abrir crédito adicional do tipo suplementar no orçamento vigente da Câmara Municipal de Nepomuceno no valor total de ${formatarMoeda(valorTotal)} (${valorPorExtensoMinusculo(valorTotal)}) sob as seguintes classificações orçamentárias:</p>`;
+  const art2Intro = `<p style="text-indent:1.25cm;text-align:justify"><strong>Art.2º</strong> A origem dos recursos dos créditos suplementares autorizados no art. 1º que totaliza ${formatarMoeda(valorTotal)} (${valorPorExtensoMinusculo(valorTotal)}) será a anulação parcial das seguintes dotações do Orçamento da Câmara Municipal de Nepomuceno:</p>`;
+  const art3 =
+    '<p style="text-indent:1.25cm;text-align:justify"><strong>Art.3º</strong> Este decreto entra em vigor na data da sua publicação, revogando as disposições em contrário.</p>';
+
+  return (
+    titulo +
+    subtitulo +
+    preambulo +
+    corpoArtigoHtml(itensDestino, art1Intro) +
+    corpoArtigoHtml(itensOrigem, art2Intro) +
+    art3
+  );
 }

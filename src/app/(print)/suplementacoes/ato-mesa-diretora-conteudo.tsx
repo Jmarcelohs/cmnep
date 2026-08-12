@@ -1,13 +1,14 @@
 import { PaginaA4 } from "../celula";
 import { dataPorExtenso } from "@/lib/pdf/formato";
-import { CIDADE, MESA_DIRETORA } from "@/lib/suplementacoes/documento";
+import { sanitizarHtmlDocumento } from "@/lib/sanitizar-html";
+import { CIDADE, MESA_DIRETORA, montarCorpoAtoPadrao, type ItemSuplementacao } from "@/lib/suplementacoes/documento";
 import {
-  ALTURA_TITULO_MM,
   ALTURA_FECHAMENTO_MM,
   ALTURA_ASSINATURA_MESA_MM,
+  blocosDeHtml,
   paginarBlocosSuplementacao,
+  type BlocoConteudo,
 } from "@/lib/suplementacoes/paginacao";
-import { montarBlocosArtigos, type ItemSuplementacao } from "./artigos-suplementacao";
 
 const TIMBRADO = "/timbrado/oficio-diretor-executivo.png";
 // Margens medidas por comparação direta com um Ato real (12/05/2026):
@@ -18,50 +19,39 @@ const MARGEM = "ml-[30mm] mr-[30mm] mt-[48mm] mb-[24mm]";
 
 export function AtoMesaDiretoraConteudo({
   dataAto,
+  corpoHtml,
   itensDestino,
   itensOrigem,
 }: {
   dataAto: string;
+  // Título/ementa/preâmbulo/Art.1º-2º-3º — texto rico editável (ver
+  // rich-text-editor.tsx). null nos registros salvos antes da migration
+  // 0048: remonta o texto padrão a partir das fichas, igual sempre foi.
+  corpoHtml: string | null;
   itensDestino: ItemSuplementacao[];
   itensOrigem: ItemSuplementacao[];
 }) {
-  const tituloBloco = {
-    altura: ALTURA_TITULO_MM,
-    node: (
-      <div key="titulo">
-        <p className="text-center font-bold">
-          ATO DA MESA DIRETORA DE {dataPorExtenso(dataAto).toUpperCase()}
-        </p>
-        <p className="mt-4 text-right font-bold">
-          Abre crédito suplementar no Orçamento vigente da Câmara Municipal.
-        </p>
-        <p className="mt-4 text-justify">
-          A Mesa Diretora da Câmara Municipal de Nepomuceno, conforme lhe faculta o art. 67, inciso VI
-          da Lei Orgânica Municipal, por determinação do art. 42 da Lei Federal 4.320/64, RESOLVE:
-        </p>
-      </div>
-    ),
-  };
+  // Sanitiza de novo aqui (já sanitizado ao salvar) — roda dentro da
+  // própria página que o Puppeteer abre pra gerar o PDF, vale a camada
+  // extra de segurança direto no ponto de renderização (mesma convenção do
+  // Ofício do Diretor Executivo — ver oficio-de-conteudo.tsx).
+  const html = sanitizarHtmlDocumento(
+    corpoHtml?.trim() || montarCorpoAtoPadrao({ dataAto, itensDestino, itensOrigem }),
+  );
 
-  // Art.3º e a data de fechamento entram juntos, num bloco só — nunca faz
-  // sentido um sem o outro na mesma página (ver ALTURA_FECHAMENTO_MM).
-  const fechamentoBloco = {
+  const fechamentoBloco: BlocoConteudo = {
     altura: ALTURA_FECHAMENTO_MM,
+    kind: "node",
     node: (
-      <div key="fechamento">
-        <p className="mt-4 indent-[1.25cm] text-justify">
-          <strong>Art.3º</strong> Este ato entra em vigor na data da sua publicação, revogando as
-          disposições em contrário.
-        </p>
-        <p className="mt-4 text-right">
-          {CIDADE}, {dataPorExtenso(dataAto)}.
-        </p>
-      </div>
+      <p key="fechamento" className="text-right">
+        {CIDADE}, {dataPorExtenso(dataAto)}.
+      </p>
     ),
   };
 
-  const assinaturaBloco = {
+  const assinaturaBloco: BlocoConteudo = {
     altura: ALTURA_ASSINATURA_MESA_MM,
+    kind: "node",
     node: (
       <div key="assinatura" className="mt-[16mm] flex flex-col items-center gap-[10mm]">
         <div className="text-center leading-none">
@@ -85,9 +75,8 @@ export function AtoMesaDiretoraConteudo({
     ),
   };
 
-  const paginas = paginarBlocosSuplementacao([
-    tituloBloco,
-    ...montarBlocosArtigos({ itensDestino, itensOrigem }),
+  const paginas = paginarBlocosSuplementacao<BlocoConteudo>([
+    ...blocosDeHtml(html),
     fechamentoBloco,
     assinaturaBloco,
   ]);
@@ -96,8 +85,16 @@ export function AtoMesaDiretoraConteudo({
     <>
       {paginas.map((pagina, indice) => (
         <PaginaA4 key={indice} backgroundImage={TIMBRADO} quebrarPagina={indice < paginas.length - 1}>
-          <div className={`${MARGEM} flex flex-1 flex-col text-[12pt] leading-snug`}>
-            {pagina.map((bloco) => bloco.node)}
+          <div
+            className={`${MARGEM} flex flex-1 flex-col gap-2 text-[12pt] leading-snug [&_ol]:list-decimal [&_ol]:pl-5 [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:border-black [&_td]:px-2 [&_td]:py-1 [&_th]:border [&_th]:border-black [&_th]:px-2 [&_th]:py-1 [&_th]:font-bold [&_ul]:list-disc [&_ul]:pl-5`}
+          >
+            {pagina.map((bloco, i) =>
+              bloco.kind === "node" ? (
+                bloco.node
+              ) : (
+                <div key={i} dangerouslySetInnerHTML={{ __html: bloco.html }} />
+              ),
+            )}
           </div>
         </PaginaA4>
       ))}

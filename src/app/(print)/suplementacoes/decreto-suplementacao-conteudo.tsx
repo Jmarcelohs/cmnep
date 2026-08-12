@@ -1,13 +1,20 @@
 import { PaginaA4 } from "../celula";
 import { dataPorExtenso } from "@/lib/pdf/formato";
-import { CIDADE, PREFEITO_CARGO, PREFEITO_NOME } from "@/lib/suplementacoes/documento";
+import { sanitizarHtmlDocumento } from "@/lib/sanitizar-html";
 import {
-  ALTURA_TITULO_MM,
+  CIDADE,
+  PREFEITO_CARGO,
+  PREFEITO_NOME,
+  montarCorpoDecretoPadrao,
+  type ItemSuplementacao,
+} from "@/lib/suplementacoes/documento";
+import {
   ALTURA_FECHAMENTO_MM,
   ALTURA_ASSINATURA_PREFEITO_MM,
+  blocosDeHtml,
   paginarBlocosSuplementacao,
+  type BlocoConteudo,
 } from "@/lib/suplementacoes/paginacao";
-import { montarBlocosArtigos, type ItemSuplementacao } from "./artigos-suplementacao";
 
 const TIMBRADO = "/timbrado/oficio-diretor-executivo.png";
 const MARGEM = "ml-[30mm] mr-[30mm] mt-[48mm] mb-[24mm]";
@@ -15,51 +22,34 @@ const MARGEM = "ml-[30mm] mr-[30mm] mt-[48mm] mb-[24mm]";
 export function DecretoSuplementacaoConteudo({
   numeroDecreto,
   dataDecreto,
+  corpoHtml,
   itensDestino,
   itensOrigem,
 }: {
   numeroDecreto: string;
   dataDecreto: string;
+  corpoHtml: string | null;
   itensDestino: ItemSuplementacao[];
   itensOrigem: ItemSuplementacao[];
 }) {
-  const tituloBloco = {
-    altura: ALTURA_TITULO_MM,
-    node: (
-      <div key="titulo">
-        <p className="text-center font-bold">
-          DECRETO Nº {numeroDecreto} DE {dataPorExtenso(dataDecreto).toUpperCase()}
-        </p>
-        <p className="mt-4 text-right font-bold">
-          Abre crédito adicional suplementar no Orçamento vigente da Câmara Municipal
-        </p>
-        <p className="mt-4 text-justify">
-          O Prefeito Municipal de Nepomuceno, no uso de suas atribuições legais e ratificando ato da
-          mesa diretora da Câmara Municipal, DECRETA:
-        </p>
-      </div>
-    ),
-  };
+  const html = sanitizarHtmlDocumento(
+    corpoHtml?.trim() ||
+      montarCorpoDecretoPadrao({ numeroDecreto, dataDecreto, itensDestino, itensOrigem }),
+  );
 
-  // Art.3º e a data de fechamento entram juntos, num bloco só — nunca faz
-  // sentido um sem o outro na mesma página (ver ALTURA_FECHAMENTO_MM).
-  const fechamentoBloco = {
+  const fechamentoBloco: BlocoConteudo = {
     altura: ALTURA_FECHAMENTO_MM,
+    kind: "node",
     node: (
-      <div key="fechamento">
-        <p className="mt-4 indent-[1.25cm] text-justify">
-          <strong>Art.3º</strong> Este decreto entra em vigor na data da sua publicação, revogando as
-          disposições em contrário.
-        </p>
-        <p className="mt-4">
-          Gabinete do Prefeito de {CIDADE}, {dataPorExtenso(dataDecreto)}.
-        </p>
-      </div>
+      <p key="fechamento">
+        Gabinete do Prefeito de {CIDADE}, {dataPorExtenso(dataDecreto)}.
+      </p>
     ),
   };
 
-  const assinaturaBloco = {
+  const assinaturaBloco: BlocoConteudo = {
     altura: ALTURA_ASSINATURA_PREFEITO_MM,
+    kind: "node",
     node: (
       <div key="assinatura" className="mx-auto mt-[16mm] w-[100mm] text-center leading-none">
         <p className="font-bold uppercase">{PREFEITO_NOME}</p>
@@ -68,9 +58,8 @@ export function DecretoSuplementacaoConteudo({
     ),
   };
 
-  const paginas = paginarBlocosSuplementacao([
-    tituloBloco,
-    ...montarBlocosArtigos({ itensDestino, itensOrigem }),
+  const paginas = paginarBlocosSuplementacao<BlocoConteudo>([
+    ...blocosDeHtml(html),
     fechamentoBloco,
     assinaturaBloco,
   ]);
@@ -79,8 +68,16 @@ export function DecretoSuplementacaoConteudo({
     <>
       {paginas.map((pagina, indice) => (
         <PaginaA4 key={indice} backgroundImage={TIMBRADO} quebrarPagina={indice < paginas.length - 1}>
-          <div className={`${MARGEM} flex flex-1 flex-col text-[12pt] leading-snug`}>
-            {pagina.map((bloco) => bloco.node)}
+          <div
+            className={`${MARGEM} flex flex-1 flex-col gap-2 text-[12pt] leading-snug [&_ol]:list-decimal [&_ol]:pl-5 [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:border-black [&_td]:px-2 [&_td]:py-1 [&_th]:border [&_th]:border-black [&_th]:px-2 [&_th]:py-1 [&_th]:font-bold [&_ul]:list-disc [&_ul]:pl-5`}
+          >
+            {pagina.map((bloco, i) =>
+              bloco.kind === "node" ? (
+                bloco.node
+              ) : (
+                <div key={i} dangerouslySetInnerHTML={{ __html: bloco.html }} />
+              ),
+            )}
           </div>
         </PaginaA4>
       ))}
