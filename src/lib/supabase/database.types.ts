@@ -842,6 +842,61 @@ export interface Database {
           },
         ];
       };
+      oficios_diretor_executivo: {
+        Row: {
+          id: string;
+          numero: string;
+          ano: number;
+          data_oficio: string;
+          destinatario_tratamento: TratamentoOficio;
+          destinatario_nome: string;
+          destinatario_cargo: string;
+          destinatario_cidade_uf: string | null;
+          saudacao: string;
+          assunto: string;
+          corpo_texto: string;
+          criado_por: string | null;
+          criado_em: string;
+        };
+        Insert: Partial<Omit<Database["public"]["Tables"]["oficios_diretor_executivo"]["Row"], "id">> & {
+          numero: string;
+          ano: number;
+          destinatario_nome: string;
+          destinatario_cargo: string;
+          assunto: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["oficios_diretor_executivo"]["Row"]>;
+        Relationships: [];
+      };
+      oficios_diretor_executivo_anexos: {
+        Row: {
+          id: string;
+          oficio_id: string;
+          caminho: string;
+          nome_original: string;
+          tipo: TipoAnexoOficio;
+          criado_por: string | null;
+          criado_em: string;
+        };
+        Insert: Partial<
+          Omit<Database["public"]["Tables"]["oficios_diretor_executivo_anexos"]["Row"], "id">
+        > & {
+          oficio_id: string;
+          caminho: string;
+          nome_original: string;
+          tipo: TipoAnexoOficio;
+        };
+        Update: Partial<Database["public"]["Tables"]["oficios_diretor_executivo_anexos"]["Row"]>;
+        Relationships: [
+          {
+            foreignKeyName: "oficios_diretor_executivo_anexos_oficio_id_fkey";
+            columns: ["oficio_id"];
+            isOneToOne: false;
+            referencedRelation: "oficios_diretor_executivo";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       legislacao_documentos: {
         Row: {
           id: string;

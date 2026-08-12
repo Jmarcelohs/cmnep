@@ -36,6 +36,7 @@ export const NAV_ESTRUTURA: NavEntry[] = [
       { href: "/decretos", label: "Decretos" },
       { href: "/mocoes", label: "Moções" },
       { href: "/oficios", label: "Ofícios" },
+      { href: "/oficios-de", label: "Ofícios — Diretor Executivo", apenas: ["admin"] },
       { href: "/legislacao", label: "Legislação" },
       {
         href: "/plenario",
