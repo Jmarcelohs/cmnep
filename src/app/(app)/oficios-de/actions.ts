@@ -24,7 +24,9 @@ function lerCampos(formData: FormData) {
   // setor do Executivo, não uma pessoa (ver migration 0044).
   const destinatario_tratamento = String(formData.get("destinatario_tratamento") ?? "").trim();
   const destinatario_nome = String(formData.get("destinatario_nome") ?? "").trim();
-  const destinatario_cargo = String(formData.get("destinatario_cargo") ?? "").trim();
+  // Opcional — nem todo destinatário tem um cargo aplicável (ver migration
+  // 0045, ex.: um setor do Executivo endereçado só pelo nome).
+  const destinatario_cargo = String(formData.get("destinatario_cargo") ?? "").trim() || null;
   const destinatario_cidade_uf =
     String(formData.get("destinatario_cidade_uf") ?? "").trim() || null;
   const saudacao = String(formData.get("saudacao") ?? "").trim();
@@ -55,7 +57,6 @@ export async function criarOficioDE(formData: FormData) {
     !campos.numero ||
     !campos.data_oficio ||
     !campos.destinatario_nome ||
-    !campos.destinatario_cargo ||
     !campos.assunto ||
     corpoTextoEstaVazio(campos.corpo_texto)
   ) {
@@ -93,7 +94,6 @@ export async function editarOficioDE(id: string, formData: FormData) {
     !campos.numero ||
     !campos.data_oficio ||
     !campos.destinatario_nome ||
-    !campos.destinatario_cargo ||
     !campos.assunto ||
     corpoTextoEstaVazio(campos.corpo_texto)
   ) {

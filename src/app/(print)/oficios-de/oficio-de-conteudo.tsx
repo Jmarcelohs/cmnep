@@ -15,7 +15,7 @@ type OficioDE = {
   data_oficio: string;
   destinatario_tratamento: string;
   destinatario_nome: string;
-  destinatario_cargo: string;
+  destinatario_cargo: string | null;
   destinatario_cidade_uf: string | null;
   saudacao: string;
   assunto: string;
@@ -47,7 +47,7 @@ export function OficioDEConteudo({ oficio }: { oficio: OficioDE }) {
               Departamento), sem tratamento de pessoa nenhum. */}
           {oficio.destinatario_tratamento.trim() && <p>Ao {oficio.destinatario_tratamento}</p>}
           <p>{oficio.destinatario_nome}</p>
-          <p>{oficio.destinatario_cargo}</p>
+          {oficio.destinatario_cargo && <p>{oficio.destinatario_cargo}</p>}
           {oficio.destinatario_cidade_uf && <p>{oficio.destinatario_cidade_uf}</p>}
         </div>
 

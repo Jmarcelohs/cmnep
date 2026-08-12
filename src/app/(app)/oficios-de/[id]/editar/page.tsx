@@ -47,7 +47,7 @@ export default async function EditarOficioDEPage({
           data_oficio: oficio.data_oficio,
           destinatario_tratamento: oficio.destinatario_tratamento,
           destinatario_nome: oficio.destinatario_nome,
-          destinatario_cargo: oficio.destinatario_cargo,
+          destinatario_cargo: oficio.destinatario_cargo ?? "",
           destinatario_cidade_uf: oficio.destinatario_cidade_uf ?? "",
           saudacao: oficio.saudacao,
           assunto: oficio.assunto,

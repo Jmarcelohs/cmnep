@@ -131,14 +131,13 @@ export function OficioDEForm({
           </div>
           <div>
             <label htmlFor="destinatario_cargo" className="block text-sm font-medium text-slate-700">
-              Cargo
+              Cargo (opcional)
             </label>
             <input
               id="destinatario_cargo"
               name="destinatario_cargo"
               value={destinatarioCargo}
               onChange={(e) => setDestinatarioCargo(e.target.value)}
-              required
               placeholder="Ex.: Controlador Geral do Município"
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
             />
@@ -203,8 +202,8 @@ export function OficioDEForm({
         <div className="mt-2 space-y-2 text-sm text-slate-700">
           <p className="font-semibold">{numeroOficioDEFormatado({ numero: numero || "—", ano })}</p>
           <p>
-            {destinatarioCargo &&
-              `${tratamento.trim() ? `Ao ${tratamento} ` : "Ao "}${destinatarioNome || "—"}, ${destinatarioCargo}`}
+            {destinatarioNome &&
+              `${tratamento.trim() ? `Ao ${tratamento} ` : "Ao "}${destinatarioNome}${destinatarioCargo ? `, ${destinatarioCargo}` : ""}`}
           </p>
           <p>{assunto && `Assunto: ${assunto}`}</p>
           <p>{saudacaoExibida}</p>

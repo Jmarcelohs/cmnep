@@ -853,7 +853,9 @@ export interface Database {
           // Executivo, sem tratamento de pessoa (ver migration 0044).
           destinatario_tratamento: string;
           destinatario_nome: string;
-          destinatario_cargo: string;
+          // Opcional — nem todo destinatário tem um cargo aplicável (ver
+          // migration 0045).
+          destinatario_cargo: string | null;
           destinatario_cidade_uf: string | null;
           saudacao: string;
           assunto: string;
@@ -865,7 +867,6 @@ export interface Database {
           numero: string;
           ano: number;
           destinatario_nome: string;
-          destinatario_cargo: string;
           assunto: string;
         };
         Update: Partial<Database["public"]["Tables"]["oficios_diretor_executivo"]["Row"]>;
