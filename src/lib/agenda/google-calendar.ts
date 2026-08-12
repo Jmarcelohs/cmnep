@@ -132,6 +132,14 @@ function diaAnterior(dataISO: string): string {
   return new Date(Date.UTC(ano, mes - 1, dia - 1)).toISOString().slice(0, 10);
 }
 
+// O <input type="datetime-local"> do formulário manda "YYYY-MM-DDTHH:mm",
+// sem segundos — a API do Google Agenda responde 400 Bad Request pra um
+// dateTime nesse formato (confirmado direto contra a API). Completa com
+// ":00" só quando faltam.
+function comSegundos(dateTimeLocal: string): string {
+  return /T\d{2}:\d{2}$/.test(dateTimeLocal) ? `${dateTimeLocal}:00` : dateTimeLocal;
+}
+
 function paraCorpoGoogle(input: EventoInput) {
   return {
     summary: input.titulo,
@@ -139,10 +147,10 @@ function paraCorpoGoogle(input: EventoInput) {
     location: input.local || undefined,
     start: input.diaTodo
       ? { date: input.inicio }
-      : { dateTime: input.inicio, timeZone: FUSO_BRASIL },
+      : { dateTime: comSegundos(input.inicio), timeZone: FUSO_BRASIL },
     end: input.diaTodo
       ? { date: proximoDia(input.fim) }
-      : { dateTime: input.fim, timeZone: FUSO_BRASIL },
+      : { dateTime: comSegundos(input.fim), timeZone: FUSO_BRASIL },
   };
 }
 
