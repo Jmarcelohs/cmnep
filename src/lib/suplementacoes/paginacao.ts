@@ -23,8 +23,10 @@ export const ALTURA_LINHA_TABELA_MM = 8;
 export const MARGEM_ENTRE_BLOCOS_MM = 2;
 
 export const ALTURA_FECHAMENTO_MM = 16; // só "Cidade, data por extenso."
-// Presidente + Vice-Presidente/Secretário lado a lado (Ato: 3 signatários).
-export const ALTURA_ASSINATURA_MESA_MM = 55;
+// Presidente + Vice-Presidente/Secretário lado a lado (Ato: 3 signatários)
+// — leading-normal (não leading-none) por pedido explícito de mais espaço
+// entre as linhas de cada bloco de assinatura.
+export const ALTURA_ASSINATURA_MESA_MM = 68;
 // Só o Prefeito (Decreto: 1 signatário).
 export const ALTURA_ASSINATURA_PREFEITO_MM = 28;
 

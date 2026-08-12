@@ -11,11 +11,12 @@ import {
 } from "@/lib/suplementacoes/paginacao";
 
 const TIMBRADO = "/timbrado/oficio-diretor-executivo.png";
-// Margens medidas por comparação direta com um Ato real (12/05/2026):
-// título centralizado a ~51mm do topo, ~30mm de cada lado (mesmo timbrado
-// do Ofício do Diretor Executivo) — repetidas em toda página de conteúdo,
-// não só na primeira, porque o timbrado real também se repete.
-const MARGEM = "ml-[30mm] mr-[30mm] mt-[48mm] mb-[24mm]";
+// Margem lateral (~30mm) medida direto num Ato real (12/05/2026), mesmo
+// timbrado do Ofício do Diretor Executivo. Margem superior ajustada por
+// pedido explícito (título mais próximo do cabeçalho do que os ~48mm
+// originais) — repetida em toda página de conteúdo, não só na primeira,
+// porque o timbrado real também se repete.
+const MARGEM = "ml-[30mm] mr-[30mm] mt-[40mm] mb-[24mm]";
 
 export function AtoMesaDiretoraConteudo({
   dataAto,
@@ -54,18 +55,18 @@ export function AtoMesaDiretoraConteudo({
     kind: "node",
     node: (
       <div key="assinatura" className="mt-[16mm] flex flex-col items-center gap-[10mm]">
-        <div className="text-center leading-none">
+        <div className="text-center leading-normal">
           <p className="font-bold uppercase">{MESA_DIRETORA.presidente.nome}</p>
           <p>{MESA_DIRETORA.presidente.cargo}</p>
           <p>{MESA_DIRETORA.bienio}</p>
         </div>
         <div className="flex w-full justify-around">
-          <div className="text-center leading-none">
+          <div className="text-center leading-normal">
             <p className="font-bold uppercase">{MESA_DIRETORA.vicePresidente.nome}</p>
             <p>{MESA_DIRETORA.vicePresidente.cargo}</p>
             <p>{MESA_DIRETORA.bienio}</p>
           </div>
-          <div className="text-center leading-none">
+          <div className="text-center leading-normal">
             <p className="font-bold uppercase">{MESA_DIRETORA.secretario.nome}</p>
             <p>{MESA_DIRETORA.secretario.cargo}</p>
             <p>{MESA_DIRETORA.bienio}</p>

@@ -17,7 +17,9 @@ import {
 } from "@/lib/suplementacoes/paginacao";
 
 const TIMBRADO = "/timbrado/oficio-diretor-executivo.png";
-const MARGEM = "ml-[30mm] mr-[30mm] mt-[48mm] mb-[24mm]";
+// Margem superior ajustada por pedido explícito (título mais próximo do
+// cabeçalho) — mesmo valor usado no Ato (ver ato-mesa-diretora-conteudo.tsx).
+const MARGEM = "ml-[30mm] mr-[30mm] mt-[40mm] mb-[24mm]";
 
 export function DecretoSuplementacaoConteudo({
   numeroDecreto,
@@ -41,7 +43,7 @@ export function DecretoSuplementacaoConteudo({
     altura: ALTURA_FECHAMENTO_MM,
     kind: "node",
     node: (
-      <p key="fechamento">
+      <p key="fechamento" className="text-right">
         Gabinete do Prefeito de {CIDADE}, {dataPorExtenso(dataDecreto)}.
       </p>
     ),
