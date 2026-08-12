@@ -81,19 +81,19 @@ function blocosDoArtigo(
   return blocos;
 }
 
-// Art.1º (destino — crédito suplementar), Art.2º (origem — anulação
-// parcial) e Art.3º (vigência) — texto idêntico entre Ato e Decreto, só
-// muda a palavra "ato"/"decreto" no Art.3º. Devolve os blocos já com altura
-// estimada, pra quem monta a página (ato-mesa-diretora-conteudo.tsx /
-// decreto-suplementacao-conteudo.tsx) paginar junto com título e fechamento.
+// Art.1º (destino — crédito suplementar) e Art.2º (origem — anulação
+// parcial). Devolve os blocos já com altura estimada, pra quem monta a
+// página (ato-mesa-diretora-conteudo.tsx / decreto-suplementacao-
+// conteudo.tsx) paginar junto com título, fechamento (Art.3º + data) e
+// assinatura. Art.3º fica fora daqui de propósito — entra junto com a data
+// de fechamento num bloco só, pra nunca acabar isolado numa página à parte
+// (ver ALTURA_FECHAMENTO_MM em @/lib/suplementacoes/paginacao).
 export function montarBlocosArtigos({
   itensDestino,
   itensOrigem,
-  substantivoDocumento,
 }: {
   itensDestino: ItemSuplementacao[];
   itensOrigem: ItemSuplementacao[];
-  substantivoDocumento: "ato" | "decreto";
 }): BlocoConteudo[] {
   const valorTotal = itensDestino.reduce((soma, i) => soma + i.valor, 0);
 
@@ -115,15 +115,5 @@ export function montarBlocosArtigos({
     </p>,
   );
 
-  const blocoArt3: BlocoConteudo = {
-    altura: ALTURA_ART_INTRO_MM,
-    node: (
-      <p key="art3" className="mt-4 indent-[1.25cm] text-justify">
-        <strong>Art.3º</strong> Este {substantivoDocumento} entra em vigor na data da sua publicação,
-        revogando as disposições em contrário.
-      </p>
-    ),
-  };
-
-  return [...blocosArt1, ...blocosArt2, blocoArt3];
+  return [...blocosArt1, ...blocosArt2];
 }

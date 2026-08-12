@@ -41,8 +41,18 @@ function lerCampos(formData: FormData) {
   return { data_ato, numero_decreto, data_decreto, itensDestino, itensOrigem };
 }
 
+// O <input type="date"> nativo aceita perder foco com o ano incompleto
+// (ex.: digitou "2" e saiu do campo antes de completar "2026") e manda
+// "0002-08-12" sem avisar — já aconteceu na prática (data do Decreto saiu
+// "12 de agosto de 2"). Valida o formato completo antes de gravar.
+const DATA_VALIDA = /^\d{4}-\d{2}-\d{2}$/;
+
 function validar(campos: ReturnType<typeof lerCampos>): string | null {
   if (!campos.data_ato) return "Preencha a data do Ato";
+  if (!DATA_VALIDA.test(campos.data_ato)) return "Data do Ato inválida — confira o ano preenchido";
+  if (campos.data_decreto && !DATA_VALIDA.test(campos.data_decreto)) {
+    return "Data do Decreto inválida — confira o ano preenchido";
+  }
   if (campos.itensDestino.length === 0) return "Inclua ao menos um item de destino (Art. 1º)";
   if (campos.itensOrigem.length === 0) return "Inclua ao menos um item de origem (Art. 2º)";
 

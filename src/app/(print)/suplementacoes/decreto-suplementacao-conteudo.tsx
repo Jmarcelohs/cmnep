@@ -1,7 +1,12 @@
 import { PaginaA4 } from "../celula";
 import { dataPorExtenso } from "@/lib/pdf/formato";
 import { CIDADE, PREFEITO_CARGO, PREFEITO_NOME } from "@/lib/suplementacoes/documento";
-import { ALTURA_TITULO_MM, ALTURA_FECHAMENTO_MM, paginarBlocosSuplementacao } from "@/lib/suplementacoes/paginacao";
+import {
+  ALTURA_TITULO_MM,
+  ALTURA_FECHAMENTO_MM,
+  ALTURA_ASSINATURA_PREFEITO_MM,
+  paginarBlocosSuplementacao,
+} from "@/lib/suplementacoes/paginacao";
 import { montarBlocosArtigos, type ItemSuplementacao } from "./artigos-suplementacao";
 
 const TIMBRADO = "/timbrado/oficio-diretor-executivo.png";
@@ -36,39 +41,49 @@ export function DecretoSuplementacaoConteudo({
     ),
   };
 
+  // Art.3º e a data de fechamento entram juntos, num bloco só — nunca faz
+  // sentido um sem o outro na mesma página (ver ALTURA_FECHAMENTO_MM).
   const fechamentoBloco = {
     altura: ALTURA_FECHAMENTO_MM,
     node: (
-      <p key="fechamento" className="mt-4">
-        Gabinete do Prefeito de {CIDADE}, {dataPorExtenso(dataDecreto)}.
-      </p>
+      <div key="fechamento">
+        <p className="mt-4 indent-[1.25cm] text-justify">
+          <strong>Art.3º</strong> Este decreto entra em vigor na data da sua publicação, revogando as
+          disposições em contrário.
+        </p>
+        <p className="mt-4">
+          Gabinete do Prefeito de {CIDADE}, {dataPorExtenso(dataDecreto)}.
+        </p>
+      </div>
     ),
   };
 
-  const paginasConteudo = paginarBlocosSuplementacao([
+  const assinaturaBloco = {
+    altura: ALTURA_ASSINATURA_PREFEITO_MM,
+    node: (
+      <div key="assinatura" className="mx-auto mt-[16mm] w-[100mm] text-center leading-none">
+        <p className="font-bold uppercase">{PREFEITO_NOME}</p>
+        <p>{PREFEITO_CARGO}</p>
+      </div>
+    ),
+  };
+
+  const paginas = paginarBlocosSuplementacao([
     tituloBloco,
-    ...montarBlocosArtigos({ itensDestino, itensOrigem, substantivoDocumento: "decreto" }),
+    ...montarBlocosArtigos({ itensDestino, itensOrigem }),
     fechamentoBloco,
+    assinaturaBloco,
   ]);
 
   return (
     <>
-      {paginasConteudo.map((pagina, indice) => (
-        <PaginaA4 key={indice} backgroundImage={TIMBRADO}>
+      {paginas.map((pagina, indice) => (
+        <PaginaA4 key={indice} backgroundImage={TIMBRADO} quebrarPagina={indice < paginas.length - 1}>
           <div className={`${MARGEM} flex flex-1 flex-col text-[12pt] leading-snug`}>
             {pagina.map((bloco) => bloco.node)}
           </div>
         </PaginaA4>
       ))}
-
-      <PaginaA4 backgroundImage={TIMBRADO} quebrarPagina={false}>
-        <div className={`${MARGEM} flex flex-1 flex-col text-[12pt]`}>
-          <div className="mx-auto mt-[16mm] w-[100mm] text-center leading-none">
-            <p className="font-bold uppercase">{PREFEITO_NOME}</p>
-            <p>{PREFEITO_CARGO}</p>
-          </div>
-        </div>
-      </PaginaA4>
     </>
   );
 }

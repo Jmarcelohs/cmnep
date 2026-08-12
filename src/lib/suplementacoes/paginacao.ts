@@ -1,8 +1,13 @@
 // Paginação dos blocos itemizados do Ato/Decreto de suplementação. Cada
-// bloco (parágrafo de artigo, ficha, total geral) é atômico — nunca quebra
-// no meio — e o bloco de assinatura fica sempre isolado na página seguinte
-// à parte (ver ato-mesa-diretora-conteudo.tsx), igual ao padrão já usado em
-// decreto-conteudo.tsx pra separar texto de justificativa do bloco final.
+// bloco (parágrafo de artigo, ficha, total geral, fechamento, assinatura)
+// é atômico — nunca quebra no meio — e todos entram na MESMA lista
+// paginada (título...assinatura), sem reservar de antemão uma página só
+// pra assinatura: isso fazia sobrar uma página quase vazia toda vez que o
+// Art.3º/fechamento não cabia no fim da página de itens, deixando a
+// assinatura visualmente longe demais do texto (ver ato-mesa-diretora-
+// conteudo.tsx). Deixando o pacote decidir onde cada bloco cai, a
+// assinatura só fica numa página própria quando realmente não há espaço
+// sobrando — igual ao Ato/Decreto reais.
 //
 // Alturas estimadas por cima (character-per-line real seria menor) — mesmo
 // raciocínio de paginarTextoCorrido em @/lib/pdf/paginacao: melhor gerar
@@ -14,10 +19,14 @@ export const ALTURA_TITULO_MM = 44;
 export const ALTURA_ART_INTRO_MM = 28;
 export const ALTURA_ITEM_MM = 52;
 export const ALTURA_TOTAL_GERAL_MM = 10;
-// Só a linha "Cidade, data por extenso." — o Art.3º entra como um bloco de
-// artigo comum (ALTURA_ART_INTRO_MM) e a assinatura fica numa página à
-// parte, fora dessa paginação (ver ato-mesa-diretora-conteudo.tsx).
-export const ALTURA_FECHAMENTO_MM = 16;
+// Art.3º + "Cidade, data por extenso." juntos num bloco só, pra nunca
+// ficarem separados em páginas diferentes (um sem o outro não faz sentido
+// visualmente, e nenhum dos dois isolado justificaria uma página própria).
+export const ALTURA_FECHAMENTO_MM = 42;
+// Presidente + Vice-Presidente/Secretário lado a lado (Ato: 3 signatários).
+export const ALTURA_ASSINATURA_MESA_MM = 55;
+// Só o Prefeito (Decreto: 1 signatário).
+export const ALTURA_ASSINATURA_PREFEITO_MM = 28;
 
 export type BlocoSuplementacao = { altura: number };
 
