@@ -848,7 +848,10 @@ export interface Database {
           numero: string;
           ano: number;
           data_oficio: string;
-          destinatario_tratamento: TratamentoOficio;
+          // Texto livre (não a lista fixa TratamentoOficio) — alguns
+          // ofícios do Diretor Executivo são endereçados a um setor do
+          // Executivo, sem tratamento de pessoa (ver migration 0044).
+          destinatario_tratamento: string;
           destinatario_nome: string;
           destinatario_cargo: string;
           destinatario_cidade_uf: string | null;

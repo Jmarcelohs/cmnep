@@ -47,7 +47,7 @@ export default async function NovoOficioDEPage({
         valoresIniciais={{
           numero: numeroSugerido,
           data_oficio: "",
-          destinatario_tratamento: "Ilustríssimo Senhor",
+          destinatario_tratamento: "Ilmo. Sr.",
           destinatario_nome: "",
           destinatario_cargo: "",
           destinatario_cidade_uf: "",

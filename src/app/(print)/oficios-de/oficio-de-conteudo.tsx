@@ -1,7 +1,6 @@
 import { PaginaA4 } from "../celula";
 import { dataPorExtenso } from "@/lib/pdf/formato";
 import {
-  abreviarTratamento,
   CIDADE,
   DIRETOR_EXECUTIVO_CARGO,
   DIRETOR_EXECUTIVO_NOME,
@@ -9,13 +8,12 @@ import {
   numeroOficioDEFormatado,
 } from "@/lib/oficios-de/documento";
 import { sanitizarHtmlDocumento } from "@/lib/sanitizar-html";
-import type { TratamentoOficio } from "@/lib/supabase/database.types";
 
 type OficioDE = {
   numero: string;
   ano: number;
   data_oficio: string;
-  destinatario_tratamento: TratamentoOficio;
+  destinatario_tratamento: string;
   destinatario_nome: string;
   destinatario_cargo: string;
   destinatario_cidade_uf: string | null;
@@ -44,7 +42,10 @@ export function OficioDEConteudo({ oficio }: { oficio: OficioDE }) {
         </p>
 
         <div className="mt-6 leading-none">
-          <p>Ao {abreviarTratamento(oficio.destinatario_tratamento)}</p>
+          {/* Tratamento é texto livre e pode ficar vazio — alguns ofícios
+              reais são endereçados a um setor do Executivo (ex.: um
+              Departamento), sem tratamento de pessoa nenhum. */}
+          {oficio.destinatario_tratamento.trim() && <p>Ao {oficio.destinatario_tratamento}</p>}
           <p>{oficio.destinatario_nome}</p>
           <p>{oficio.destinatario_cargo}</p>
           {oficio.destinatario_cidade_uf && <p>{oficio.destinatario_cidade_uf}</p>}

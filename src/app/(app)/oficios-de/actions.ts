@@ -6,7 +6,6 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { corpoTextoEstaVazio } from "@/lib/oficios/documento";
 import { sanitizarHtmlDocumento } from "@/lib/sanitizar-html";
-import type { TratamentoOficio } from "@/lib/supabase/database.types";
 
 // Aba de uso exclusivo do Diretor Executivo — restrita a admin (ver
 // migration 0043; hoje o único admin cadastrado é a própria pessoa).
@@ -21,9 +20,9 @@ export async function exigirAdmin(redirectPath: string) {
 function lerCampos(formData: FormData) {
   const numero = String(formData.get("numero") ?? "").trim();
   const data_oficio = String(formData.get("data_oficio") ?? "");
-  const destinatario_tratamento = String(
-    formData.get("destinatario_tratamento") ?? "Ilustríssimo Senhor",
-  ) as TratamentoOficio;
+  // Texto livre e opcional — pode ficar vazio quando o destinatário é um
+  // setor do Executivo, não uma pessoa (ver migration 0044).
+  const destinatario_tratamento = String(formData.get("destinatario_tratamento") ?? "").trim();
   const destinatario_nome = String(formData.get("destinatario_nome") ?? "").trim();
   const destinatario_cargo = String(formData.get("destinatario_cargo") ?? "").trim();
   const destinatario_cidade_uf =

@@ -4,17 +4,16 @@ import { useState } from "react";
 import {
   DIRETOR_EXECUTIVO_CARGO,
   DIRETOR_EXECUTIVO_NOME,
-  abreviarTratamento,
+  SUGESTOES_TRATAMENTO_DE,
   numeroOficioDEFormatado,
   saudacaoSugeridaDE,
 } from "@/lib/oficios-de/documento";
 import { RichTextEditor } from "@/components/rich-text-editor";
-import type { TratamentoOficio } from "@/lib/supabase/database.types";
 
 export type ValoresIniciaisOficioDE = {
   numero: string;
   data_oficio: string;
-  destinatario_tratamento: TratamentoOficio;
+  destinatario_tratamento: string;
   destinatario_nome: string;
   destinatario_cargo: string;
   destinatario_cidade_uf: string;
@@ -34,8 +33,8 @@ export function OficioDEForm({
 }) {
   const [numero, setNumero] = useState(valoresIniciais?.numero ?? "");
   const [dataOficio, setDataOficio] = useState(valoresIniciais?.data_oficio ?? "");
-  const [tratamento, setTratamento] = useState<TratamentoOficio>(
-    valoresIniciais?.destinatario_tratamento ?? "Ilustríssimo Senhor",
+  const [tratamento, setTratamento] = useState(
+    valoresIniciais?.destinatario_tratamento ?? "Ilmo. Sr.",
   );
   const [destinatarioNome, setDestinatarioNome] = useState(valoresIniciais?.destinatario_nome ?? "");
   const [destinatarioCargo, setDestinatarioCargo] = useState(
@@ -94,32 +93,39 @@ export function OficioDEForm({
         <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="destinatario_tratamento" className="block text-sm font-medium text-slate-700">
-              Tratamento
+              Tratamento (opcional)
             </label>
-            <select
+            <input
               id="destinatario_tratamento"
               name="destinatario_tratamento"
+              list="lista-tratamentos-de"
               value={tratamento}
-              onChange={(e) => setTratamento(e.target.value as TratamentoOficio)}
+              onChange={(e) => setTratamento(e.target.value)}
+              placeholder="Ex.: Ilmo. Sr."
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-            >
-              <option value="Excelentíssimo Senhor">Excelentíssimo Senhor</option>
-              <option value="Excelentíssima Senhora">Excelentíssima Senhora</option>
-              <option value="Ilustríssimo Senhor">Ilustríssimo Senhor</option>
-              <option value="Ilustríssima Senhora">Ilustríssima Senhora</option>
-            </select>
+            />
+            <datalist id="lista-tratamentos-de">
+              {SUGESTOES_TRATAMENTO_DE.map((s) => (
+                <option key={s} value={s} />
+              ))}
+            </datalist>
             <p className="mt-1 text-xs text-slate-500">
-              No ofício sai abreviado: &quot;Ao {abreviarTratamento(tratamento)}&quot;
+              {tratamento.trim()
+                ? `No ofício sai: "Ao ${tratamento}"`
+                : "Deixe em branco pra endereçar a um setor/departamento, sem tratamento de pessoa."}
             </p>
           </div>
           <div>
-            <label htmlFor="destinatario_nome" className="block text-sm font-medium text-slate-700">Nome</label>
+            <label htmlFor="destinatario_nome" className="block text-sm font-medium text-slate-700">
+              Nome (pessoa ou setor)
+            </label>
             <input
               id="destinatario_nome"
               name="destinatario_nome"
               value={destinatarioNome}
               onChange={(e) => setDestinatarioNome(e.target.value)}
               required
+              placeholder="Ex.: Bruno Henrique de Carvalho Marangoni ou Departamento de Arrecadação"
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
             />
           </div>
@@ -198,7 +204,7 @@ export function OficioDEForm({
           <p className="font-semibold">{numeroOficioDEFormatado({ numero: numero || "—", ano })}</p>
           <p>
             {destinatarioCargo &&
-              `Ao ${abreviarTratamento(tratamento)} ${destinatarioNome || "—"}, ${destinatarioCargo}`}
+              `${tratamento.trim() ? `Ao ${tratamento} ` : "Ao "}${destinatarioNome || "—"}, ${destinatarioCargo}`}
           </p>
           <p>{assunto && `Assunto: ${assunto}`}</p>
           <p>{saudacaoExibida}</p>

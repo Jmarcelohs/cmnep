@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { abreviarTratamento, numeroOficioDEFormatado, saudacaoSugeridaDE } from "./documento";
+import { numeroOficioDEFormatado, saudacaoSugeridaDE } from "./documento";
 
 describe("numeroOficioDEFormatado", () => {
   it("formata número e ano no padrão DE/CMN", () => {
@@ -7,29 +7,24 @@ describe("numeroOficioDEFormatado", () => {
   });
 });
 
-describe("abreviarTratamento", () => {
-  it("abrevia os 4 tratamentos possíveis", () => {
-    expect(abreviarTratamento("Excelentíssimo Senhor")).toBe("Exmo. Sr.");
-    expect(abreviarTratamento("Excelentíssima Senhora")).toBe("Exma. Sra.");
-    expect(abreviarTratamento("Ilustríssimo Senhor")).toBe("Ilmo. Sr.");
-    expect(abreviarTratamento("Ilustríssima Senhora")).toBe("Ilma. Sra.");
-  });
-});
-
 describe("saudacaoSugeridaDE", () => {
   it("usa a primeira palavra do cargo com o título masculino", () => {
-    expect(saudacaoSugeridaDE("Ilustríssimo Senhor", "Controlador Geral do Município")).toBe(
+    expect(saudacaoSugeridaDE("Ilmo. Sr.", "Controlador Geral do Município")).toBe(
       "Senhor Controlador,",
     );
   });
 
-  it("usa o título feminino quando o tratamento é feminino", () => {
-    expect(saudacaoSugeridaDE("Ilustríssima Senhora", "Secretária Municipal de Saúde")).toBe(
+  it("usa o título feminino quando o tratamento termina em 'Sra.'", () => {
+    expect(saudacaoSugeridaDE("Ilma. Sra.", "Secretária Municipal de Saúde")).toBe(
       "Senhora Secretária,",
     );
   });
 
   it("cai no título genérico quando o cargo está vazio", () => {
-    expect(saudacaoSugeridaDE("Excelentíssimo Senhor", "")).toBe("Senhor,");
+    expect(saudacaoSugeridaDE("Exmo. Sr.", "")).toBe("Senhor,");
+  });
+
+  it("cai no título masculino quando o tratamento está vazio (endereçado a um setor)", () => {
+    expect(saudacaoSugeridaDE("", "Departamento de Arrecadação")).toBe("Senhor Departamento,");
   });
 });
