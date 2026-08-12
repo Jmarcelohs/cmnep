@@ -9,6 +9,17 @@ const BOTOES: { comando: string; label: string; rotulo: string }[] = [
   { comando: "insertUnorderedList", label: "•", rotulo: "Lista com marcadores" },
 ];
 
+// justifyLeft/Center/Right/Full são execCommand nativos — no Chrome eles só
+// marcam text-align inline no bloco atual (sem envolver numa tag nova), por
+// isso dá pra reaproveitar o mesmo aplicarComando() dos botões acima. Fica
+// permitido no sanitizador (ver src/lib/sanitizar-html.ts) só esse estilo.
+const ALINHAMENTOS: { comando: string; label: string; rotulo: string }[] = [
+  { comando: "justifyLeft", label: "Esquerda", rotulo: "Alinhar à esquerda" },
+  { comando: "justifyCenter", label: "Centro", rotulo: "Centralizar" },
+  { comando: "justifyRight", label: "Direita", rotulo: "Alinhar à direita" },
+  { comando: "justifyFull", label: "Justificado", rotulo: "Justificar" },
+];
+
 function celulasDaLinha(linha: HTMLTableRowElement): HTMLTableCellElement[] {
   return Array.from(linha.cells);
 }
@@ -146,6 +157,39 @@ export function RichTextEditor({
     onChange(ref.current?.innerHTML ?? "");
   }
 
+  // Parágrafo(s) sob o cursor ou abrangidos pela seleção — "Recuo +"/"Recuo
+  // -" agem sobre eles. Não usa o execCommand nativo "indent" porque ele
+  // embrulha o bloco num <blockquote> com margin (uma tag/propriedade a
+  // mais pra permitir no sanitizador, e um jeito de recuar diferente do
+  // text-indent de primeira linha já usado no resto do documento) — aqui
+  // ajusta o mesmo text-indent direto no <p>, sem trocar a estrutura.
+  function paragrafosSelecionados(): HTMLParagraphElement[] {
+    if (!ref.current) return [];
+    const selecao = document.getSelection();
+    if (!selecao || selecao.rangeCount === 0) return [];
+    const intervalo = selecao.getRangeAt(0);
+    if (!ref.current.contains(intervalo.commonAncestorContainer)) return [];
+
+    const todosOsParagrafos = Array.from(ref.current.querySelectorAll("p"));
+    const abrangidos = todosOsParagrafos.filter((p) => intervalo.intersectsNode(p));
+    if (abrangidos.length > 0) return abrangidos;
+
+    const no = selecao.anchorNode;
+    const elemento = no && (no.nodeType === Node.ELEMENT_NODE ? (no as Element) : no.parentElement);
+    const paragrafoAtual = elemento?.closest("p");
+    return paragrafoAtual ? [paragrafoAtual] : [];
+  }
+
+  function ajustarRecuo(comIndentacao: boolean) {
+    focarEditor();
+    const paragrafos = paragrafosSelecionados();
+    if (paragrafos.length === 0) return;
+    paragrafos.forEach((p) => {
+      p.style.textIndent = comIndentacao ? "1.25cm" : "0cm";
+    });
+    onChange(ref.current?.innerHTML ?? "");
+  }
+
   return (
     <div>
       <div className="flex flex-wrap gap-1 rounded-t-md border border-b-0 border-slate-300 bg-slate-50 p-1">
@@ -167,6 +211,47 @@ export function RichTextEditor({
             {botao.label}
           </button>
         ))}
+        <span className="mx-1 w-px bg-slate-300" />
+        {ALINHAMENTOS.map((botao) => (
+          <button
+            key={botao.comando}
+            type="button"
+            aria-label={botao.rotulo}
+            title={botao.rotulo}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              aplicarComando(botao.comando);
+            }}
+            className="flex h-7 items-center justify-center rounded px-2 text-xs text-slate-700 hover:bg-slate-200"
+          >
+            {botao.label}
+          </button>
+        ))}
+        <span className="mx-1 w-px bg-slate-300" />
+        <button
+          type="button"
+          aria-label="Diminuir recuo do parágrafo"
+          title="Diminuir recuo do parágrafo"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            ajustarRecuo(false);
+          }}
+          className="flex h-7 items-center justify-center rounded px-2 text-xs text-slate-700 hover:bg-slate-200"
+        >
+          Recuo −
+        </button>
+        <button
+          type="button"
+          aria-label="Aumentar recuo do parágrafo"
+          title="Aumentar recuo do parágrafo"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            ajustarRecuo(true);
+          }}
+          className="flex h-7 items-center justify-center rounded px-2 text-xs text-slate-700 hover:bg-slate-200"
+        >
+          Recuo +
+        </button>
         <span className="mx-1 w-px bg-slate-300" />
         <button
           type="button"

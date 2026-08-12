@@ -58,6 +58,46 @@ describe("sanitizarHtmlDocumento", () => {
     expect(sanitizarHtmlDocumento("<p><br></p>")).toBe("");
   });
 
+  it("remove <br> solto no início de um parágrafo com texto (rouba o recuo de primeira linha)", () => {
+    expect(sanitizarHtmlDocumento("<p><br />Solicito que...</p>")).toBe("<p>Solicito que...</p>");
+    expect(sanitizarHtmlDocumento("<p><br><br>Duplo também.</p>")).toBe("<p>Duplo também.</p>");
+  });
+
+  it("mantém <br> no meio ou no fim de um parágrafo (espaçamento intencional)", () => {
+    expect(sanitizarHtmlDocumento("<p>Meio<br />do texto.</p>")).toBe("<p>Meio<br />do texto.</p>");
+    expect(sanitizarHtmlDocumento("<p>Fim do texto:<br /><br /></p>")).toBe(
+      "<p>Fim do texto:<br /><br /></p>",
+    );
+  });
+
+  it("mantém text-align/text-indent em <p> (botões de alinhamento/recuo do editor)", () => {
+    expect(sanitizarHtmlDocumento('<p style="text-align: center;">Centro</p>')).toBe(
+      '<p style="text-align:center">Centro</p>',
+    );
+    expect(sanitizarHtmlDocumento('<p style="text-indent: 1.25cm;">Recuado</p>')).toBe(
+      '<p style="text-indent:1.25cm">Recuado</p>',
+    );
+  });
+
+  it("remove propriedades de estilo fora da lista permitida (ex.: color, position)", () => {
+    expect(sanitizarHtmlDocumento('<p style="color: red;">texto</p>')).toBe("<p>texto</p>");
+    expect(
+      sanitizarHtmlDocumento('<p style="position: fixed; top: 0;">texto</p>'),
+    ).toBe("<p>texto</p>");
+  });
+
+  it("rejeita valor de estilo fora do padrão esperado (ex.: url() disfarçado de text-align)", () => {
+    expect(
+      sanitizarHtmlDocumento('<p style="text-align: url(javascript:alert(1));">texto</p>'),
+    ).toBe("<p>texto</p>");
+  });
+
+  it("não permite style em outra tag (só <p> recebe recuo/alinhamento)", () => {
+    expect(sanitizarHtmlDocumento('<strong style="text-align: center;">texto</strong>')).toBe(
+      "<strong>texto</strong>",
+    );
+  });
+
   it("não lança erro com HTML malformado/não fechado", () => {
     expect(() => sanitizarHtmlDocumento("<p>texto sem fechar")).not.toThrow();
     expect(sanitizarHtmlDocumento("<p>texto sem fechar")).toBe("<p>texto sem fechar</p>");
