@@ -3,6 +3,7 @@ import {
   montarCorpoAtoPadrao,
   montarCorpoDecretoPadrao,
   numeroRomano,
+  rotuloFicha,
   segmentosFicha,
   valorPorExtensoMinusculo,
 } from "./documento";
@@ -56,6 +57,14 @@ describe("segmentosFicha", () => {
       "01.01.031.0001.2001.339039.1500",
     ]);
     expect(segmentos[segmentos.length - 1].nome).toBe("Recursos Ordinários");
+  });
+});
+
+describe("rotuloFicha", () => {
+  it("mostra a codificação orçamentária completa, sem saldo/valor", () => {
+    expect(rotuloFicha(FICHA_22)).toBe(
+      "Ficha 22 — 01.01.031.0001.2001.339039.1500 — Outros Serviços de Terceiros - Pessoa Jurídica (Manutenção das Atividades do Legislativo Municipal)",
+    );
   });
 });
 

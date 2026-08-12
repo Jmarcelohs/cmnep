@@ -68,13 +68,17 @@ export function segmentosFicha(dotacao: DotacaoOrcamentaria) {
   ];
 }
 
-// Rótulo pro <select> de ficha no formulário — ex.: "Ficha 22 — Outros
-// Serviços de Terceiros - Pessoa Jurídica (Manutenção das Atividades do
-// Legislativo Municipal) — saldo ref.: R$4.601,86".
+// Rótulo pro <select> de ficha no formulário — ex.: "Ficha 22 —
+// 01.01.031.0001.2001.339039.1500 — Outros Serviços de Terceiros - Pessoa
+// Jurídica (Manutenção das Atividades do Legislativo Municipal)". Mostra a
+// codificação orçamentária completa (código acumulado até a fonte de
+// recurso) em vez do saldo de referência — o saldo é só uma foto do
+// momento da importação, não o dado que ajuda a conferir se é a ficha
+// certa (ver [[camara-nepomuceno-*]] sobre "só referência" no import).
 export function rotuloFicha(dotacao: DotacaoOrcamentaria): string {
-  const saldo =
-    dotacao.saldo_referencia != null ? ` — saldo ref.: ${formatarMoeda(dotacao.saldo_referencia)}` : "";
-  return `Ficha ${dotacao.ficha} — ${dotacao.elemento_nome} (${dotacao.projeto_atividade_nome})${saldo}`;
+  const segmentos = segmentosFicha(dotacao);
+  const codigoCompleto = segmentos[segmentos.length - 1].codigo;
+  return `Ficha ${dotacao.ficha} — ${codigoCompleto} — ${dotacao.elemento_nome} (${dotacao.projeto_atividade_nome})`;
 }
 
 // "cinquenta e três mil reais" (minúsculo, pra encaixar depois de
