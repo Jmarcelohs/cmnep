@@ -80,7 +80,7 @@ export function OficioConteudo({ oficio }: { oficio: Oficio }) {
         <p className="mt-6">{oficio.saudacao}</p>
 
         <div
-          className="mt-3 space-y-3 text-justify [&>p]:indent-[1.25cm] [&_ol]:list-decimal [&_ol]:pl-[1.25cm] [&_ul]:list-disc [&_ul]:pl-[1.25cm]"
+          className="mt-3 space-y-3 text-justify [&>p]:indent-[1.25cm] [&_ol]:list-decimal [&_ol]:pl-[1.25cm] [&_ul]:list-disc [&_ul]:pl-[1.25cm] [&_table]:my-2 [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:border-black [&_td]:px-2 [&_td]:py-1 [&_th]:border [&_th]:border-black [&_th]:px-2 [&_th]:py-1 [&_th]:font-bold"
           dangerouslySetInnerHTML={{ __html: corpoHtml }}
         />
 

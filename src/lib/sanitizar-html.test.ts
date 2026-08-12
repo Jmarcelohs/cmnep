@@ -12,6 +12,12 @@ describe("sanitizarHtmlDocumento", () => {
     expect(sanitizarHtmlDocumento("<ul><li>item</li></ul>")).toBe("<ul><li>item</li></ul>");
   });
 
+  it("mantém tabela (table/thead/tbody/tr/td/th)", () => {
+    const tabela =
+      "<table><thead><tr><th>Item</th></tr></thead><tbody><tr><td>Valor</td></tr></tbody></table>";
+    expect(sanitizarHtmlDocumento(tabela)).toBe(tabela);
+  });
+
   it("remove <script> por completo, incluindo o conteúdo", () => {
     expect(sanitizarHtmlDocumento('<script>alert(1)</script><p>texto</p>')).toBe("<p>texto</p>");
   });

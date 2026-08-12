@@ -53,14 +53,14 @@ export function OficioDEConteudo({ oficio }: { oficio: OficioDE }) {
 
         <p className="mt-4 font-bold">Assunto: {oficio.assunto}</p>
 
-        <p className="mt-6">{oficio.saudacao}</p>
+        <p className="mt-6 indent-[1.25cm]">{oficio.saudacao}</p>
 
         <div
-          className="mt-3 space-y-3 text-justify [&>p]:indent-[1.25cm] [&_ol]:list-decimal [&_ol]:pl-[1.25cm] [&_ul]:list-disc [&_ul]:pl-[1.25cm]"
+          className="mt-3 space-y-3 text-justify [&>p]:indent-[1.25cm] [&_ol]:list-decimal [&_ol]:pl-[1.25cm] [&_ul]:list-disc [&_ul]:pl-[1.25cm] [&_table]:my-2 [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:border-black [&_td]:px-2 [&_td]:py-1 [&_th]:border [&_th]:border-black [&_th]:px-2 [&_th]:py-1 [&_th]:font-bold"
           dangerouslySetInnerHTML={{ __html: corpoHtml }}
         />
 
-        <p className="mt-6">Atenciosamente.</p>
+        <p className="mt-6 indent-[1.25cm]">Atenciosamente.</p>
 
         <div className="mx-auto mt-[16mm] w-[100mm] text-center leading-none">
           <p className="font-bold">{DIRETOR_EXECUTIVO_NOME}</p>

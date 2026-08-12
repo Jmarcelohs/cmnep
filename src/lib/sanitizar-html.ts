@@ -6,7 +6,24 @@ import sanitizeHtml from "sanitize-html";
 // o PDF (ver src/lib/pdf/gerar-pdf.ts), então uma tag maliciosa aqui
 // rodaria com a sessão autenticada de quem gerar o PDF — por isso a
 // sanitização é obrigatória tanto ao salvar quanto ao renderizar.
-const TAGS_PERMITIDAS = ["p", "br", "strong", "b", "em", "i", "u", "ul", "ol", "li"];
+const TAGS_PERMITIDAS = [
+  "p",
+  "br",
+  "strong",
+  "b",
+  "em",
+  "i",
+  "u",
+  "ul",
+  "ol",
+  "li",
+  "table",
+  "thead",
+  "tbody",
+  "tr",
+  "td",
+  "th",
+];
 
 export function sanitizarHtmlDocumento(html: string): string {
   const limpo = sanitizeHtml(html, {
