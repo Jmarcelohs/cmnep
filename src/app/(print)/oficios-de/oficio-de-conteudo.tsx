@@ -62,7 +62,10 @@ export function OficioDEConteudo({ oficio }: { oficio: OficioDE }) {
 
         <p className="mt-6 indent-[1.25cm]">Atenciosamente.</p>
 
-        <div className="mx-auto mt-[16mm] w-[100mm] text-center leading-none">
+        {/* 8mm (não os 16mm do Ofício da Secretaria) — com tabela no corpo,
+            um ofício mais longo chegava a encostar no rodapé (confirmado ao
+            vivo: só ~1,4mm de folga antes desse ajuste). */}
+        <div className="mx-auto mt-[8mm] w-[100mm] text-center leading-none">
           <p className="font-bold">{DIRETOR_EXECUTIVO_NOME}</p>
           <p>{DIRETOR_EXECUTIVO_CARGO}</p>
           <p>{NOME_CAMARA} - MG</p>
