@@ -262,6 +262,8 @@ export function OficioForm({
             >
               <option value="Excelentíssimo Senhor">Excelentíssimo Senhor</option>
               <option value="Excelentíssima Senhora">Excelentíssima Senhora</option>
+              <option value="Ilustríssimo Senhor">Ilustríssimo Senhor</option>
+              <option value="Ilustríssima Senhora">Ilustríssima Senhora</option>
             </select>
           </div>
           <div>

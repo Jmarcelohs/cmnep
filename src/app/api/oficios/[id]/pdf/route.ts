@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { gerarPdfDeRota } from "@/lib/pdf/gerar-pdf";
+import { baixarAnexosOficioPdf } from "@/lib/pdf/anexos";
 
 export const maxDuration = 60;
 
@@ -35,5 +36,7 @@ export async function GET(
 
   const filename = `Ofício nº ${oficio.numero}-${oficio.ano} - ${limparNomeArquivo(oficio.assunto)}.pdf`;
 
-  return gerarPdfDeRota(request, `/oficios/${id}/imprimir`, filename);
+  const pdfsParaAnexar = await baixarAnexosOficioPdf(supabase, id);
+
+  return gerarPdfDeRota(request, `/oficios/${id}/imprimir`, filename, pdfsParaAnexar);
 }

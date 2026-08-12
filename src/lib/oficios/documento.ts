@@ -1,6 +1,6 @@
 import { dataPorExtenso } from "@/lib/pdf/formato";
 import { PRESIDENTE_PADRAO } from "@/lib/reembolso/documento";
-import type { GeneroVereador, TipoOficio } from "@/lib/supabase/database.types";
+import type { GeneroVereador, TipoOficio, TratamentoOficio } from "@/lib/supabase/database.types";
 
 export const NOME_CAMARA = "Câmara Municipal de Nepomuceno";
 export const CIDADE = "Nepomuceno";
@@ -116,13 +116,14 @@ export function aberturaOficio({
 // Sugestão de saudação a partir do cargo do destinatário — sempre editável
 // pelo redator, porque a redação real varia mais do que dá pra prever
 // (ex.: "Excelentíssimo Senhor Promotor," no ofício 251).
-export function saudacaoSugerida(
-  tratamento: "Excelentíssimo Senhor" | "Excelentíssima Senhora",
-  cargo: string,
-) {
-  const feminino = tratamento === "Excelentíssima Senhora";
+export function saudacaoSugerida(tratamento: TratamentoOficio, cargo: string) {
+  const feminino = tratamento === "Excelentíssima Senhora" || tratamento === "Ilustríssima Senhora";
   if ((cargo || "").toLowerCase().includes("prefeit")) {
     return feminino ? "Senhora Prefeita," : "Senhor Prefeito,";
+  }
+  const ilustrissimo = tratamento === "Ilustríssimo Senhor" || tratamento === "Ilustríssima Senhora";
+  if (ilustrissimo) {
+    return feminino ? "Ilustríssima Senhora," : "Ilustríssimo Senhor,";
   }
   return feminino ? "Excelentíssima Senhora," : "Excelentíssimo Senhor,";
 }

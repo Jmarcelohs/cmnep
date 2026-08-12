@@ -45,7 +45,11 @@ export type TipoRequerimentoInterno = "rh" | "presidente" | "geral";
 export type TipoOficio = "padrao" | "indicacao" | "requerimento" | "convite";
 export type TipoDocumentoLegislacao = "lei" | "decreto" | "resolucao" | "portaria" | "ato" | "outro";
 
-export type TratamentoOficio = "Excelentíssimo Senhor" | "Excelentíssima Senhora";
+export type TratamentoOficio =
+  | "Excelentíssimo Senhor"
+  | "Excelentíssima Senhora"
+  | "Ilustríssimo Senhor"
+  | "Ilustríssima Senhora";
 
 export type GeneroVereador = "Vereador" | "Vereadora";
 

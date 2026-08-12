@@ -3,6 +3,7 @@ import type { Database } from "@/lib/supabase/database.types";
 
 const BUCKET = "prestacoes-anexos";
 const BUCKET_REEMBOLSO = "reembolso-anexos";
+const BUCKET_OFICIOS = "oficios-anexos";
 const URL_VALIDA_SEGUNDOS = 300;
 
 export async function carregarAnexosParaImpressao(
@@ -73,6 +74,31 @@ export async function baixarComprovantesPdf(
       const { data, error } = await supabase.storage.from(BUCKET_REEMBOLSO).download(anexo.caminho);
       if (error) {
         console.error(`Falha ao baixar comprovante "${anexo.caminho}":`, error.message);
+        return null;
+      }
+      return Buffer.from(await data.arrayBuffer());
+    }),
+  );
+
+  return buffers.filter((b): b is NonNullable<typeof b> => b !== null);
+}
+
+export async function baixarAnexosOficioPdf(
+  supabase: SupabaseClient<Database>,
+  oficioId: string,
+) {
+  const { data: anexos } = await supabase
+    .from("oficios_anexos")
+    .select("caminho")
+    .eq("oficio_id", oficioId)
+    .eq("tipo", "pdf")
+    .order("criado_em");
+
+  const buffers = await Promise.all(
+    (anexos ?? []).map(async (anexo) => {
+      const { data, error } = await supabase.storage.from(BUCKET_OFICIOS).download(anexo.caminho);
+      if (error) {
+        console.error(`Falha ao baixar anexo do ofício "${anexo.caminho}":`, error.message);
         return null;
       }
       return Buffer.from(await data.arrayBuffer());

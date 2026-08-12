@@ -99,6 +99,20 @@ describe("saudacaoSugerida", () => {
       "Excelentíssima Senhora,",
     );
   });
+
+  it("usa a saudação de Ilustríssimo(a) pra esse tratamento", () => {
+    expect(saudacaoSugerida("Ilustríssimo Senhor", "Diretor da Empresa X")).toBe(
+      "Ilustríssimo Senhor,",
+    );
+    expect(saudacaoSugerida("Ilustríssima Senhora", "Diretora da Empresa X")).toBe(
+      "Ilustríssima Senhora,",
+    );
+  });
+
+  it("usa 'Senhor/Senhora Prefeito(a)' mesmo com tratamento Ilustríssimo(a)", () => {
+    expect(saudacaoSugerida("Ilustríssimo Senhor", "Prefeito Municipal")).toBe("Senhor Prefeito,");
+    expect(saudacaoSugerida("Ilustríssima Senhora", "Prefeita Municipal")).toBe("Senhora Prefeita,");
+  });
 });
 
 describe("injetarAberturaHtml", () => {
