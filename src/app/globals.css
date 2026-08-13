@@ -19,8 +19,10 @@
   --color-brand-green-dark: #3f6b44;
   --color-brand-navy: #0b2c3f;
   --color-brand-navy-light: #163c52;
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Fonte padrão do sistema: Arial em toda parte — inclusive onde algum
+     componente usar a classe utilitária "font-sans" do Tailwind (ex.:
+     veiculo-locacao-form.tsx), que resolve pra essa variável. */
+  --font-sans: Arial, Helvetica, sans-serif;
 }
 
 body {

@@ -12,13 +12,14 @@ import type { ReactNode } from "react";
 // timbrado (já aconteceu nesse mesmo módulo, ver commits anteriores).
 export const ALTURA_UTIL_PAGINA_MM = 225; // 297mm - 48mm (topo) - 24mm (rodapé)
 
-// Calibrado pro corpo do Ato/Decreto: 12pt, leading-snug (~1.375), largura
-// útil 150mm (ml-30mm mr-30mm num A4). CARACTERES_POR_LINHA menor que os
-// 88 usados em @/lib/pdf/paginacao (calibrado pra 160mm) — proporcional à
-// largura menor, arredondado pra baixo (mais linhas estimadas = mais
-// seguro).
-const CARACTERES_POR_LINHA = 78;
-export const ALTURA_LINHA_MM = 6.2;
+// Calibrado pro corpo do Ato/Decreto: 12pt, entrelinha 1,5 (regra oficial
+// da Base de Formatação da Câmara), largura útil 160mm (ml-30mm mr-20mm
+// num A4). CARACTERES_POR_LINHA menor que os 88 usados em
+// @/lib/pdf/paginacao (que já é 160mm/1,5 — mas arredondado pra baixo
+// aqui, mais linhas estimadas = mais seguro).
+const CARACTERES_POR_LINHA = 82;
+// 12pt × 1,5 de entrelinha ≈ 6,35mm/linha — arredondado por cima.
+export const ALTURA_LINHA_MM = 6.6;
 export const ALTURA_LINHA_TABELA_MM = 8;
 export const MARGEM_ENTRE_BLOCOS_MM = 2;
 
@@ -27,8 +28,9 @@ export const ALTURA_FECHAMENTO_MM = 16; // só "Cidade, data por extenso."
 // — leading-normal (não leading-none) por pedido explícito de mais espaço
 // entre as linhas de cada bloco de assinatura.
 export const ALTURA_ASSINATURA_MESA_MM = 68;
-// Só o Prefeito (Decreto: 1 signatário).
-export const ALTURA_ASSINATURA_PREFEITO_MM = 28;
+// Só o Prefeito (Decreto: 1 signatário) — leading-normal, mesmo motivo do
+// bloco do Ato (mais espaço entre nome e cargo).
+export const ALTURA_ASSINATURA_PREFEITO_MM = 32;
 
 export type BlocoSuplementacao = { altura: number };
 

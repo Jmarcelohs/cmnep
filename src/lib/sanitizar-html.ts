@@ -38,6 +38,10 @@ export function sanitizarHtmlDocumento(html: string): string {
       p: {
         "text-align": [/^(left|center|right|justify)$/],
         "text-indent": [/^-?\d+(\.\d+)?(cm|mm|px|em|rem)$/],
+        // Só os tamanhos usados na hierarquia título/subtítulo da Base de
+        // Formatação da Câmara (18pt título inicial, 14pt título principal,
+        // 12pt corpo/subtítulo, 10pt rodapé/nota) — não um valor livre.
+        "font-size": [/^(10|11|12|14|16|18)pt$/],
       },
     },
     // contentEditable às vezes quebra linha com <div> em vez de <p>

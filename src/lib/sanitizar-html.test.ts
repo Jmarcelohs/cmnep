@@ -79,6 +79,20 @@ describe("sanitizarHtmlDocumento", () => {
     );
   });
 
+  it("mantém font-size em <p> só nos tamanhos da hierarquia oficial (título/subtítulo/corpo/nota)", () => {
+    expect(sanitizarHtmlDocumento('<p style="font-size: 18pt;">Título</p>')).toBe(
+      '<p style="font-size:18pt">Título</p>',
+    );
+    expect(sanitizarHtmlDocumento('<p style="font-size: 12pt;">Corpo</p>')).toBe(
+      '<p style="font-size:12pt">Corpo</p>',
+    );
+  });
+
+  it("rejeita font-size fora dos valores permitidos (ex.: 100pt, unidade livre)", () => {
+    expect(sanitizarHtmlDocumento('<p style="font-size: 100pt;">texto</p>')).toBe("<p>texto</p>");
+    expect(sanitizarHtmlDocumento('<p style="font-size: 2em;">texto</p>')).toBe("<p>texto</p>");
+  });
+
   it("remove propriedades de estilo fora da lista permitida (ex.: color, position)", () => {
     expect(sanitizarHtmlDocumento('<p style="color: red;">texto</p>')).toBe("<p>texto</p>");
     expect(

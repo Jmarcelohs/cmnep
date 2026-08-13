@@ -17,9 +17,11 @@ import {
 } from "@/lib/suplementacoes/paginacao";
 
 const TIMBRADO = "/timbrado/oficio-diretor-executivo.png";
-// Margem superior ajustada por pedido explícito (título mais próximo do
-// cabeçalho) — mesmo valor usado no Ato (ver ato-mesa-diretora-conteudo.tsx).
-const MARGEM = "ml-[30mm] mr-[30mm] mt-[40mm] mb-[24mm]";
+// Mesmas margens do Ato (ver ato-mesa-diretora-conteudo.tsx): esquerda
+// 3cm/direita 2cm/inferior 2cm da Base de Formatação oficial da Câmara;
+// superior mantida em 40mm (não os 30mm da regra) pra não encostar na
+// faixa gráfica do timbrado.
+const MARGEM = "ml-[30mm] mr-[20mm] mt-[40mm] mb-[20mm]";
 
 export function DecretoSuplementacaoConteudo({
   numeroDecreto,
@@ -53,9 +55,9 @@ export function DecretoSuplementacaoConteudo({
     altura: ALTURA_ASSINATURA_PREFEITO_MM,
     kind: "node",
     node: (
-      <div key="assinatura" className="mx-auto mt-[16mm] w-[100mm] text-center leading-none">
+      <div key="assinatura" className="mx-auto mt-[16mm] w-[100mm] text-center leading-normal">
         <p className="font-bold uppercase">{PREFEITO_NOME}</p>
-        <p>{PREFEITO_CARGO}</p>
+        <p className="font-bold">{PREFEITO_CARGO}</p>
       </div>
     ),
   };
@@ -71,7 +73,7 @@ export function DecretoSuplementacaoConteudo({
       {paginas.map((pagina, indice) => (
         <PaginaA4 key={indice} backgroundImage={TIMBRADO} quebrarPagina={indice < paginas.length - 1}>
           <div
-            className={`${MARGEM} flex flex-1 flex-col gap-2 text-[12pt] leading-snug [&_ol]:list-decimal [&_ol]:pl-5 [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:border-black [&_td]:px-2 [&_td]:py-1 [&_th]:border [&_th]:border-black [&_th]:px-2 [&_th]:py-1 [&_th]:font-bold [&_ul]:list-disc [&_ul]:pl-5`}
+            className={`${MARGEM} flex flex-1 flex-col gap-2 text-[12pt] leading-normal [&_ol]:list-decimal [&_ol]:pl-5 [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:border-black [&_td]:px-2 [&_td]:py-1 [&_th]:border [&_th]:border-black [&_th]:px-2 [&_th]:py-1 [&_th]:font-bold [&_ul]:list-disc [&_ul]:pl-5`}
           >
             {pagina.map((bloco, i) =>
               bloco.kind === "node" ? (

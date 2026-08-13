@@ -142,11 +142,11 @@ export function montarCorpoAtoPadrao({
   const valorTotal = itensDestino.reduce((soma, i) => soma + i.valor, 0);
   const dataFormatada = dataAto ? dataPorExtenso(dataAto).toUpperCase() : "___";
 
-  const titulo = `<p style="text-align:center"><strong>ATO DA MESA DIRETORA DE ${dataFormatada}</strong></p>`;
+  const titulo = `<p style="text-align:center;font-size:18pt"><strong>ATO DA MESA DIRETORA DE ${dataFormatada}</strong></p>`;
   const subtitulo =
     '<p style="text-align:right"><strong>Abre crédito suplementar no Orçamento vigente da Câmara Municipal.</strong></p>';
   const preambulo =
-    '<p style="text-align:justify">A Mesa Diretora da Câmara Municipal de Nepomuceno, conforme lhe faculta o art. 67, inciso VI da Lei Orgânica Municipal, por determinação do art. 42 da Lei Federal 4.320/64, RESOLVE:</p>';
+    '<p style="text-indent:1.25cm;text-align:justify">A Mesa Diretora da Câmara Municipal de Nepomuceno, conforme lhe faculta o art. 67, inciso VI da Lei Orgânica Municipal, por determinação do art. 42 da Lei Federal 4.320/64, RESOLVE:</p>';
 
   const art1Intro = `<p style="text-indent:1.25cm;text-align:justify"><strong>Art.1º</strong> Abrir crédito adicional do tipo suplementar no orçamento vigente da Câmara Municipal de Nepomuceno no valor total de ${formatarMoeda(valorTotal)} (${valorPorExtensoMinusculo(valorTotal)}) sob as seguintes classificações orçamentárias:</p>`;
   const art2Intro = `<p style="text-indent:1.25cm;text-align:justify"><strong>Art.2º</strong> A origem dos recursos dos créditos suplementares autorizados no art. 1º que totaliza ${formatarMoeda(valorTotal)} (${valorPorExtensoMinusculo(valorTotal)}) será a anulação parcial das seguintes dotações do Orçamento da Câmara Municipal de Nepomuceno:</p>`;
@@ -180,11 +180,11 @@ export function montarCorpoDecretoPadrao({
   const dataFormatada = dataDecreto ? dataPorExtenso(dataDecreto).toUpperCase() : "___";
   const numero = numeroDecreto.trim() || "___";
 
-  const titulo = `<p style="text-align:center"><strong>DECRETO Nº ${numero} DE ${dataFormatada}</strong></p>`;
+  const titulo = `<p style="text-align:center;font-size:18pt"><strong>DECRETO Nº ${numero} DE ${dataFormatada}</strong></p>`;
   const subtitulo =
     '<p style="text-align:right"><strong>Abre crédito adicional suplementar no Orçamento vigente da Câmara Municipal</strong></p>';
   const preambulo =
-    '<p style="text-align:justify">O Prefeito Municipal de Nepomuceno, no uso de suas atribuições legais e ratificando ato da mesa diretora da Câmara Municipal, DECRETA:</p>';
+    '<p style="text-indent:1.25cm;text-align:justify">O Prefeito Municipal de Nepomuceno, no uso de suas atribuições legais e ratificando ato da mesa diretora da Câmara Municipal, DECRETA:</p>';
 
   const art1Intro = `<p style="text-indent:1.25cm;text-align:justify"><strong>Art.1º</strong> Abrir crédito adicional do tipo suplementar no orçamento vigente da Câmara Municipal de Nepomuceno no valor total de ${formatarMoeda(valorTotal)} (${valorPorExtensoMinusculo(valorTotal)}) sob as seguintes classificações orçamentárias:</p>`;
   const art2Intro = `<p style="text-indent:1.25cm;text-align:justify"><strong>Art.2º</strong> A origem dos recursos dos créditos suplementares autorizados no art. 1º que totaliza ${formatarMoeda(valorTotal)} (${valorPorExtensoMinusculo(valorTotal)}) será a anulação parcial das seguintes dotações do Orçamento da Câmara Municipal de Nepomuceno:</p>`;
