@@ -193,7 +193,13 @@ export function OficioDEForm({
           Use a barra de ferramentas pra negrito, itálico, sublinhado e listas.
         </p>
         <div className="mt-1">
-          <RichTextEditor name="corpo_texto" value={corpoTexto} onChange={setCorpoTexto} />
+          <RichTextEditor
+            name="corpo_texto"
+            value={corpoTexto}
+            onChange={setCorpoTexto}
+            margemEsquerdaMm={30}
+            margemDireitaMm={30}
+          />
         </div>
       </div>
 

@@ -21,6 +21,65 @@ const FONTES: { label: string; valor: string }[] = [
 // valores aceitos em sanitizar-html.ts.
 const TAMANHOS_FONTE = [10, 11, 12, 14, 16, 18];
 
+// Largura de uma página A4 retrato — único formato usado pelos documentos
+// que têm campo de texto rico hoje (Ofícios, Ofício do Diretor Executivo,
+// Suplementações). Se algum dia esse editor for usado numa página paisagem
+// (ex.: Moção de Congratulação), a régua vai ficar incorreta — não vale a
+// complexidade de receber orientação como prop enquanto não houver um uso
+// real assim.
+const LARGURA_PAGINA_MM = 210;
+
+// Régua horizontal só de referência visual (não arrasta marcador de
+// recuo/tabulação — isso já existe nos botões "Recuo +/-" da barra de
+// ferramentas) — mostra a largura real da página impressa, com a margem
+// esquerda/direita sombreada, pra quem está digitando ter noção de onde o
+// texto vai cair no documento final. Cada consumidor deste editor passa a
+// margem real do template PDF que ele gera (ver margemEsquerdaMm/
+// margemDireitaMm em RichTextEditor).
+function Regua({
+  margemEsquerdaMm,
+  margemDireitaMm,
+}: {
+  margemEsquerdaMm: number;
+  margemDireitaMm: number;
+}) {
+  const centimetros = Array.from({ length: LARGURA_PAGINA_MM / 10 + 1 }, (_, i) => i);
+
+  return (
+    <div
+      aria-hidden="true"
+      className="relative h-5 select-none overflow-hidden border-x border-t border-slate-300 bg-white"
+    >
+      <div
+        className="absolute inset-y-0 left-0 bg-slate-100"
+        style={{ width: `${(margemEsquerdaMm / LARGURA_PAGINA_MM) * 100}%` }}
+      />
+      <div
+        className="absolute inset-y-0 right-0 bg-slate-100"
+        style={{ width: `${(margemDireitaMm / LARGURA_PAGINA_MM) * 100}%` }}
+      />
+      {centimetros.map((cm) => (
+        <span
+          key={cm}
+          className={`absolute bottom-0 w-px bg-slate-400 ${cm % 5 === 0 ? "h-2.5" : "h-1.5"}`}
+          style={{ left: `${((cm * 10) / LARGURA_PAGINA_MM) * 100}%` }}
+        />
+      ))}
+      {centimetros
+        .filter((cm) => cm % 5 === 0)
+        .map((cm) => (
+          <span
+            key={cm}
+            className="absolute top-0 -translate-x-1/2 text-[9px] leading-tight text-slate-500"
+            style={{ left: `${((cm * 10) / LARGURA_PAGINA_MM) * 100}%` }}
+          >
+            {cm}
+          </span>
+        ))}
+    </div>
+  );
+}
+
 // justifyLeft/Center/Right/Full são execCommand nativos — no Chrome eles só
 // marcam text-align inline no bloco atual (sem envolver numa tag nova), por
 // isso dá pra reaproveitar o mesmo aplicarComando() dos botões acima. Fica
@@ -60,12 +119,20 @@ export function RichTextEditor({
   onChange,
   placeholder,
   minHeight = "10rem",
+  // Margem esquerda/direita reais do template PDF que este texto alimenta
+  // — só usado pra desenhar a régua proporcionalmente correta (ver Regua
+  // acima). Padrão 30mm/20mm bate com Ofícios e Suplementações; Ofício do
+  // Diretor Executivo passa 30mm/30mm explicitamente.
+  margemEsquerdaMm = 30,
+  margemDireitaMm = 20,
 }: {
   name: string;
   value: string;
   onChange: (html: string) => void;
   placeholder?: string;
   minHeight?: string;
+  margemEsquerdaMm?: number;
+  margemDireitaMm?: number;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -364,6 +431,7 @@ export function RichTextEditor({
           + Coluna
         </button>
       </div>
+      <Regua margemEsquerdaMm={margemEsquerdaMm} margemDireitaMm={margemDireitaMm} />
       <div className="relative">
         {estaVazio && placeholder && (
           <p className="pointer-events-none absolute top-2 left-3 text-sm text-slate-400">
