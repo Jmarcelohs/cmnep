@@ -9,6 +9,18 @@ const BOTOES: { comando: string; label: string; rotulo: string }[] = [
   { comando: "insertUnorderedList", label: "•", rotulo: "Lista com marcadores" },
 ];
 
+// Só as 2 fontes que a Base de Formatação da Câmara permite (Times New
+// Roman ou Arial) — o valor exato precisa bater com o regex de
+// allowedStyles em sanitizar-html.ts, senão a escolha se perde ao salvar.
+const FONTES: { label: string; valor: string }[] = [
+  { label: "Arial", valor: "Arial, Helvetica, sans-serif" },
+  { label: "Times New Roman", valor: "'Times New Roman', Times, serif" },
+];
+
+// Hierarquia título/subtítulo/corpo/nota da Base de Formatação — mesmos 6
+// valores aceitos em sanitizar-html.ts.
+const TAMANHOS_FONTE = [10, 11, 12, 14, 16, 18];
+
 // justifyLeft/Center/Right/Full são execCommand nativos — no Chrome eles só
 // marcam text-align inline no bloco atual (sem envolver numa tag nova), por
 // isso dá pra reaproveitar o mesmo aplicarComando() dos botões acima. Fica
@@ -190,9 +202,71 @@ export function RichTextEditor({
     onChange(ref.current?.innerHTML ?? "");
   }
 
+  // Um <select> nativo, diferente dos botões acima, tira o foco (e a
+  // seleção de texto) do contentEditable assim que o usuário clica pra
+  // abrir a lista — não dá pra só preventDefault() o mousedown como nos
+  // botões, senão a lista nem abre. Por isso captura os parágrafos
+  // afetados no mousedown (ainda com a seleção intacta, antes do troca de
+  // foco) e só aplica o estilo depois, no onChange do select.
+  const paragrafosCapturadosRef = useRef<HTMLParagraphElement[]>([]);
+
+  function capturarParagrafos() {
+    paragrafosCapturadosRef.current = paragrafosSelecionados();
+  }
+
+  function aplicarFonte(propriedade: "fontFamily" | "fontSize", valor: string) {
+    const paragrafos = paragrafosCapturadosRef.current;
+    if (!ref.current || paragrafos.length === 0) return;
+    paragrafos.forEach((p) => {
+      p.style[propriedade] = valor;
+    });
+    onChange(ref.current.innerHTML);
+  }
+
   return (
     <div>
-      <div className="flex flex-wrap gap-1 rounded-t-md border border-b-0 border-slate-300 bg-slate-50 p-1">
+      <div className="flex flex-wrap items-center gap-1 rounded-t-md border border-b-0 border-slate-300 bg-slate-50 p-1">
+        <select
+          aria-label="Fonte"
+          title="Fonte"
+          defaultValue=""
+          onMouseDown={capturarParagrafos}
+          onChange={(e) => {
+            aplicarFonte("fontFamily", e.target.value);
+            e.target.value = "";
+          }}
+          className="h-7 rounded border border-slate-300 bg-white px-1 text-xs text-slate-700"
+        >
+          <option value="" disabled>
+            Fonte…
+          </option>
+          {FONTES.map((fonte) => (
+            <option key={fonte.valor} value={fonte.valor}>
+              {fonte.label}
+            </option>
+          ))}
+        </select>
+        <select
+          aria-label="Tamanho da fonte"
+          title="Tamanho da fonte"
+          defaultValue=""
+          onMouseDown={capturarParagrafos}
+          onChange={(e) => {
+            aplicarFonte("fontSize", `${e.target.value}pt`);
+            e.target.value = "";
+          }}
+          className="h-7 rounded border border-slate-300 bg-white px-1 text-xs text-slate-700"
+        >
+          <option value="" disabled>
+            Tamanho…
+          </option>
+          {TAMANHOS_FONTE.map((tamanho) => (
+            <option key={tamanho} value={tamanho}>
+              {tamanho}pt
+            </option>
+          ))}
+        </select>
+        <span className="mx-1 w-px bg-slate-300" />
         {BOTOES.map((botao) => (
           <button
             key={botao.comando}
@@ -304,7 +378,12 @@ export function RichTextEditor({
           aria-label={placeholder}
           onInput={() => onChange(ref.current?.innerHTML ?? "")}
           style={{ minHeight }}
-          className="rounded-b-md border border-slate-300 px-3 py-2 text-sm focus:outline-2 focus:outline-brand-navy focus:-outline-offset-1 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:min-h-[1.25em] [&_ul]:list-disc [&_ul]:pl-5 [&_table]:my-2 [&_table]:border-collapse [&_td]:border [&_td]:border-slate-400 [&_td]:px-2 [&_td]:py-1 [&_th]:border [&_th]:border-slate-400 [&_th]:bg-slate-100 [&_th]:px-2 [&_th]:py-1 [&_th]:font-semibold"
+          // [&_p]:mb-2 — mesmo espaçamento (~2mm) que o wrapper flex-col
+          // gap-2 aplica entre blocos no PDF final (ver ato-mesa-diretora-
+          // conteudo.tsx/decreto-suplementacao-conteudo.tsx). Sem isso os
+          // parágrafos aparecem colados aqui no editor mesmo saindo com
+          // espaço no documento gerado — o que engana quem está editando.
+          className="rounded-b-md border border-slate-300 px-3 py-2 text-sm focus:outline-2 focus:outline-brand-navy focus:-outline-offset-1 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-2 [&_p]:min-h-[1.25em] [&_p:last-child]:mb-0 [&_ul]:list-disc [&_ul]:pl-5 [&_table]:my-2 [&_table]:border-collapse [&_td]:border [&_td]:border-slate-400 [&_td]:px-2 [&_td]:py-1 [&_th]:border [&_th]:border-slate-400 [&_th]:bg-slate-100 [&_th]:px-2 [&_th]:py-1 [&_th]:font-semibold"
         />
       </div>
       <input type="hidden" name={name} value={value} readOnly />

@@ -93,6 +93,21 @@ describe("sanitizarHtmlDocumento", () => {
     expect(sanitizarHtmlDocumento('<p style="font-size: 2em;">texto</p>')).toBe("<p>texto</p>");
   });
 
+  it("mantém font-family em <p> só nas 2 fontes da Base de Formatação (Arial/Times New Roman)", () => {
+    expect(
+      sanitizarHtmlDocumento('<p style="font-family: Arial, Helvetica, sans-serif;">texto</p>'),
+    ).toBe('<p style="font-family:Arial, Helvetica, sans-serif">texto</p>');
+    expect(
+      sanitizarHtmlDocumento("<p style=\"font-family: 'Times New Roman', Times, serif;\">texto</p>"),
+    ).toBe("<p style=\"font-family:'Times New Roman', Times, serif\">texto</p>");
+  });
+
+  it("rejeita font-family fora das 2 permitidas (ex.: fonte arbitrária)", () => {
+    expect(sanitizarHtmlDocumento('<p style="font-family: Comic Sans MS;">texto</p>')).toBe(
+      "<p>texto</p>",
+    );
+  });
+
   it("remove propriedades de estilo fora da lista permitida (ex.: color, position)", () => {
     expect(sanitizarHtmlDocumento('<p style="color: red;">texto</p>')).toBe("<p>texto</p>");
     expect(

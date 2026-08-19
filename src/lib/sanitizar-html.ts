@@ -42,6 +42,11 @@ export function sanitizarHtmlDocumento(html: string): string {
         // Formatação da Câmara (18pt título inicial, 14pt título principal,
         // 12pt corpo/subtítulo, 10pt rodapé/nota) — não um valor livre.
         "font-size": [/^(10|11|12|14|16|18)pt$/],
+        // Só as 2 fontes que a Base de Formatação permite (Times New Roman
+        // ou Arial) — valores exatos que o seletor de fonte do editor
+        // produz (ver FONTES em rich-text-editor.tsx), não uma família
+        // livre.
+        "font-family": [/^(Arial, Helvetica, sans-serif|'Times New Roman', Times, serif)$/],
       },
     },
     // contentEditable às vezes quebra linha com <div> em vez de <p>
