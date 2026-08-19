@@ -112,6 +112,14 @@ describe("montarCorpoAtoPadrao", () => {
     expect(html).not.toContain("Total Geral");
   });
 
+  it("separa a última linha da ficha do 'Total' com uma linha em branco", () => {
+    expect(html).toContain("Recursos Ordinários R$ 53.000,00<br><br>Total: R$ 53.000,00");
+  });
+
+  it("reduz a fonte do bloco da ficha (10pt) pra caber o nome mais longo numa linha só", () => {
+    expect(html).toContain('<p style="font-size:10pt">I<br>Ficha 22');
+  });
+
   it("soma 'Total Geral' quando há mais de 1 item no mesmo artigo", () => {
     const comDoisItens = montarCorpoAtoPadrao({
       dataAto: "2026-05-12",

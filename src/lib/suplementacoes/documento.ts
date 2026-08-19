@@ -94,14 +94,23 @@ export type ItemSuplementacao = {
   dotacao: DotacaoOrcamentaria;
 };
 
-// Um bloco "I / Ficha N / <7 linhas da classificação> / Total: R$X" — junta
-// tudo num <p> só com <br> entre as linhas (não um <p> por linha) pra não
-// abrir espaço extra de parágrafo entre elas. É a mesma informação do
-// modelo real, só sem o efeito visual de pontilhado antes do valor (não dá
-// pra reproduzir isso com as tags/estilos que o editor de texto rico e o
+// Um bloco "I / Ficha N / <7 linhas da classificação> / (linha em branco) /
+// Total: R$X" — tudo num <p> só com <br> entre as linhas (não um <p> por
+// linha) pra não abrir espaço extra de parágrafo entre elas, mas com um
+// <br><br> antes do Total pra separar visualmente do resto (pedido
+// explícito — sem isso ficava tudo colado). É a mesma informação do modelo
+// real, só sem o efeito visual de pontilhado antes do valor (não dá pra
+// reproduzir isso com as tags/estilos que o editor de texto rico e o
 // sanitizador permitem — ver TAGS_PERMITIDAS em sanitizar-html.ts) — vira
 // texto puro "Total: R$X" pra caber no conjunto de tags aceitas, já que
 // esse texto agora pode ser editado livremente (não é mais gerado à parte).
+//
+// font-size:10pt (menor que o resto do corpo, 12pt) — sem isso, o nome do
+// projeto/atividade mais longo (ex.: "Aquisição de Equipamentos e
+// Materiais Permanentes e Veículos") estourava a largura da página e
+// quebrava pra uma segunda linha, ficando com aparência de erro de
+// digitação. Mesma convenção de fonte reduzida pra dado denso/tabular já
+// usada nos outros templates de PDF do sistema (9-11pt).
 function linhaItemHtml(item: ItemSuplementacao, indice: number): string {
   const linhas = segmentosFicha(item.dotacao);
   const ultima = linhas[linhas.length - 1];
@@ -110,9 +119,8 @@ function linhaItemHtml(item: ItemSuplementacao, indice: number): string {
     `Ficha ${item.dotacao.ficha}`,
     ...linhas.map((l) => `${l.codigo} ${l.nome}`),
     `${ultima.codigo} ${ultima.nome} ${formatarMoeda(item.valor)}`,
-    `Total: ${formatarMoeda(item.valor)}`,
   ];
-  return `<p>${partes.join("<br>")}</p>`;
+  return `<p style="font-size:10pt">${partes.join("<br>")}<br><br>Total: ${formatarMoeda(item.valor)}</p>`;
 }
 
 function corpoArtigoHtml(itens: ItemSuplementacao[], introHtml: string): string {
