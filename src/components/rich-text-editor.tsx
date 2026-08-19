@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const BOTOES: { comando: string; label: string; rotulo: string }[] = [
   { comando: "bold", label: "N", rotulo: "Negrito" },
@@ -29,53 +29,107 @@ const TAMANHOS_FONTE = [10, 11, 12, 14, 16, 18];
 // real assim.
 const LARGURA_PAGINA_MM = 210;
 
-// Régua horizontal só de referência visual (não arrasta marcador de
-// recuo/tabulação — isso já existe nos botões "Recuo +/-" da barra de
-// ferramentas) — mostra a largura real da página impressa, com a margem
-// esquerda/direita sombreada, pra quem está digitando ter noção de onde o
-// texto vai cair no documento final. Cada consumidor deste editor passa a
-// margem real do template PDF que ele gera (ver margemEsquerdaMm/
-// margemDireitaMm em RichTextEditor).
+// Régua horizontal — mostra a largura real da página impressa, com a
+// margem esquerda/direita sombreada, e um marcador arrastável do recuo de
+// primeira linha (mesmo text-indent que os botões "Recuo +/-" já ajustam,
+// só que aqui dá pra escolher um valor livre em vez do salto fixo de
+// 1,25cm). Cada consumidor deste editor passa a margem real do template
+// PDF que ele gera (ver margemEsquerdaMm/margemDireitaMm em
+// RichTextEditor).
 function Regua({
   margemEsquerdaMm,
   margemDireitaMm,
+  recuoCm,
+  onIniciarArraste,
+  onArrastarPara,
 }: {
   margemEsquerdaMm: number;
   margemDireitaMm: number;
+  recuoCm: number;
+  onIniciarArraste: () => void;
+  onArrastarPara: (cm: number) => void;
 }) {
+  const reguaRef = useRef<HTMLDivElement>(null);
   const centimetros = Array.from({ length: LARGURA_PAGINA_MM / 10 + 1 }, (_, i) => i);
+  const larguraUtilCm = (LARGURA_PAGINA_MM - margemEsquerdaMm - margemDireitaMm) / 10;
+
+  // Converte a posição X do ponteiro (em pixels de tela) pro recuo
+  // correspondente em cm, relativo ao início do texto (a margem esquerda),
+  // arredondado pra 1 casa decimal e travado entre 0 e a largura útil do
+  // conteúdo — não deixa arrastar o marcador pra dentro de nenhuma margem.
+  function posicaoParaCm(clientX: number): number {
+    const rect = reguaRef.current?.getBoundingClientRect();
+    if (!rect) return 0;
+    const fracao = Math.min(Math.max((clientX - rect.left) / rect.width, 0), 1);
+    const mm = fracao * LARGURA_PAGINA_MM;
+    const cm = (mm - margemEsquerdaMm) / 10;
+    return Math.min(Math.max(Math.round(cm * 10) / 10, 0), larguraUtilCm);
+  }
+
+  function aoPressionarMarcador(e: React.PointerEvent<HTMLDivElement>) {
+    // preventDefault (não focus) — mesma técnica dos botões da barra de
+    // ferramentas: mantém a seleção de texto atual no contentEditable em
+    // vez de tirar o foco pro marcador.
+    e.preventDefault();
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    onIniciarArraste();
+  }
+
+  function aoMoverMarcador(e: React.PointerEvent<HTMLDivElement>) {
+    if (e.buttons === 0) return;
+    onArrastarPara(posicaoParaCm(e.clientX));
+  }
+
+  const posicaoMarcadorPct = ((margemEsquerdaMm + recuoCm * 10) / LARGURA_PAGINA_MM) * 100;
 
   return (
     <div
-      aria-hidden="true"
-      className="relative h-5 select-none overflow-hidden border-x border-t border-slate-300 bg-white"
+      ref={reguaRef}
+      className="relative h-5 select-none overflow-visible border-x border-t border-slate-300 bg-white"
     >
-      <div
-        className="absolute inset-y-0 left-0 bg-slate-100"
-        style={{ width: `${(margemEsquerdaMm / LARGURA_PAGINA_MM) * 100}%` }}
-      />
-      <div
-        className="absolute inset-y-0 right-0 bg-slate-100"
-        style={{ width: `${(margemDireitaMm / LARGURA_PAGINA_MM) * 100}%` }}
-      />
-      {centimetros.map((cm) => (
-        <span
-          key={cm}
-          className={`absolute bottom-0 w-px bg-slate-400 ${cm % 5 === 0 ? "h-2.5" : "h-1.5"}`}
-          style={{ left: `${((cm * 10) / LARGURA_PAGINA_MM) * 100}%` }}
+      <div aria-hidden="true" className="absolute inset-0 overflow-hidden">
+        <div
+          className="absolute inset-y-0 left-0 bg-slate-100"
+          style={{ width: `${(margemEsquerdaMm / LARGURA_PAGINA_MM) * 100}%` }}
         />
-      ))}
-      {centimetros
-        .filter((cm) => cm % 5 === 0)
-        .map((cm) => (
+        <div
+          className="absolute inset-y-0 right-0 bg-slate-100"
+          style={{ width: `${(margemDireitaMm / LARGURA_PAGINA_MM) * 100}%` }}
+        />
+        {centimetros.map((cm) => (
           <span
             key={cm}
-            className="absolute top-0 -translate-x-1/2 text-[9px] leading-tight text-slate-500"
+            className={`absolute bottom-0 w-px bg-slate-400 ${cm % 5 === 0 ? "h-2.5" : "h-1.5"}`}
             style={{ left: `${((cm * 10) / LARGURA_PAGINA_MM) * 100}%` }}
-          >
-            {cm}
-          </span>
+          />
         ))}
+        {centimetros
+          .filter((cm) => cm % 5 === 0)
+          .map((cm) => (
+            <span
+              key={cm}
+              className="absolute top-0 -translate-x-1/2 text-[9px] leading-tight text-slate-500"
+              style={{ left: `${((cm * 10) / LARGURA_PAGINA_MM) * 100}%` }}
+            >
+              {cm}
+            </span>
+          ))}
+      </div>
+      <div
+        role="slider"
+        aria-label="Recuo da primeira linha"
+        aria-valuemin={0}
+        aria-valuemax={larguraUtilCm}
+        aria-valuenow={recuoCm}
+        aria-valuetext={`${recuoCm.toFixed(1)}cm`}
+        title={`Recuo da primeira linha: ${recuoCm.toFixed(1)}cm — arraste pra ajustar`}
+        onPointerDown={aoPressionarMarcador}
+        onPointerMove={aoMoverMarcador}
+        className="absolute top-0 z-10 h-full w-3 -translate-x-1/2 cursor-ew-resize touch-none"
+        style={{ left: `${posicaoMarcadorPct}%` }}
+      >
+        <div className="mx-auto h-0 w-0 border-x-[5px] border-t-[7px] border-x-transparent border-t-brand-navy" />
+      </div>
     </div>
   );
 }
@@ -259,14 +313,53 @@ export function RichTextEditor({
     return paragrafoAtual ? [paragrafoAtual] : [];
   }
 
+  // Recuo do parágrafo ativo (sob o cursor) — só pra posicionar o marcador
+  // na régua. Refeito a cada mudança de seleção (não só ao clicar num
+  // botão), pra o marcador seguir o cursor enquanto o usuário navega pelo
+  // texto.
+  const [recuoAtual, setRecuoAtual] = useState(0);
+
+  useEffect(() => {
+    function aoMudarSelecao() {
+      const paragrafos = paragrafosSelecionados();
+      if (paragrafos.length === 0) return;
+      const valor = parseFloat(paragrafos[0].style.textIndent);
+      setRecuoAtual(Number.isNaN(valor) ? 0 : valor);
+    }
+    document.addEventListener("selectionchange", aoMudarSelecao);
+    return () => document.removeEventListener("selectionchange", aoMudarSelecao);
+  }, []);
+
   function ajustarRecuo(comIndentacao: boolean) {
     focarEditor();
     const paragrafos = paragrafosSelecionados();
     if (paragrafos.length === 0) return;
+    const novoValor = comIndentacao ? 1.25 : 0;
     paragrafos.forEach((p) => {
-      p.style.textIndent = comIndentacao ? "1.25cm" : "0cm";
+      p.style.textIndent = `${novoValor}cm`;
     });
+    setRecuoAtual(novoValor);
     onChange(ref.current?.innerHTML ?? "");
+  }
+
+  // Arrastar o marcador da régua funciona igual aos botões Recuo +/-, só
+  // que soltando um valor livre em vez do salto fixo de 1,25cm — mesma
+  // técnica de capturar os parágrafos afetados no início do gesto (aqui,
+  // no pointerdown do marcador) usada pros seletores de fonte/tamanho.
+  const paragrafosArrastadosRef = useRef<HTMLParagraphElement[]>([]);
+
+  function iniciarArrasteRecuo() {
+    paragrafosArrastadosRef.current = paragrafosSelecionados();
+  }
+
+  function arrastarRecuoPara(cm: number) {
+    const paragrafos = paragrafosArrastadosRef.current;
+    if (!ref.current || paragrafos.length === 0) return;
+    paragrafos.forEach((p) => {
+      p.style.textIndent = `${cm}cm`;
+    });
+    setRecuoAtual(cm);
+    onChange(ref.current.innerHTML);
   }
 
   // Um <select> nativo, diferente dos botões acima, tira o foco (e a
@@ -431,7 +524,13 @@ export function RichTextEditor({
           + Coluna
         </button>
       </div>
-      <Regua margemEsquerdaMm={margemEsquerdaMm} margemDireitaMm={margemDireitaMm} />
+      <Regua
+        margemEsquerdaMm={margemEsquerdaMm}
+        margemDireitaMm={margemDireitaMm}
+        recuoCm={recuoAtual}
+        onIniciarArraste={iniciarArrasteRecuo}
+        onArrastarPara={arrastarRecuoPara}
+      />
       <div className="relative">
         {estaVazio && placeholder && (
           <p className="pointer-events-none absolute top-2 left-3 text-sm text-slate-400">
