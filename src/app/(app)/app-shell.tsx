@@ -196,7 +196,7 @@ export function AppShell({
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Sidebar fixa (telas grandes) */}
-      <aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:w-64 lg:flex-col lg:overflow-y-auto lg:bg-brand-navy">
+      <aside className="no-print hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:w-64 lg:flex-col lg:overflow-y-auto lg:bg-brand-navy">
         <div className="m-4 rounded-lg bg-white p-3">
           <Logo />
         </div>
@@ -214,7 +214,7 @@ export function AppShell({
       </aside>
 
       {/* Barra superior (telas pequenas) */}
-      <header className="flex items-center justify-between bg-brand-navy px-4 py-3 lg:hidden">
+      <header className="no-print flex items-center justify-between bg-brand-navy px-4 py-3 lg:hidden">
         <button
           type="button"
           onClick={() => setAberto(true)}
@@ -261,8 +261,8 @@ export function AppShell({
         </div>
       )}
 
-      <main className="lg:pl-64">
-        <div className="mx-auto w-full max-w-5xl px-4 py-8">{children}</div>
+      <main className="lg:pl-64 print:pl-0">
+        <div className="mx-auto w-full max-w-5xl px-4 py-8 print:max-w-none print:p-0">{children}</div>
       </main>
 
       <BotaoSuporteWhatsapp />

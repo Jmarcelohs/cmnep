@@ -66,6 +66,11 @@ export const NAV_ESTRUTURA: NavEntry[] = [
     label: "Suplementações Orçamentárias",
     apenas: ["admin"],
   },
+  {
+    href: "/provisionamento",
+    label: "Provisionamento Orçamentário",
+    apenas: ["admin"],
+  },
   { href: "/auditoria", label: "Auditoria", apenas: ["admin"] },
 ];
 
