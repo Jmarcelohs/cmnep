@@ -997,6 +997,45 @@ export interface Database {
           },
         ];
       };
+      provisionamento_contratos: {
+        Row: {
+          id: string;
+          nome: string;
+          fornecedor: string;
+          valor_vigente: number;
+          tipo_valor: "mensal" | "anual";
+          data_inicio_vigencia: string;
+          data_fim_vigencia: string;
+          data_proximo_reajuste: string;
+          indice_correcao: string;
+          percentual_estimado: number;
+          situacao: "continua" | "vence" | "nova_licitacao";
+          valor_novo_contrato_estimado: number | null;
+          data_inicio_novo_contrato: string | null;
+          ficha_orcamentaria: string;
+          dotacao: string;
+          elemento_despesa: string;
+          observacoes: string;
+          criado_por: string | null;
+          criado_em: string;
+          atualizado_em: string;
+        };
+        Insert: Partial<
+          Omit<Database["public"]["Tables"]["provisionamento_contratos"]["Row"], "id">
+        > & {
+          nome: string;
+          valor_vigente: number;
+          tipo_valor: "mensal" | "anual";
+          data_inicio_vigencia: string;
+          data_fim_vigencia: string;
+          data_proximo_reajuste: string;
+          indice_correcao: string;
+          percentual_estimado: number;
+          situacao: "continua" | "vence" | "nova_licitacao";
+        };
+        Update: Partial<Database["public"]["Tables"]["provisionamento_contratos"]["Row"]>;
+        Relationships: [];
+      };
       legislacao_documentos: {
         Row: {
           id: string;

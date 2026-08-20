@@ -1,6 +1,7 @@
 // Mesma convenção das rotas de exportação CSV do resto do sistema (ver
-// ex.: src/app/api/pessoas/csv/route.ts) — só que rodando no navegador,
-// já que os dados deste módulo nunca chegam ao servidor (ver tipos.ts).
+// ex.: src/app/api/pessoas/csv/route.ts) — só que montada e baixada direto
+// no navegador (os dados já chegaram nele via os Server Actions de
+// actions.ts, não precisa de uma rota /api à parte só pra isso).
 function csvEscape(valor: string): string {
   if (/[",\n]/.test(valor)) {
     return `"${valor.replace(/"/g, '""')}"`;

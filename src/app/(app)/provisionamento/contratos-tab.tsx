@@ -29,10 +29,12 @@ function ContratoForm({
   valoresIniciais,
   onSalvar,
   onCancelar,
+  salvando,
 }: {
   valoresIniciais: Contrato | null;
   onSalvar: (dados: NovoContrato) => void;
   onCancelar: () => void;
+  salvando: boolean;
 }) {
   const [campos, setCampos] = useState<NovoContrato>(valoresIniciais ?? CAMPOS_INICIAIS);
   // Percentual guardado como fração (0.05) — o campo mostra/edita como
@@ -277,14 +279,16 @@ function ContratoForm({
       <div className="flex gap-2">
         <button
           type="submit"
-          className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white hover:bg-brand-navy-light"
+          disabled={salvando}
+          className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white hover:bg-brand-navy-light disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Salvar contrato
+          {salvando ? "Salvando…" : "Salvar contrato"}
         </button>
         <button
           type="button"
           onClick={onCancelar}
-          className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          disabled={salvando}
+          className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Cancelar
         </button>
@@ -299,30 +303,37 @@ function rotuloSituacao(valor: Contrato["situacao"]): string {
 
 export function ContratosTab({
   contratos,
-  onAlterar,
+  onCriar,
+  onEditar,
+  onExcluir,
 }: {
   contratos: Contrato[];
-  onAlterar: (contratos: Contrato[]) => void;
+  onCriar: (dados: NovoContrato) => Promise<void>;
+  onEditar: (id: string, dados: NovoContrato) => Promise<void>;
+  onExcluir: (id: string) => Promise<void>;
 }) {
   const [editando, setEditando] = useState<Contrato | null>(null);
   const [mostrarForm, setMostrarForm] = useState(false);
+  const [salvando, setSalvando] = useState(false);
 
-  function salvar(dados: NovoContrato) {
-    if (editando) {
-      onAlterar(contratos.map((c) => (c.id === editando.id ? { ...c, ...dados } : c)));
-    } else {
-      onAlterar([
-        ...contratos,
-        { ...dados, id: crypto.randomUUID(), criadoEm: new Date().toISOString() },
-      ]);
+  async function salvar(dados: NovoContrato) {
+    setSalvando(true);
+    try {
+      if (editando) {
+        await onEditar(editando.id, dados);
+      } else {
+        await onCriar(dados);
+      }
+      setMostrarForm(false);
+      setEditando(null);
+    } finally {
+      setSalvando(false);
     }
-    setMostrarForm(false);
-    setEditando(null);
   }
 
-  function excluir(contrato: Contrato) {
+  async function excluir(contrato: Contrato) {
     if (!window.confirm(`Excluir o contrato "${contrato.nome}"? Essa ação não pode ser desfeita.`)) return;
-    onAlterar(contratos.filter((c) => c.id !== contrato.id));
+    await onExcluir(contrato.id);
   }
 
   function exportarCsv() {
@@ -370,6 +381,7 @@ export function ContratosTab({
       <ContratoForm
         valoresIniciais={editando}
         onSalvar={salvar}
+        salvando={salvando}
         onCancelar={() => {
           setMostrarForm(false);
           setEditando(null);

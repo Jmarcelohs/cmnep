@@ -1,10 +1,9 @@
-// Provisionamento Orçamentário — ao contrário do resto do sistema, os
-// dados desse módulo NÃO passam pelo Supabase: ficam só no navegador
-// (localStorage), conforme o Memorial de Cálculo que definiu essa
-// funcionalidade ("Todos os dados ficam armazenados localmente no
-// navegador utilizado"). É uma ferramenta de planejamento/rascunho
-// interno, não uma peça orçamentária oficial nem um registro que precise
-// de auditoria/RLS entre usuários.
+// Provisionamento Orçamentário — cadastro de contratos administrativos
+// usado pra projetar, mês a mês, o valor esperado em cada ficha
+// orçamentária (ver src/lib/provisionamento/calculo.ts). Persistido no
+// Supabase (migration 0049), admin-only — mesma sensibilidade de
+// Suplementações Orçamentárias. É uma ferramenta de planejamento/
+// rascunho interno, não uma peça orçamentária oficial.
 
 export type TipoValor = "mensal" | "anual";
 

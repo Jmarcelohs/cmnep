@@ -1,26 +1,8 @@
 import type { Contrato } from "./tipos";
 
-// Ver nota em tipos.ts — este módulo guarda tudo no localStorage do
-// navegador, não no Supabase.
-const CHAVE = "provisionamento-orcamentario:contratos";
-
-export function carregarContratos(): Contrato[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const bruto = window.localStorage.getItem(CHAVE);
-    if (!bruto) return [];
-    const dados = JSON.parse(bruto);
-    return Array.isArray(dados) ? dados : [];
-  } catch {
-    return [];
-  }
-}
-
-export function salvarContratos(contratos: Contrato[]): void {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(CHAVE, JSON.stringify(contratos));
-}
-
+// Os contratos em si ficam no Supabase (ver actions.ts) — isso aqui é só
+// pro backup manual em JSON da aba Parâmetros (exportar uma cópia à
+// parte, ou restaurar/migrar contratos de um arquivo).
 export function exportarJson(contratos: Contrato[]): string {
   return JSON.stringify(
     { ferramenta: "provisionamento-orcamentario", versao: 1, exportadoEm: new Date().toISOString(), contratos },
