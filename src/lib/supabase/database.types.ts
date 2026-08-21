@@ -1002,8 +1002,15 @@ export interface Database {
           id: string;
           nome: string;
           fornecedor: string;
-          valor_vigente: number;
-          tipo_valor: "mensal" | "anual";
+          modalidade: "fixo" | "unidade";
+          // "fixo": valor_vigente + tipo_valor; "unidade": valor_unitario +
+          // unidade_medida + quantidade_estimada_mensal — sempre um par ou
+          // outro null, conforme a modalidade (ver migration 0050).
+          valor_vigente: number | null;
+          tipo_valor: "mensal" | "anual" | null;
+          valor_unitario: number | null;
+          unidade_medida: string | null;
+          quantidade_estimada_mensal: number | null;
           data_inicio_vigencia: string;
           data_fim_vigencia: string;
           data_proximo_reajuste: string;
@@ -1022,8 +1029,7 @@ export interface Database {
           Omit<Database["public"]["Tables"]["provisionamento_contratos"]["Row"], "id">
         > & {
           nome: string;
-          valor_vigente: number;
-          tipo_valor: "mensal" | "anual";
+          modalidade: "fixo" | "unidade";
           data_inicio_vigencia: string;
           data_fim_vigencia: string;
           data_proximo_reajuste: string;

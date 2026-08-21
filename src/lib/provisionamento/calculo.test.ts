@@ -40,8 +40,12 @@ function contrato(sobrescreve: Partial<Contrato> = {}): Contrato {
     id: "c1",
     nome: "Contrato de teste",
     fornecedor: "Fornecedor Ltda",
+    modalidade: "fixo",
     valorVigente: 10000,
     tipoValor: "mensal",
+    valorUnitario: null,
+    unidadeMedida: null,
+    quantidadeEstimadaMensal: null,
     dataInicioVigencia: "2026-01-01",
     dataFimVigencia: "2028-12-31",
     dataProximoReajuste: "2027-06-01",
@@ -149,6 +153,44 @@ describe("valorMensalContrato — conversão de valor anual pra mensal", () => {
   it("divide por 12 quando tipoValor é 'anual'", () => {
     const c = contrato({ tipoValor: "anual", valorVigente: 120000, percentualEstimado: 0 });
     expect(valorMensalContrato(c, 2027, 1)).toBe(10000);
+  });
+});
+
+describe("valorMensalContrato — modalidade 'unidade' (contrato por serviço prestado)", () => {
+  // Ex.: motoboy a R$ 8,00 por entrega, ~200 entregas/mês → base R$ 1.600,00/mês.
+  const c = contrato({
+    modalidade: "unidade",
+    valorVigente: null,
+    tipoValor: null,
+    valorUnitario: 8,
+    unidadeMedida: "entrega",
+    quantidadeEstimadaMensal: 200,
+    dataInicioVigencia: "2020-01-01",
+    dataFimVigencia: "2030-12-31",
+    dataProximoReajuste: "2027-06-01",
+    percentualEstimado: 0.05,
+  });
+
+  it("multiplica preço unitário pela quantidade estimada mensal, antes do reajuste", () => {
+    expect(valorMensalContrato(c, 2027, 1)).toBe(1600);
+  });
+
+  it("aplica o mesmo reajuste composto que a modalidade fixa", () => {
+    expect(valorMensalContrato(c, 2027, 6)).toBeCloseTo(1600 * 1.05, 6);
+  });
+
+  it("respeita vigência e situação normalmente", () => {
+    const vencido = contrato({
+      modalidade: "unidade",
+      valorVigente: null,
+      tipoValor: null,
+      valorUnitario: 8,
+      unidadeMedida: "entrega",
+      quantidadeEstimadaMensal: 200,
+      situacao: "vence",
+      dataFimVigencia: "2027-06-30",
+    });
+    expect(valorMensalContrato(vencido, 2027, 7)).toBe(0);
   });
 });
 

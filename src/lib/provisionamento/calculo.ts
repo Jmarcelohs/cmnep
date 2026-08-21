@@ -34,6 +34,17 @@ export function contarAniversariosReajuste(
   return Math.floor((alvo - ancora) / 12) + 1;
 }
 
+// Valor mensal de base do contrato, antes do reajuste — para modalidade
+// "fixo", o valor vigente convertido pra mensal; para "unidade", preço
+// unitário × quantidade estimada por mês. A partir daqui os dois tipos
+// seguem o mesmo cálculo de reajuste composto (ver valorMensalContrato).
+function valorMensalBaseContrato(contrato: Contrato): number {
+  if (contrato.modalidade === "unidade") {
+    return (contrato.valorUnitario ?? 0) * (contrato.quantidadeEstimadaMensal ?? 0);
+  }
+  return contrato.tipoValor === "anual" ? (contrato.valorVigente ?? 0) / 12 : (contrato.valorVigente ?? 0);
+}
+
 // Valor provisionado de um contrato num mês específico do ano de
 // referência — implementa os passos 1-4 do Memorial de Cálculo, nessa
 // ordem: fora da vigência inicial → fim de vigência (continua/vence/nova
@@ -61,7 +72,7 @@ export function valorMensalContrato(contrato: Contrato, ano: number, mes: number
     }
   }
 
-  const valorBase = contrato.tipoValor === "anual" ? contrato.valorVigente / 12 : contrato.valorVigente;
+  const valorBase = valorMensalBaseContrato(contrato);
   const n = contarAniversariosReajuste(contrato.dataProximoReajuste, ano, mes);
   return valorBase * Math.pow(1 + contrato.percentualEstimado, n);
 }

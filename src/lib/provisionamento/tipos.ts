@@ -15,6 +15,18 @@ export { rotuloFicha, segmentosFicha } from "@/lib/suplementacoes/documento";
 
 export type TipoValor = "mensal" | "anual";
 
+// "fixo": valor mensal/anual fixo (valorVigente + tipoValor). "unidade":
+// contratos cobrados por serviço prestado (ex.: R$ por entrega de
+// motoboy, R$ por km de táxi/van, R$ por publicação no jornal) — o valor
+// mensal é valorUnitario × quantidadeEstimadaMensal, ver
+// valorMensalBaseContrato em calculo.ts.
+export type ModalidadeContrato = "fixo" | "unidade";
+
+export const MODALIDADES: { valor: ModalidadeContrato; label: string }[] = [
+  { valor: "fixo", label: "Valor fixo (mensal ou anual)" },
+  { valor: "unidade", label: "Por unidade/serviço prestado" },
+];
+
 export type SituacaoContrato = "continua" | "vence" | "nova_licitacao";
 
 export type IndiceCorrecao = "IPCA" | "IPCA-E" | "IGP-M" | "INPC" | "Outro";
@@ -43,8 +55,14 @@ export type Contrato = {
   id: string;
   nome: string;
   fornecedor: string;
-  valorVigente: number;
-  tipoValor: TipoValor;
+  modalidade: ModalidadeContrato;
+  // Preenchidos quando modalidade = "fixo"; null quando "unidade".
+  valorVigente: number | null;
+  tipoValor: TipoValor | null;
+  // Preenchidos quando modalidade = "unidade"; null quando "fixo".
+  valorUnitario: number | null;
+  unidadeMedida: string | null;
+  quantidadeEstimadaMensal: number | null;
   // Datas em "YYYY-MM-DD" (mesmo formato de <input type="date">) — o
   // cálculo mensal só usa ano/mês, o dia é ignorado (ver calculo.ts).
   dataInicioVigencia: string;

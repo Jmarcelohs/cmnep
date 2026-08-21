@@ -3,14 +3,18 @@
 import { useState } from "react";
 import { formatarData, formatarMoeda } from "@/lib/pdf/formato";
 import { baixarArquivo, montarCsv } from "@/lib/provisionamento/csv";
-import { INDICES_CORRECAO, rotuloFicha, SITUACOES } from "@/lib/provisionamento/tipos";
+import { INDICES_CORRECAO, MODALIDADES, rotuloFicha, SITUACOES } from "@/lib/provisionamento/tipos";
 import type { Contrato, DotacaoOrcamentaria, NovoContrato } from "@/lib/provisionamento/tipos";
 
 const CAMPOS_INICIAIS: NovoContrato = {
   nome: "",
   fornecedor: "",
+  modalidade: "fixo",
   valorVigente: 0,
   tipoValor: "mensal",
+  valorUnitario: null,
+  unidadeMedida: null,
+  quantidadeEstimadaMensal: null,
   dataInicioVigencia: "",
   dataFimVigencia: "",
   dataProximoReajuste: "",
@@ -73,31 +77,101 @@ function ContratoForm({
             className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <label className="block text-sm font-medium text-slate-700">Valor vigente</label>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={campos.valorVigente || ""}
-              onChange={(e) => atualizar("valorVigente", Number(e.target.value) || 0)}
-              required
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700">Periodicidade</label>
-            <select
-              value={campos.tipoValor}
-              onChange={(e) => atualizar("tipoValor", e.target.value as NovoContrato["tipoValor"])}
-              className="mt-1 w-full rounded-md border border-slate-300 px-2 py-2 text-sm"
-            >
-              <option value="mensal">Mensal</option>
-              <option value="anual">Anual</option>
-            </select>
-          </div>
+        <div className="sm:col-span-2">
+          <label className="block text-sm font-medium text-slate-700">Modalidade de cobrança</label>
+          <select
+            value={campos.modalidade}
+            onChange={(e) => {
+              const modalidade = e.target.value as NovoContrato["modalidade"];
+              setCampos((c) => ({
+                ...c,
+                modalidade,
+                valorVigente: modalidade === "fixo" ? c.valorVigente || 0 : null,
+                tipoValor: modalidade === "fixo" ? c.tipoValor ?? "mensal" : null,
+                valorUnitario: modalidade === "unidade" ? c.valorUnitario ?? 0 : null,
+                unidadeMedida: modalidade === "unidade" ? c.unidadeMedida ?? "" : null,
+                quantidadeEstimadaMensal: modalidade === "unidade" ? c.quantidadeEstimadaMensal ?? 0 : null,
+              }));
+            }}
+            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-2 text-sm"
+          >
+            {MODALIDADES.map((m) => (
+              <option key={m.valor} value={m.valor}>
+                {m.label}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-slate-500">
+            Por unidade/serviço: contratos sem valor mensal fixo — ex.: R$ por entrega de motoboy, R$
+            por km rodado de táxi/van, R$ por publicação no jornal. O valor mensal provisionado é o
+            preço unitário multiplicado pela quantidade estimada por mês.
+          </p>
         </div>
+
+        {campos.modalidade === "fixo" ? (
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-sm font-medium text-slate-700">Valor vigente</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={campos.valorVigente || ""}
+                onChange={(e) => atualizar("valorVigente", Number(e.target.value) || 0)}
+                required
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700">Periodicidade</label>
+              <select
+                value={campos.tipoValor ?? "mensal"}
+                onChange={(e) => atualizar("tipoValor", e.target.value as NovoContrato["tipoValor"])}
+                className="mt-1 w-full rounded-md border border-slate-300 px-2 py-2 text-sm"
+              >
+                <option value="mensal">Mensal</option>
+                <option value="anual">Anual</option>
+              </select>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-2">
+            <div>
+              <label className="block text-sm font-medium text-slate-700">Preço unitário</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={campos.valorUnitario || ""}
+                onChange={(e) => atualizar("valorUnitario", Number(e.target.value) || 0)}
+                required
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700">Unidade</label>
+              <input
+                value={campos.unidadeMedida ?? ""}
+                onChange={(e) => atualizar("unidadeMedida", e.target.value)}
+                placeholder="Ex.: entrega, km, publicação"
+                required
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700">Qtd. estimada/mês</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={campos.quantidadeEstimadaMensal || ""}
+                onChange={(e) => atualizar("quantidadeEstimadaMensal", Number(e.target.value) || 0)}
+                required
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="rounded-lg border border-slate-200 p-4">
@@ -328,8 +402,12 @@ export function ContratosTab({
     const cabecalho = [
       "Objeto",
       "Fornecedor",
+      "Modalidade",
       "Valor vigente",
       "Periodicidade",
+      "Preço unitário",
+      "Unidade",
+      "Qtd. estimada/mês",
       "Início vigência",
       "Fim vigência",
       "Próximo reajuste",
@@ -345,8 +423,12 @@ export function ContratosTab({
     const linhas = contratos.map((c) => [
       c.nome,
       c.fornecedor,
-      c.valorVigente,
-      c.tipoValor,
+      c.modalidade === "unidade" ? "Por unidade/serviço" : "Valor fixo",
+      c.valorVigente ?? "",
+      c.tipoValor ?? "",
+      c.valorUnitario ?? "",
+      c.unidadeMedida ?? "",
+      c.quantidadeEstimadaMensal ?? "",
       c.dataInicioVigencia,
       c.dataFimVigencia,
       c.dataProximoReajuste,
@@ -426,10 +508,21 @@ export function ContratosTab({
                   {c.fornecedor && <span className="block text-xs text-slate-500">{c.fornecedor}</span>}
                 </td>
                 <td className="px-4 py-2 text-slate-700">
-                  {formatarMoeda(c.valorVigente)}
-                  <span className="block text-xs text-slate-500">
-                    {c.tipoValor === "anual" ? "anual" : "mensal"}
-                  </span>
+                  {c.modalidade === "unidade" ? (
+                    <>
+                      {formatarMoeda(c.valorUnitario ?? 0)} / {c.unidadeMedida || "unidade"}
+                      <span className="block text-xs text-slate-500">
+                        ~{c.quantidadeEstimadaMensal ?? 0} por mês
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      {formatarMoeda(c.valorVigente ?? 0)}
+                      <span className="block text-xs text-slate-500">
+                        {c.tipoValor === "anual" ? "anual" : "mensal"}
+                      </span>
+                    </>
+                  )}
                 </td>
                 <td className="px-4 py-2 text-slate-700">
                   {formatarData(c.dataInicioVigencia)} a {formatarData(c.dataFimVigencia)}
