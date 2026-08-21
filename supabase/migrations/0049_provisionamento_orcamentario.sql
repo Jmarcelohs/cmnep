@@ -28,9 +28,14 @@ create table provisionamento_contratos (
   valor_novo_contrato_estimado numeric(14, 2),
   data_inicio_novo_contrato date,
 
-  ficha_orcamentaria text not null default '',
-  dotacao text not null default '',
-  elemento_despesa text not null default '',
+  -- Aponta pra uma das fichas já cadastradas em dotacoes_orcamentarias
+  -- (mesma tabela usada em Suplementações Orçamentárias, migration 0046)
+  -- em vez de texto livre — reaproveita a classificação orçamentária real
+  -- (órgão/unidade/subfunção/programa/projeto-atividade/elemento/fonte) e
+  -- evita divergência entre o que fica digitado aqui e a ficha de verdade.
+  -- Nullable: um contrato pode ser cadastrado antes de a ficha certa ser
+  -- definida.
+  ficha_id uuid references dotacoes_orcamentarias(id),
   observacoes text not null default '',
 
   criado_por uuid references usuarios(id),
@@ -38,7 +43,7 @@ create table provisionamento_contratos (
   atualizado_em timestamptz not null default now()
 );
 
-create index idx_provisionamento_contratos_ficha on provisionamento_contratos(ficha_orcamentaria);
+create index idx_provisionamento_contratos_ficha on provisionamento_contratos(ficha_id);
 
 alter table provisionamento_contratos enable row level security;
 

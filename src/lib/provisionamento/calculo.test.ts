@@ -4,10 +4,36 @@ import {
   contarAniversariosReajuste,
   gerarAlertas,
   provisionamentoMensalContrato,
+  rotuloFichaContrato,
   totalAnualContrato,
   valorMensalContrato,
 } from "./calculo";
-import type { Contrato } from "./tipos";
+import type { Contrato, DotacaoOrcamentaria } from "./tipos";
+
+const FICHA_50: DotacaoOrcamentaria = {
+  id: "ficha-50",
+  ficha: 50,
+  orgao_codigo: "01",
+  orgao_nome: "Legislativo Municipal",
+  unidade_codigo: "01",
+  unidade_nome: "Gabinete e Secretaria da Câmara",
+  subfuncao_codigo: "031",
+  subfuncao_nome: "Ação Legislativa",
+  programa_codigo: "0001",
+  programa_nome: "Atividades Legislativas",
+  projeto_atividade_codigo: "2001",
+  projeto_atividade_nome: "Manutenção das Atividades do Legislativo Municipal",
+  elemento_codigo: "339039",
+  elemento_nome: "Outros Serviços de Terceiros - Pessoa Jurídica",
+  fonte_codigo: "1500",
+  fonte_nome: "Recursos Ordinários",
+  saldo_referencia: null,
+  saldo_referencia_em: null,
+  ativo: true,
+  criado_em: "2026-08-12T00:00:00Z",
+};
+
+const FICHA_60: DotacaoOrcamentaria = { ...FICHA_50, id: "ficha-60", ficha: 60 };
 
 function contrato(sobrescreve: Partial<Contrato> = {}): Contrato {
   return {
@@ -24,9 +50,8 @@ function contrato(sobrescreve: Partial<Contrato> = {}): Contrato {
     situacao: "continua",
     valorNovoContratoEstimado: null,
     dataInicioNovoContrato: null,
-    fichaOrcamentaria: "50",
-    dotacao: "01.01.031.0001.2001.339039.1500",
-    elementoDespesa: "339039",
+    fichaId: FICHA_50.id,
+    ficha: FICHA_50,
     observacoes: "",
     criadoEm: "2026-08-20T00:00:00.000Z",
     ...sobrescreve,
@@ -134,36 +159,41 @@ describe("provisionamentoMensalContrato", () => {
   });
 });
 
+describe("rotuloFichaContrato", () => {
+  it("mostra o número da ficha vinculada", () => {
+    expect(rotuloFichaContrato(contrato({ ficha: FICHA_50 }))).toBe("Ficha 50");
+  });
+
+  it("usa um rótulo neutro quando não há ficha vinculada", () => {
+    expect(rotuloFichaContrato(contrato({ fichaId: null, ficha: null }))).toBe("(sem ficha)");
+  });
+});
+
 describe("consolidarPorDotacao", () => {
-  it("agrupa por ficha orçamentária quando preenchida", () => {
-    const a = contrato({ id: "a", fichaOrcamentaria: "50", percentualEstimado: 0 });
-    const b = contrato({ id: "b", fichaOrcamentaria: "50", percentualEstimado: 0 });
-    const c = contrato({ id: "c", fichaOrcamentaria: "60", percentualEstimado: 0 });
+  it("agrupa por ficha orçamentária vinculada", () => {
+    const a = contrato({ id: "a", fichaId: FICHA_50.id, ficha: FICHA_50, percentualEstimado: 0 });
+    const b = contrato({ id: "b", fichaId: FICHA_50.id, ficha: FICHA_50, percentualEstimado: 0 });
+    const c = contrato({ id: "c", fichaId: FICHA_60.id, ficha: FICHA_60, percentualEstimado: 0 });
     const grupos = consolidarPorDotacao([a, b, c], 2027);
-    expect(grupos.map((g) => g.chave)).toEqual(["50", "60"]);
+    expect(grupos.map((g) => g.chave)).toEqual(["Ficha 50", "Ficha 60"]);
     expect(grupos[0].contratos).toHaveLength(2);
     expect(grupos[0].totalAnual).toBeCloseTo(240000, 2); // 2 contratos × 10.000 × 12
   });
 
-  it("cai pra dotação quando a ficha está vazia", () => {
-    const a = contrato({ fichaOrcamentaria: "", dotacao: "01.01.031" });
+  it("usa um rótulo padrão quando não há ficha vinculada", () => {
+    const a = contrato({ fichaId: null, ficha: null });
     const grupos = consolidarPorDotacao([a], 2027);
-    expect(grupos[0].chave).toBe("01.01.031");
-  });
-
-  it("usa um rótulo padrão quando ficha e dotação estão vazias", () => {
-    const a = contrato({ fichaOrcamentaria: "", dotacao: "" });
-    const grupos = consolidarPorDotacao([a], 2027);
-    expect(grupos[0].chave).toBe("(sem ficha/dotação)");
+    expect(grupos[0].chave).toBe("(sem ficha)");
   });
 });
 
 describe("gerarAlertas", () => {
-  it("alerta contratos 'vence' cuja vigência termina no ano de referência", () => {
+  it("alerta contratos 'vence' cuja vigência termina no ano de referência, citando a ficha", () => {
     const c = contrato({ situacao: "vence", dataFimVigencia: "2027-06-30" });
     const alertas = gerarAlertas([c], 2027);
     expect(alertas).toHaveLength(1);
     expect(alertas[0].tipo).toBe("sem_renovacao");
+    expect(alertas[0].mensagem).toContain("Ficha 50");
   });
 
   it("não alerta contrato 'vence' cuja vigência termina fora do ano de referência", () => {

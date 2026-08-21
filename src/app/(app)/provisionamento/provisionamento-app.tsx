@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Contrato, NovoContrato } from "@/lib/provisionamento/tipos";
+import type { Contrato, DotacaoOrcamentaria, NovoContrato } from "@/lib/provisionamento/tipos";
 import { apagarTodosContratos, criarContrato, editarContrato, excluirContrato, importarContratos } from "./actions";
 import { ContratosTab } from "./contratos-tab";
 import { ProvisionamentoTab } from "./provisionamento-tab";
@@ -17,7 +17,13 @@ const ABAS: { valor: Aba; label: string }[] = [
   { valor: "parametros", label: "Parâmetros" },
 ];
 
-export function ProvisionamentoApp({ contratosIniciais }: { contratosIniciais: Contrato[] }) {
+export function ProvisionamentoApp({
+  contratosIniciais,
+  fichas,
+}: {
+  contratosIniciais: Contrato[];
+  fichas: DotacaoOrcamentaria[];
+}) {
   const [contratos, setContratos] = useState<Contrato[]>(contratosIniciais);
   const [aba, setAba] = useState<Aba>("contratos");
   const [ano, setAno] = useState(() => new Date().getFullYear() + 1);
@@ -92,6 +98,7 @@ export function ProvisionamentoApp({ contratosIniciais }: { contratosIniciais: C
         {aba === "contratos" && (
           <ContratosTab
             contratos={contratos}
+            fichas={fichas}
             onCriar={aoCriar}
             onEditar={aoEditar}
             onExcluir={aoExcluir}

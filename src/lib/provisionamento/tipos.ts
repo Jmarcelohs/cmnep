@@ -5,6 +5,14 @@
 // Suplementações Orçamentárias. É uma ferramenta de planejamento/
 // rascunho interno, não uma peça orçamentária oficial.
 
+import type { DotacaoOrcamentaria } from "@/lib/suplementacoes/documento";
+
+// Reexporta o mesmo tipo/helpers já usados em Suplementações Orçamentárias
+// (src/lib/suplementacoes/documento.ts) — é a mesma tabela de fichas, não
+// faz sentido duplicar a lógica de formatação/classificação aqui.
+export type { DotacaoOrcamentaria } from "@/lib/suplementacoes/documento";
+export { rotuloFicha, segmentosFicha } from "@/lib/suplementacoes/documento";
+
 export type TipoValor = "mensal" | "anual";
 
 export type SituacaoContrato = "continua" | "vence" | "nova_licitacao";
@@ -49,11 +57,15 @@ export type Contrato = {
   situacao: SituacaoContrato;
   valorNovoContratoEstimado: number | null;
   dataInicioNovoContrato: string | null;
-  fichaOrcamentaria: string;
-  dotacao: string;
-  elementoDespesa: string;
+  // Aponta pra uma ficha de dotacoes_orcamentarias (mesma tabela/cadastro
+  // usado em Suplementações Orçamentárias) em vez de texto livre — ver
+  // migration 0049. fichaId é o que é salvo; ficha é o registro completo
+  // já resolvido (join feito em actions.ts), usado pra exibir a
+  // classificação orçamentária real sem precisar buscar de novo.
+  fichaId: string | null;
+  ficha: DotacaoOrcamentaria | null;
   observacoes: string;
   criadoEm: string;
 };
 
-export type NovoContrato = Omit<Contrato, "id" | "criadoEm">;
+export type NovoContrato = Omit<Contrato, "id" | "criadoEm" | "ficha">;

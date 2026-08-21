@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import type { Database } from "@/lib/supabase/database.types";
-import type { Contrato, NovoContrato } from "@/lib/provisionamento/tipos";
+import type { Contrato, DotacaoOrcamentaria, NovoContrato } from "@/lib/provisionamento/tipos";
 
 // Movimento orçamentário/contábil — mesma sensibilidade de Suplementações
 // Orçamentárias, restrito a admin.
@@ -16,7 +16,14 @@ async function exigirAdmin() {
   return usuario;
 }
 
-type LinhaContrato = Database["public"]["Tables"]["provisionamento_contratos"]["Row"];
+// Toda leitura de contrato traz a ficha vinculada junto (join numa query
+// só) — o resto do módulo (cálculo, exibição) trabalha sempre com o
+// registro completo da ficha, nunca só o id.
+const SELECT_COM_FICHA = "*, ficha:dotacoes_orcamentarias(*)";
+
+type LinhaContrato = Database["public"]["Tables"]["provisionamento_contratos"]["Row"] & {
+  ficha: DotacaoOrcamentaria | null;
+};
 
 function paraLinhaDb(dados: NovoContrato) {
   return {
@@ -32,9 +39,7 @@ function paraLinhaDb(dados: NovoContrato) {
     situacao: dados.situacao,
     valor_novo_contrato_estimado: dados.valorNovoContratoEstimado,
     data_inicio_novo_contrato: dados.dataInicioNovoContrato,
-    ficha_orcamentaria: dados.fichaOrcamentaria,
-    dotacao: dados.dotacao,
-    elemento_despesa: dados.elementoDespesa,
+    ficha_id: dados.fichaId,
     observacoes: dados.observacoes,
   };
 }
@@ -54,9 +59,8 @@ function paraContrato(linha: LinhaContrato): Contrato {
     situacao: linha.situacao,
     valorNovoContratoEstimado: linha.valor_novo_contrato_estimado,
     dataInicioNovoContrato: linha.data_inicio_novo_contrato,
-    fichaOrcamentaria: linha.ficha_orcamentaria,
-    dotacao: linha.dotacao,
-    elementoDespesa: linha.elemento_despesa,
+    fichaId: linha.ficha_id,
+    ficha: linha.ficha,
     observacoes: linha.observacoes,
     criadoEm: linha.criado_em,
   };
@@ -67,10 +71,24 @@ export async function listarContratos(): Promise<Contrato[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("provisionamento_contratos")
-    .select("*")
+    .select(SELECT_COM_FICHA)
     .order("nome");
   if (error) throw new Error(error.message);
-  return (data ?? []).map(paraContrato);
+  return ((data ?? []) as unknown as LinhaContrato[]).map(paraContrato);
+}
+
+// Fichas ativas de dotacoes_orcamentarias (mesmo cadastro usado em
+// Suplementações Orçamentárias) — pro seletor de ficha do formulário.
+export async function listarFichasAtivas(): Promise<DotacaoOrcamentaria[]> {
+  await exigirAdmin();
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("dotacoes_orcamentarias")
+    .select("*")
+    .eq("ativo", true)
+    .order("ficha");
+  if (error) throw new Error(error.message);
+  return data ?? [];
 }
 
 export async function criarContrato(dados: NovoContrato): Promise<Contrato> {
@@ -79,11 +97,11 @@ export async function criarContrato(dados: NovoContrato): Promise<Contrato> {
   const { data, error } = await supabase
     .from("provisionamento_contratos")
     .insert({ ...paraLinhaDb(dados), criado_por: usuario!.id })
-    .select()
+    .select(SELECT_COM_FICHA)
     .single();
   if (error || !data) throw new Error(error?.message ?? "Erro ao salvar o contrato.");
   revalidatePath("/provisionamento");
-  return paraContrato(data);
+  return paraContrato(data as unknown as LinhaContrato);
 }
 
 export async function editarContrato(id: string, dados: NovoContrato): Promise<Contrato> {
@@ -93,11 +111,11 @@ export async function editarContrato(id: string, dados: NovoContrato): Promise<C
     .from("provisionamento_contratos")
     .update({ ...paraLinhaDb(dados), atualizado_em: new Date().toISOString() })
     .eq("id", id)
-    .select()
+    .select(SELECT_COM_FICHA)
     .single();
   if (error || !data) throw new Error(error?.message ?? "Erro ao atualizar o contrato.");
   revalidatePath("/provisionamento");
-  return paraContrato(data);
+  return paraContrato(data as unknown as LinhaContrato);
 }
 
 export async function excluirContrato(id: string): Promise<void> {
@@ -129,10 +147,10 @@ export async function importarContratos(lista: NovoContrato[]): Promise<Contrato
   const { data, error } = await supabase
     .from("provisionamento_contratos")
     .insert(lista.map((c) => ({ ...paraLinhaDb(c), criado_por: usuario!.id })))
-    .select();
+    .select(SELECT_COM_FICHA);
   if (error) throw new Error(error.message);
   revalidatePath("/provisionamento");
-  return (data ?? []).map(paraContrato);
+  return ((data ?? []) as unknown as LinhaContrato[]).map(paraContrato);
 }
 
 export async function apagarTodosContratos(): Promise<void> {

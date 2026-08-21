@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { formatarData, formatarMoeda } from "@/lib/pdf/formato";
 import { baixarArquivo, montarCsv } from "@/lib/provisionamento/csv";
-import { INDICES_CORRECAO, SITUACOES } from "@/lib/provisionamento/tipos";
-import type { Contrato, NovoContrato } from "@/lib/provisionamento/tipos";
+import { INDICES_CORRECAO, rotuloFicha, SITUACOES } from "@/lib/provisionamento/tipos";
+import type { Contrato, DotacaoOrcamentaria, NovoContrato } from "@/lib/provisionamento/tipos";
 
 const CAMPOS_INICIAIS: NovoContrato = {
   nome: "",
@@ -19,19 +19,19 @@ const CAMPOS_INICIAIS: NovoContrato = {
   situacao: "continua",
   valorNovoContratoEstimado: null,
   dataInicioNovoContrato: null,
-  fichaOrcamentaria: "",
-  dotacao: "",
-  elementoDespesa: "",
+  fichaId: null,
   observacoes: "",
 };
 
 function ContratoForm({
   valoresIniciais,
+  fichas,
   onSalvar,
   onCancelar,
   salvando,
 }: {
   valoresIniciais: Contrato | null;
+  fichas: DotacaoOrcamentaria[];
   onSalvar: (dados: NovoContrato) => void;
   onCancelar: () => void;
   salvando: boolean;
@@ -229,38 +229,24 @@ function ContratoForm({
       </div>
 
       <div className="rounded-lg border border-slate-200 p-4">
-        <p className="text-sm font-semibold text-slate-700">Classificação orçamentária</p>
-        <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div>
-            <label className="block text-sm font-medium text-slate-700">Ficha orçamentária</label>
-            <input
-              value={campos.fichaOrcamentaria}
-              onChange={(e) => atualizar("fichaOrcamentaria", e.target.value)}
-              placeholder="Ex.: 50"
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700">Dotação</label>
-            <input
-              value={campos.dotacao}
-              onChange={(e) => atualizar("dotacao", e.target.value)}
-              placeholder="Ex.: 01.01.031.0001.2001.339039.1500"
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700">Elemento de despesa</label>
-            <input
-              value={campos.elementoDespesa}
-              onChange={(e) => atualizar("elementoDespesa", e.target.value)}
-              placeholder="Ex.: 339039"
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-            />
-          </div>
+        <p className="text-sm font-semibold text-slate-700">Ficha orçamentária</p>
+        <div className="mt-3">
+          <select
+            value={campos.fichaId ?? ""}
+            onChange={(e) => atualizar("fichaId", e.target.value || null)}
+            className="w-full rounded-md border border-slate-300 px-2 py-2 text-sm"
+          >
+            <option value="">Sem ficha vinculada ainda</option>
+            {fichas.map((f) => (
+              <option key={f.id} value={f.id}>
+                {rotuloFicha(f)}
+              </option>
+            ))}
+          </select>
         </div>
         <p className="mt-2 text-xs text-slate-500">
-          O consolidado agrupa pela ficha; quando ela estiver vazia, usa a dotação no lugar.
+          Mesmo cadastro de fichas usado em Suplementações Orçamentárias — o consolidado por
+          dotação/ficha agrupa por ela.
         </p>
       </div>
 
@@ -303,11 +289,13 @@ function rotuloSituacao(valor: Contrato["situacao"]): string {
 
 export function ContratosTab({
   contratos,
+  fichas,
   onCriar,
   onEditar,
   onExcluir,
 }: {
   contratos: Contrato[];
+  fichas: DotacaoOrcamentaria[];
   onCriar: (dados: NovoContrato) => Promise<void>;
   onEditar: (id: string, dados: NovoContrato) => Promise<void>;
   onExcluir: (id: string) => Promise<void>;
@@ -352,7 +340,6 @@ export function ContratosTab({
       "Início novo contrato",
       "Ficha",
       "Dotação",
-      "Elemento de despesa",
       "Observações",
     ];
     const linhas = contratos.map((c) => [
@@ -368,9 +355,8 @@ export function ContratosTab({
       rotuloSituacao(c.situacao),
       c.valorNovoContratoEstimado ?? "",
       c.dataInicioNovoContrato ?? "",
-      c.fichaOrcamentaria,
-      c.dotacao,
-      c.elementoDespesa,
+      c.ficha ? c.ficha.ficha : "",
+      c.ficha ? `${c.ficha.orgao_codigo}.${c.ficha.unidade_codigo}.${c.ficha.subfuncao_codigo}.${c.ficha.programa_codigo}.${c.ficha.projeto_atividade_codigo}.${c.ficha.elemento_codigo}.${c.ficha.fonte_codigo}` : "",
       c.observacoes,
     ]);
     baixarArquivo("contratos.csv", montarCsv(cabecalho, linhas), "text/csv;charset=utf-8");
@@ -380,6 +366,7 @@ export function ContratosTab({
     return (
       <ContratoForm
         valoresIniciais={editando}
+        fichas={fichas}
         onSalvar={salvar}
         salvando={salvando}
         onCancelar={() => {
@@ -448,7 +435,7 @@ export function ContratosTab({
                   {formatarData(c.dataInicioVigencia)} a {formatarData(c.dataFimVigencia)}
                 </td>
                 <td className="px-4 py-2 text-slate-700">{rotuloSituacao(c.situacao)}</td>
-                <td className="px-4 py-2 text-slate-700">{c.fichaOrcamentaria || c.dotacao || "—"}</td>
+                <td className="px-4 py-2 text-slate-700">{c.ficha ? `Ficha ${c.ficha.ficha}` : "—"}</td>
                 <td className="px-4 py-2">
                   <div className="flex gap-2">
                     <button

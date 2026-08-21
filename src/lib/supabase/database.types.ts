@@ -1012,9 +1012,7 @@ export interface Database {
           situacao: "continua" | "vence" | "nova_licitacao";
           valor_novo_contrato_estimado: number | null;
           data_inicio_novo_contrato: string | null;
-          ficha_orcamentaria: string;
-          dotacao: string;
-          elemento_despesa: string;
+          ficha_id: string | null;
           observacoes: string;
           criado_por: string | null;
           criado_em: string;
@@ -1034,7 +1032,15 @@ export interface Database {
           situacao: "continua" | "vence" | "nova_licitacao";
         };
         Update: Partial<Database["public"]["Tables"]["provisionamento_contratos"]["Row"]>;
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "provisionamento_contratos_ficha_id_fkey";
+            columns: ["ficha_id"];
+            isOneToOne: false;
+            referencedRelation: "dotacoes_orcamentarias";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       legislacao_documentos: {
         Row: {

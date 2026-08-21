@@ -10,7 +10,7 @@ export function DotacaoTab({ contratos, ano }: { contratos: Contrato[]; ano: num
   const totalGeral = grupos.reduce((soma, g) => soma + g.totalAnual, 0);
 
   function exportarCsv() {
-    const cabecalho = ["Ficha/Dotação", "Nº de contratos", `Total ${ano}`];
+    const cabecalho = ["Ficha", "Nº de contratos", `Total ${ano}`];
     const linhas = grupos.map((g) => [g.chave, g.contratos.length, g.totalAnual.toFixed(2)]);
     baixarArquivo(`provisionamento-por-dotacao-${ano}.csv`, montarCsv(cabecalho, linhas), "text/csv;charset=utf-8");
   }
@@ -19,8 +19,8 @@ export function DotacaoTab({ contratos, ano }: { contratos: Contrato[]; ano: num
     <div>
       <div className="flex items-center justify-between">
         <p className="text-sm text-slate-600">
-          Consolidado {ano} por ficha orçamentária (ou dotação, quando a ficha não estiver preenchida)
-          — número de referência pra preencher o rascunho da LOA.
+          Consolidado {ano} por ficha orçamentária — número de referência pra preencher o rascunho
+          da LOA.
         </p>
         <button
           type="button"
@@ -36,7 +36,7 @@ export function DotacaoTab({ contratos, ano }: { contratos: Contrato[]; ano: num
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-brand-navy/5">
             <tr>
-              <th className="px-4 py-2 text-left font-medium text-slate-600">Ficha / Dotação</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-600">Ficha</th>
               <th className="px-4 py-2 text-left font-medium text-slate-600">Contratos</th>
               <th className="px-4 py-2 text-right font-medium text-slate-600">Total {ano}</th>
             </tr>

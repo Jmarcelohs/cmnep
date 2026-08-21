@@ -1,6 +1,13 @@
 import { formatarData } from "@/lib/pdf/formato";
 import type { Contrato } from "./tipos";
 
+// "Ficha 22" quando o contrato tem uma ficha real vinculada, ou um rótulo
+// neutro quando ainda não tem — usado como chave de agrupamento e nas
+// mensagens de alerta.
+export function rotuloFichaContrato(contrato: Contrato): string {
+  return contrato.ficha ? `Ficha ${contrato.ficha.ficha}` : "(sem ficha)";
+}
+
 // Converte "YYYY-MM-DD" num inteiro ano*12+mês(0-11) — permite comparar
 // duas competências (ano/mês) com aritmética simples, sem lidar com Date
 // e fuso horário. O dia do mês nunca entra na conta: todo o cálculo deste
@@ -74,13 +81,12 @@ export type GrupoDotacao = {
   totalAnual: number;
 };
 
-// Agrupa pela ficha orçamentária informada — cai pra dotação quando a
-// ficha estiver vazia (ver "4. Consolidação por dotação/ficha
-// orçamentária" no Memorial de Cálculo).
+// Agrupa pela ficha orçamentária vinculada ao contrato (ver "4.
+// Consolidação por dotação/ficha orçamentária" no Memorial de Cálculo).
 export function consolidarPorDotacao(contratos: Contrato[], ano: number): GrupoDotacao[] {
   const grupos = new Map<string, Contrato[]>();
   for (const contrato of contratos) {
-    const chave = contrato.fichaOrcamentaria.trim() || contrato.dotacao.trim() || "(sem ficha/dotação)";
+    const chave = rotuloFichaContrato(contrato);
     if (!grupos.has(chave)) grupos.set(chave, []);
     grupos.get(chave)!.push(contrato);
   }
@@ -114,7 +120,6 @@ export function gerarAlertas(contratos: Contrato[], ano: number): Alerta[] {
 
   for (const contrato of contratos) {
     const identificador = contrato.nome || "Contrato sem nome";
-    const fichaOuDotacao = contrato.fichaOrcamentaria.trim() || contrato.dotacao.trim() || "não informada";
 
     if (contrato.situacao === "vence") {
       const fimVigencia = competencia(contrato.dataFimVigencia);
@@ -122,7 +127,7 @@ export function gerarAlertas(contratos: Contrato[], ano: number): Alerta[] {
         alertas.push({
           contratoId: contrato.id,
           tipo: "sem_renovacao",
-          mensagem: `"${identificador}" vence em ${formatarData(contrato.dataFimVigencia)} sem previsão de renovação — a ficha ${fichaOuDotacao} fica sem previsão a partir do mês seguinte.`,
+          mensagem: `"${identificador}" vence em ${formatarData(contrato.dataFimVigencia)} sem previsão de renovação — a ${rotuloFichaContrato(contrato)} fica sem previsão a partir do mês seguinte.`,
         });
       }
     } else if (contrato.situacao === "nova_licitacao") {

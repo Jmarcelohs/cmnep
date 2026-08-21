@@ -90,7 +90,7 @@ export function ProvisionamentoTab({
               return (
                 <tr key={c.id} className="hover:bg-slate-50 print:hover:bg-transparent">
                   <td className="sticky left-0 bg-white px-3 py-2 text-slate-900 print:static">{c.nome}</td>
-                  <td className="px-2 py-2 text-slate-700">{c.fichaOrcamentaria || c.dotacao || "—"}</td>
+                  <td className="px-2 py-2 text-slate-700">{c.ficha ? `Ficha ${c.ficha.ficha}` : "—"}</td>
                   {valoresMensais.map((v, i) => (
                     <td key={i} className="px-2 py-2 text-right text-slate-700">
                       {v > 0 ? formatarMoeda(v) : "—"}
