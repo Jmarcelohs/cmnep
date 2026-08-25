@@ -7,6 +7,7 @@ import { sanitizarHtmlDocumento } from "@/lib/sanitizar-html";
 import { montarParagrafoAberturaCapa } from "@/lib/licitacoes/documento-capa";
 import { montarCorpoTR } from "@/lib/licitacoes/documento-tr";
 import { montarCorpoDFD } from "@/lib/licitacoes/documento-dfd";
+import { montarCorpoETP } from "@/lib/licitacoes/documento-etp";
 import { montarParagrafoSolicitacaoCompra } from "@/lib/licitacoes/documento-solicitacao-compra";
 import type { Database } from "@/lib/supabase/database.types";
 import type {
@@ -403,6 +404,45 @@ export async function gerarDocumentoDfd(processoId: string): Promise<DocumentoPr
   });
 
   const documento = await inserirDocumento(supabase, processoId, "dfd", corpoHtml, usuario!.id);
+  revalidatePath(`/licitacoes/${processoId}`);
+  return documento;
+}
+
+// Gera (ou recupera) o ETP — objeto/itens/vínculo no PCA/data do processo
+// (ver montarCorpoETP); as seções narrativas (necessidade, levantamento de
+// mercado, solução escolhida) ficam como ponto de partida editável, já que
+// variam por processo.
+export async function gerarDocumentoEtp(processoId: string): Promise<DocumentoProcesso> {
+  const usuario = await exigirAcesso();
+  const supabase = await createClient();
+
+  const existente = await buscarDocumentoExistente(supabase, processoId, "etp");
+  if (existente) return existente;
+
+  const { data: processo } = await supabase
+    .from("processos_licitatorios")
+    .select("*")
+    .eq("id", processoId)
+    .single();
+  if (!processo) throw new Error("Processo não encontrado.");
+
+  const itens = await buscarItens(supabase, processoId);
+
+  const { data: pesquisaPrecos } = processo.pesquisa_precos_pessoa_id
+    ? await supabase
+        .from("pessoas")
+        .select("id, nome, cargo, genero")
+        .eq("id", processo.pesquisa_precos_pessoa_id)
+        .single()
+    : { data: null as PessoaResumo | null };
+
+  const corpoHtml = montarCorpoETP({
+    processo: paraProcesso({ ...processo, ficha: null } as unknown as LinhaProcesso),
+    itens,
+    pesquisaPrecos,
+  });
+
+  const documento = await inserirDocumento(supabase, processoId, "etp", corpoHtml, usuario!.id);
   revalidatePath(`/licitacoes/${processoId}`);
   return documento;
 }

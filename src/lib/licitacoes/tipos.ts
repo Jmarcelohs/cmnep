@@ -44,7 +44,7 @@ export const DOCUMENTOS_PROCESSO: { tipo: TipoDocumentoLicitacao; label: string;
   { tipo: "autuacao", label: "Autuação", disponivel: false },
   { tipo: "capa", label: "Capa do Processo", disponivel: true },
   { tipo: "dfd", label: "DFD — Documento de Formalização de Demanda", disponivel: true },
-  { tipo: "etp", label: "ETP — Estudo Técnico Preliminar", disponivel: false },
+  { tipo: "etp", label: "ETP — Estudo Técnico Preliminar", disponivel: true },
   {
     tipo: "solicitacao_compra",
     label: "Solicitação de Compra (Solicitação + Proposta + TR + Anexo I)",

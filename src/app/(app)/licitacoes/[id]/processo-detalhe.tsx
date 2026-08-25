@@ -7,6 +7,7 @@ import type { DocumentoProcesso, TipoDocumentoLicitacao } from "@/lib/licitacoes
 import {
   gerarDocumentoCapa,
   gerarDocumentoDfd,
+  gerarDocumentoEtp,
   gerarDocumentoSolicitacaoCompra,
   gerarDocumentoTr,
   salvarDocumento,
@@ -31,6 +32,12 @@ const CONFIG: Partial<Record<TipoDocumentoLicitacao, ConfigDocumento>> = {
     imprimirHref: (id) => `/licitacoes/${id}/imprimir/dfd`,
     titulo: "DFD — Documento de Formalização da Demanda",
     dica: "Tipificação, tipo de material e prioridade já vêm marcados com o valor mais comum — mude o X de lugar na tabela se este processo for diferente. Revise a justificativa da contratação (seção 2) e o prazo estimado de entrega (seção 4) antes de imprimir.",
+  },
+  etp: {
+    gerar: gerarDocumentoEtp,
+    imprimirHref: (id) => `/licitacoes/${id}/imprimir/etp`,
+    titulo: "ETP — Estudo Técnico Preliminar",
+    dica: "As seções narrativas (necessidade, levantamento de mercado, solução escolhida, resultados esperados) são só um ponto de partida — reescreva com o que foi de fato pesquisado/decidido neste processo antes de imprimir.",
   },
   tr: {
     gerar: gerarDocumentoTr,
