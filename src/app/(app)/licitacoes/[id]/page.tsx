@@ -7,8 +7,9 @@ import {
   rotuloNumeroModalidade,
   rotuloNumeroProcesso,
 } from "@/lib/licitacoes/tipos";
-import { buscarProcesso, listarDocumentos, listarPessoasAtivas } from "../actions";
+import { buscarProcesso, listarDocumentos, listarItens, listarPessoasAtivas } from "../actions";
 import { ProcessoDetalhe } from "./processo-detalhe";
+import { ItensEditor } from "./itens-editor";
 
 export default async function ProcessoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -17,15 +18,19 @@ export default async function ProcessoPage({ params }: { params: Promise<{ id: s
     redirect("/dashboard");
   }
 
-  const [processo, documentos, pessoas] = await Promise.all([
+  const [processo, documentos, pessoas, itens] = await Promise.all([
     buscarProcesso(id),
     listarDocumentos(id),
     listarPessoasAtivas(),
+    listarItens(id),
   ]);
   if (!processo) notFound();
 
   const organizador = pessoas.find((p) => p.id === processo.organizadorPessoaId) ?? null;
   const agente = pessoas.find((p) => p.id === processo.agenteContratacaoPessoaId) ?? null;
+  const pesquisaPrecos = pessoas.find((p) => p.id === processo.pesquisaPrecosPessoaId) ?? null;
+  const gestor = pessoas.find((p) => p.id === processo.gestorContratoPessoaId) ?? null;
+  const fiscal = pessoas.find((p) => p.id === processo.fiscalContratoPessoaId) ?? null;
 
   return (
     <div>
@@ -70,7 +75,21 @@ export default async function ProcessoPage({ params }: { params: Promise<{ id: s
               {organizador?.nome ?? "—"} / {agente?.nome ?? "—"}
             </dd>
           </div>
+          <div>
+            <dt className="font-medium text-slate-500">Pesquisa de preços</dt>
+            <dd className="mt-1 text-slate-900">{pesquisaPrecos?.nome ?? "—"}</dd>
+          </div>
+          <div>
+            <dt className="font-medium text-slate-500">Gestor / Fiscal do contrato</dt>
+            <dd className="mt-1 text-slate-900">
+              {gestor?.nome ?? "—"} / {fiscal?.nome ?? "—"}
+            </dd>
+          </div>
         </dl>
+      </div>
+
+      <div className="mt-6 rounded-lg border border-slate-200 bg-white p-4">
+        <ItensEditor processoId={id} itensIniciais={itens} />
       </div>
 
       <div className="mt-6">

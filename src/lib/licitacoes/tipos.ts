@@ -15,8 +15,12 @@ export function rotuloModalidade(modalidade: ModalidadeProcesso): string {
   return MODALIDADES_PROCESSO.find((m) => m.valor === modalidade)?.rotuloDocumento ?? modalidade;
 }
 
-// Só "capa" tem gerador de texto implementado por enquanto — os demais
-// vão sendo adicionados conforme o usuário for passando os modelos.
+// Só "capa", "solicitacao_compra" e "tr" têm gerador de texto implementado
+// por enquanto — os demais vão sendo adicionados conforme o usuário for
+// passando os modelos. "solicitacao_compra" empacota, num PDF só,
+// Solicitação + Proposta Comercial em branco + TR + Anexo I (confirmado
+// com o usuário) — e reaproveita o mesmo corpo do TR que o documento "tr"
+// autônomo usa (ver src/lib/licitacoes/documento-tr.ts).
 export type TipoDocumentoLicitacao =
   | "capa"
   | "dfd"
@@ -25,6 +29,7 @@ export type TipoDocumentoLicitacao =
   | "certidao_valor"
   | "solicitacao_abertura"
   | "termo_aceite"
+  | "solicitacao_compra"
   | "solicitacao_orcamento"
   | "certidao_orcamento"
   | "solicitacao_parecer_juridico"
@@ -40,7 +45,12 @@ export const DOCUMENTOS_PROCESSO: { tipo: TipoDocumentoLicitacao; label: string;
   { tipo: "capa", label: "Capa do Processo", disponivel: true },
   { tipo: "dfd", label: "DFD — Documento de Formalização de Demanda", disponivel: false },
   { tipo: "etp", label: "ETP — Estudo Técnico Preliminar", disponivel: false },
-  { tipo: "tr", label: "TR — Termo de Referência", disponivel: false },
+  {
+    tipo: "solicitacao_compra",
+    label: "Solicitação de Compra (Solicitação + Proposta + TR + Anexo I)",
+    disponivel: true,
+  },
+  { tipo: "tr", label: "TR — Termo de Referência", disponivel: true },
   { tipo: "certidao_valor", label: "Certidão de Valor", disponivel: false },
   { tipo: "solicitacao_abertura", label: "Solicitação de Abertura de Processo", disponivel: false },
   { tipo: "termo_aceite", label: "Termo de Aceite de Gestor e Fiscal do Contrato", disponivel: false },
@@ -74,6 +84,13 @@ export type Processo = {
   vinculoPca: string;
   organizadorPessoaId: string | null;
   agenteContratacaoPessoaId: string | null;
+  // Responsável por receber a solicitação de cotação/pesquisa de preços
+  // (destinatário da Solicitação de Compra) — e gestor/fiscal do futuro
+  // contrato, já usados pelo Termo de Referência (seção 11) e mais tarde
+  // pelo Termo de Aceite de Gestor e Fiscal.
+  pesquisaPrecosPessoaId: string | null;
+  gestorContratoPessoaId: string | null;
+  fiscalContratoPessoaId: string | null;
   criadoEm: string;
 };
 
@@ -87,6 +104,23 @@ export type DocumentoProcesso = {
   criadoEm: string;
   atualizadoEm: string;
 };
+
+// Item da tabela "DEMANDA – BEM/SERVIÇO/OBRAS E/OU INSTALAÇÕES", que
+// aparece igual na Solicitação, na Proposta Comercial (em branco) e no TR —
+// um cadastro só, reaproveitado pelos três. valorUnitario/valorGlobal
+// ficam null até a pesquisa de preço definir.
+export type ItemProcesso = {
+  id: string;
+  processoId: string;
+  numeroItem: number;
+  objeto: string;
+  unidade: string;
+  quantidade: number;
+  valorUnitario: number | null;
+  valorGlobal: number | null;
+};
+
+export type NovoItemProcesso = Omit<ItemProcesso, "id" | "processoId">;
 
 // "PROCEDIMENTO ADMINISTRATIVO Nº 058/2026"
 export function rotuloNumeroProcesso(processo: Pick<Processo, "numeroProcesso" | "ano">): string {

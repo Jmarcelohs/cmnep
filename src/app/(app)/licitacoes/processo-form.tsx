@@ -22,6 +22,9 @@ function camposIniciais(): NovoProcesso {
     vinculoPca: "",
     organizadorPessoaId: null,
     agenteContratacaoPessoaId: null,
+    pesquisaPrecosPessoaId: null,
+    gestorContratoPessoaId: null,
+    fiscalContratoPessoaId: null,
   };
 }
 
@@ -197,35 +200,41 @@ export function ProcessoForm({
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-          <label className="block text-sm font-medium text-slate-700">Quem organizou o processo</label>
-          <select
-            value={campos.organizadorPessoaId ?? ""}
-            onChange={(e) => atualizar("organizadorPessoaId", e.target.value || null)}
-            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-2 text-sm"
-          >
-            <option value="">Selecione…</option>
-            {pessoas.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.nome} — {p.cargo}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700">Agente de contratação</label>
-          <select
-            value={campos.agenteContratacaoPessoaId ?? ""}
-            onChange={(e) => atualizar("agenteContratacaoPessoaId", e.target.value || null)}
-            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-2 text-sm"
-          >
-            <option value="">Selecione…</option>
-            {pessoas.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.nome} — {p.cargo}
-              </option>
-            ))}
-          </select>
+        <SeletorPessoa
+          label="Quem organizou o processo"
+          pessoas={pessoas}
+          valor={campos.organizadorPessoaId}
+          onChange={(v) => atualizar("organizadorPessoaId", v)}
+        />
+        <SeletorPessoa
+          label="Agente de contratação"
+          pessoas={pessoas}
+          valor={campos.agenteContratacaoPessoaId}
+          onChange={(v) => atualizar("agenteContratacaoPessoaId", v)}
+        />
+      </div>
+
+      <div className="rounded-lg border border-slate-200 p-4">
+        <p className="text-sm font-semibold text-slate-700">Papéis do processo</p>
+        <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <SeletorPessoa
+            label="Pesquisa de preços (recebe a Solicitação de Compra)"
+            pessoas={pessoas}
+            valor={campos.pesquisaPrecosPessoaId}
+            onChange={(v) => atualizar("pesquisaPrecosPessoaId", v)}
+          />
+          <SeletorPessoa
+            label="Gestor do contrato"
+            pessoas={pessoas}
+            valor={campos.gestorContratoPessoaId}
+            onChange={(v) => atualizar("gestorContratoPessoaId", v)}
+          />
+          <SeletorPessoa
+            label="Fiscal do contrato"
+            pessoas={pessoas}
+            valor={campos.fiscalContratoPessoaId}
+            onChange={(v) => atualizar("fiscalContratoPessoaId", v)}
+          />
         </div>
       </div>
 
@@ -247,5 +256,35 @@ export function ProcessoForm({
         </button>
       </div>
     </form>
+  );
+}
+
+function SeletorPessoa({
+  label,
+  pessoas,
+  valor,
+  onChange,
+}: {
+  label: string;
+  pessoas: PessoaResumo[];
+  valor: string | null;
+  onChange: (valor: string | null) => void;
+}) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-slate-700">{label}</label>
+      <select
+        value={valor ?? ""}
+        onChange={(e) => onChange(e.target.value || null)}
+        className="mt-1 w-full rounded-md border border-slate-300 px-2 py-2 text-sm"
+      >
+        <option value="">Selecione…</option>
+        {pessoas.map((p) => (
+          <option key={p.id} value={p.id}>
+            {p.nome} — {p.cargo}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }

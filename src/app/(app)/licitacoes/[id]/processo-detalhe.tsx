@@ -4,7 +4,35 @@ import { useState } from "react";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { DOCUMENTOS_PROCESSO } from "@/lib/licitacoes/tipos";
 import type { DocumentoProcesso, TipoDocumentoLicitacao } from "@/lib/licitacoes/tipos";
-import { gerarDocumentoCapa, salvarDocumento } from "../actions";
+import { gerarDocumentoCapa, gerarDocumentoSolicitacaoCompra, gerarDocumentoTr, salvarDocumento } from "../actions";
+
+type ConfigDocumento = {
+  gerar: (processoId: string) => Promise<DocumentoProcesso>;
+  imprimirHref: (processoId: string) => string;
+  titulo: string;
+  dica: string;
+};
+
+const CONFIG: Partial<Record<TipoDocumentoLicitacao, ConfigDocumento>> = {
+  capa: {
+    gerar: gerarDocumentoCapa,
+    imprimirHref: (id) => `/licitacoes/${id}/imprimir/capa`,
+    titulo: "Capa do Processo — parágrafo de abertura",
+    dica: "Gerado automaticamente a partir dos dados do processo — ajuste o texto se precisar antes de imprimir. Os dados do quadro (procedimento, objeto, dotação...) vêm sempre direto do processo.",
+  },
+  tr: {
+    gerar: gerarDocumentoTr,
+    imprimirHref: (id) => `/licitacoes/${id}/imprimir/tr`,
+    titulo: "Termo de Referência",
+    dica: "A base jurídica (dispensa por valor, obrigações, sanções...) já vem pronta — revise a seção 2 (Fundamentos), que é só um ponto de partida genérico, antes de imprimir.",
+  },
+  solicitacao_compra: {
+    gerar: gerarDocumentoSolicitacaoCompra,
+    imprimirHref: (id) => `/licitacoes/${id}/imprimir/solicitacao-compra`,
+    titulo: "Solicitação de Compra — parágrafo do pedido",
+    dica: "Gera também o Termo de Referência (se ainda não existir) — o pacote impresso junta Solicitação + Proposta Comercial em branco + TR + Anexo I. Anexo II (fotos/medidas) não é gerado automaticamente ainda.",
+  },
+};
 
 export function ProcessoDetalhe({
   processoId,
@@ -22,19 +50,21 @@ export function ProcessoDetalhe({
 
   const porTipo = new Map(documentos.map((d) => [d.tipo, d]));
 
-  async function abrirCapa() {
+  async function abrirDocumento(tipo: TipoDocumentoLicitacao) {
+    const config = CONFIG[tipo];
+    if (!config) return;
     setErro(null);
-    setCarregando("capa");
+    setCarregando(tipo);
     try {
-      let documento = porTipo.get("capa");
+      let documento = porTipo.get(tipo);
       if (!documento) {
-        documento = await gerarDocumentoCapa(processoId);
+        documento = await config.gerar(processoId);
         setDocumentos((atual) => [...atual, documento!]);
       }
       setCorpoHtml(documento.corpoHtml);
-      setEditando("capa");
+      setEditando(tipo);
     } catch (err) {
-      setErro(err instanceof Error ? err.message : "Não foi possível gerar a capa.");
+      setErro(err instanceof Error ? err.message : "Não foi possível gerar o documento.");
     } finally {
       setCarregando(null);
     }
@@ -46,9 +76,7 @@ export function ProcessoDetalhe({
     setErro(null);
     try {
       await salvarDocumento(processoId, editando, corpoHtml);
-      setDocumentos((atual) =>
-        atual.map((d) => (d.tipo === editando ? { ...d, corpoHtml } : d)),
-      );
+      setDocumentos((atual) => atual.map((d) => (d.tipo === editando ? { ...d, corpoHtml } : d)));
       setEditando(null);
     } catch (err) {
       setErro(err instanceof Error ? err.message : "Não foi possível salvar.");
@@ -57,14 +85,12 @@ export function ProcessoDetalhe({
     }
   }
 
-  if (editando === "capa") {
+  if (editando && CONFIG[editando]) {
+    const config = CONFIG[editando]!;
     return (
       <div className="rounded-lg border border-slate-200 bg-white p-4">
-        <p className="text-sm font-semibold text-slate-700">Capa do Processo — parágrafo de abertura</p>
-        <p className="mt-1 text-xs text-slate-500">
-          Gerado automaticamente a partir dos dados do processo — ajuste o texto se precisar antes de
-          imprimir. Os dados do quadro (procedimento, objeto, dotação...) vêm sempre direto do processo.
-        </p>
+        <p className="text-sm font-semibold text-slate-700">{config.titulo}</p>
+        <p className="mt-1 text-xs text-slate-500">{config.dica}</p>
         <div className="mt-3">
           <RichTextEditor
             name="corpo_html"
@@ -72,6 +98,7 @@ export function ProcessoDetalhe({
             onChange={setCorpoHtml}
             margemEsquerdaMm={20}
             margemDireitaMm={20}
+            minHeight={editando === "tr" ? "40rem" : "10rem"}
           />
         </div>
         {erro && <p className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{erro}</p>}
@@ -85,7 +112,7 @@ export function ProcessoDetalhe({
             {salvando ? "Salvando…" : "Salvar"}
           </button>
           <a
-            href={`/licitacoes/${processoId}/imprimir/capa`}
+            href={config.imprimirHref(processoId)}
             target="_blank"
             rel="noopener noreferrer"
             className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
@@ -114,6 +141,7 @@ export function ProcessoDetalhe({
           <tbody className="divide-y divide-slate-100">
             {DOCUMENTOS_PROCESSO.map((doc) => {
               const gerado = porTipo.get(doc.tipo);
+              const config = CONFIG[doc.tipo];
               return (
                 <tr key={doc.tipo}>
                   <td className="px-4 py-2 text-slate-900">{doc.label}</td>
@@ -123,11 +151,11 @@ export function ProcessoDetalhe({
                         Em breve
                       </span>
                     )}
-                    {doc.disponivel && doc.tipo === "capa" && (
+                    {doc.disponivel && config && (
                       <div className="flex justify-end gap-3">
                         {gerado && (
                           <a
-                            href={`/licitacoes/${processoId}/imprimir/capa`}
+                            href={config.imprimirHref(processoId)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-xs font-medium text-brand-navy hover:underline"
@@ -137,11 +165,11 @@ export function ProcessoDetalhe({
                         )}
                         <button
                           type="button"
-                          onClick={abrirCapa}
-                          disabled={carregando === "capa"}
+                          onClick={() => abrirDocumento(doc.tipo)}
+                          disabled={carregando === doc.tipo}
                           className="text-xs font-medium text-brand-navy hover:underline disabled:opacity-50"
                         >
-                          {carregando === "capa" ? "Gerando…" : gerado ? "Editar" : "Gerar"}
+                          {carregando === doc.tipo ? "Gerando…" : gerado ? "Editar" : "Gerar"}
                         </button>
                       </div>
                     )}

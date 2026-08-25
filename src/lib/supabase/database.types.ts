@@ -1063,6 +1063,9 @@ export interface Database {
           vinculo_pca: string;
           organizador_pessoa_id: string | null;
           agente_contratacao_pessoa_id: string | null;
+          pesquisa_precos_pessoa_id: string | null;
+          gestor_contrato_pessoa_id: string | null;
+          fiscal_contrato_pessoa_id: string | null;
           criado_por: string | null;
           criado_em: string;
           atualizado_em: string;
@@ -1096,6 +1099,54 @@ export interface Database {
             referencedRelation: "pessoas";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "processos_licitatorios_pesquisa_precos_pessoa_id_fkey";
+            columns: ["pesquisa_precos_pessoa_id"];
+            isOneToOne: false;
+            referencedRelation: "pessoas";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "processos_licitatorios_gestor_contrato_pessoa_id_fkey";
+            columns: ["gestor_contrato_pessoa_id"];
+            isOneToOne: false;
+            referencedRelation: "pessoas";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "processos_licitatorios_fiscal_contrato_pessoa_id_fkey";
+            columns: ["fiscal_contrato_pessoa_id"];
+            isOneToOne: false;
+            referencedRelation: "pessoas";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      processos_licitatorios_itens: {
+        Row: {
+          id: string;
+          processo_id: string;
+          numero_item: number;
+          objeto: string;
+          unidade: string;
+          quantidade: number;
+          valor_unitario: number | null;
+          valor_global: number | null;
+          criado_em: string;
+        };
+        Insert: Partial<Omit<Database["public"]["Tables"]["processos_licitatorios_itens"]["Row"], "id">> & {
+          processo_id: string;
+          numero_item: number;
+        };
+        Update: Partial<Database["public"]["Tables"]["processos_licitatorios_itens"]["Row"]>;
+        Relationships: [
+          {
+            foreignKeyName: "processos_licitatorios_itens_processo_id_fkey";
+            columns: ["processo_id"];
+            isOneToOne: false;
+            referencedRelation: "processos_licitatorios";
+            referencedColumns: ["id"];
+          },
         ];
       };
       processos_licitatorios_documentos: {
@@ -1110,6 +1161,7 @@ export interface Database {
             | "certidao_valor"
             | "solicitacao_abertura"
             | "termo_aceite"
+            | "solicitacao_compra"
             | "solicitacao_orcamento"
             | "certidao_orcamento"
             | "solicitacao_parecer_juridico"

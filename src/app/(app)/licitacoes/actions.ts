@@ -5,10 +5,14 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { sanitizarHtmlDocumento } from "@/lib/sanitizar-html";
 import { montarParagrafoAberturaCapa } from "@/lib/licitacoes/documento-capa";
+import { montarCorpoTR } from "@/lib/licitacoes/documento-tr";
+import { montarParagrafoSolicitacaoCompra } from "@/lib/licitacoes/documento-solicitacao-compra";
 import type { Database } from "@/lib/supabase/database.types";
 import type {
   DocumentoProcesso,
+  ItemProcesso,
   ModalidadeProcesso,
+  NovoItemProcesso,
   NovoProcesso,
   PessoaResumo,
   Processo,
@@ -55,6 +59,9 @@ function paraLinhaDb(dados: NovoProcesso) {
     vinculo_pca: dados.vinculoPca,
     organizador_pessoa_id: dados.organizadorPessoaId,
     agente_contratacao_pessoa_id: dados.agenteContratacaoPessoaId,
+    pesquisa_precos_pessoa_id: dados.pesquisaPrecosPessoaId,
+    gestor_contrato_pessoa_id: dados.gestorContratoPessoaId,
+    fiscal_contrato_pessoa_id: dados.fiscalContratoPessoaId,
   };
 }
 
@@ -72,6 +79,9 @@ function paraProcesso(linha: LinhaProcesso): Processo & { ficha: DotacaoOrcament
     vinculoPca: linha.vinculo_pca,
     organizadorPessoaId: linha.organizador_pessoa_id,
     agenteContratacaoPessoaId: linha.agente_contratacao_pessoa_id,
+    pesquisaPrecosPessoaId: linha.pesquisa_precos_pessoa_id,
+    gestorContratoPessoaId: linha.gestor_contrato_pessoa_id,
+    fiscalContratoPessoaId: linha.fiscal_contrato_pessoa_id,
     criadoEm: linha.criado_em,
     ficha: linha.ficha,
   };
@@ -260,6 +270,197 @@ export async function gerarDocumentoCapa(processoId: string): Promise<DocumentoP
     criadoEm: data.criado_em,
     atualizadoEm: data.atualizado_em,
   };
+}
+
+async function buscarDocumentoExistente(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  processoId: string,
+  tipo: TipoDocumentoLicitacao,
+): Promise<DocumentoProcesso | null> {
+  const { data } = await supabase
+    .from("processos_licitatorios_documentos")
+    .select("*")
+    .eq("processo_id", processoId)
+    .eq("tipo", tipo)
+    .maybeSingle();
+  if (!data) return null;
+  return {
+    id: data.id,
+    processoId: data.processo_id,
+    tipo: data.tipo,
+    corpoHtml: data.corpo_html,
+    criadoEm: data.criado_em,
+    atualizadoEm: data.atualizado_em,
+  };
+}
+
+async function inserirDocumento(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  processoId: string,
+  tipo: TipoDocumentoLicitacao,
+  corpoHtml: string,
+  criadoPor: string,
+): Promise<DocumentoProcesso> {
+  const { data, error } = await supabase
+    .from("processos_licitatorios_documentos")
+    .insert({ processo_id: processoId, tipo, corpo_html: corpoHtml, criado_por: criadoPor })
+    .select("*")
+    .single();
+  if (error || !data) throw new Error(error?.message ?? "Erro ao gerar o documento.");
+  return {
+    id: data.id,
+    processoId: data.processo_id,
+    tipo: data.tipo,
+    corpoHtml: data.corpo_html,
+    criadoEm: data.criado_em,
+    atualizadoEm: data.atualizado_em,
+  };
+}
+
+// Gera (ou recupera) o Termo de Referência — base jurídica fixa +
+// objeto/itens/dotação/gestor/fiscal do processo (ver montarCorpoTR).
+export async function gerarDocumentoTr(processoId: string): Promise<DocumentoProcesso> {
+  const usuario = await exigirAcesso();
+  const supabase = await createClient();
+
+  const existente = await buscarDocumentoExistente(supabase, processoId, "tr");
+  if (existente) return existente;
+
+  const { data: processo } = await supabase
+    .from("processos_licitatorios")
+    .select(SELECT_COM_FICHA)
+    .eq("id", processoId)
+    .single();
+  if (!processo) throw new Error("Processo não encontrado.");
+
+  const { data: itensRows } = await supabase
+    .from("processos_licitatorios_itens")
+    .select("*")
+    .eq("processo_id", processoId)
+    .order("numero_item");
+  const itens: ItemProcesso[] = (itensRows ?? []).map((i) => ({
+    id: i.id,
+    processoId: i.processo_id,
+    numeroItem: i.numero_item,
+    objeto: i.objeto,
+    unidade: i.unidade,
+    quantidade: Number(i.quantidade),
+    valorUnitario: i.valor_unitario != null ? Number(i.valor_unitario) : null,
+    valorGlobal: i.valor_global != null ? Number(i.valor_global) : null,
+  }));
+
+  const idsPessoas = [processo.gestor_contrato_pessoa_id, processo.fiscal_contrato_pessoa_id].filter(
+    (v): v is string => Boolean(v),
+  );
+  const { data: pessoas } = idsPessoas.length
+    ? await supabase.from("pessoas").select("id, nome, cargo, genero").in("id", idsPessoas)
+    : { data: [] as PessoaResumo[] };
+  const porId = new Map((pessoas ?? []).map((p) => [p.id, p as PessoaResumo]));
+
+  const corpoHtml = montarCorpoTR({
+    processo: paraProcesso(processo as unknown as LinhaProcesso),
+    itens,
+    ficha: (processo as unknown as LinhaProcesso).ficha,
+    gestor: processo.gestor_contrato_pessoa_id ? (porId.get(processo.gestor_contrato_pessoa_id) ?? null) : null,
+    fiscal: processo.fiscal_contrato_pessoa_id ? (porId.get(processo.fiscal_contrato_pessoa_id) ?? null) : null,
+  });
+
+  const documento = await inserirDocumento(supabase, processoId, "tr", corpoHtml, usuario!.id);
+  revalidatePath(`/licitacoes/${processoId}`);
+  return documento;
+}
+
+// Gera (ou recupera) a Solicitação de Compra — o pacote impresso embute o
+// TR junto (ver solicitacao-compra-conteudo.tsx), então gerar esse
+// documento também garante que o TR exista (reaproveitado, não duplicado).
+export async function gerarDocumentoSolicitacaoCompra(processoId: string): Promise<DocumentoProcesso> {
+  const usuario = await exigirAcesso();
+  const supabase = await createClient();
+
+  await gerarDocumentoTr(processoId);
+
+  const existente = await buscarDocumentoExistente(supabase, processoId, "solicitacao_compra");
+  if (existente) return existente;
+
+  const { data: processo } = await supabase
+    .from("processos_licitatorios")
+    .select("objeto")
+    .eq("id", processoId)
+    .single();
+  if (!processo) throw new Error("Processo não encontrado.");
+
+  const corpoHtml = montarParagrafoSolicitacaoCompra({
+    processo: { objeto: processo.objeto } as Processo,
+  });
+
+  const documento = await inserirDocumento(supabase, processoId, "solicitacao_compra", corpoHtml, usuario!.id);
+  revalidatePath(`/licitacoes/${processoId}`);
+  return documento;
+}
+
+export async function listarItens(processoId: string): Promise<ItemProcesso[]> {
+  await exigirAcesso();
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("processos_licitatorios_itens")
+    .select("*")
+    .eq("processo_id", processoId)
+    .order("numero_item");
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((i) => ({
+    id: i.id,
+    processoId: i.processo_id,
+    numeroItem: i.numero_item,
+    objeto: i.objeto,
+    unidade: i.unidade,
+    quantidade: Number(i.quantidade),
+    valorUnitario: i.valor_unitario != null ? Number(i.valor_unitario) : null,
+    valorGlobal: i.valor_global != null ? Number(i.valor_global) : null,
+  }));
+}
+
+// Substitui todos os itens do processo pelos da lista — mais simples que
+// diferenciar quais linhas mudaram (mesma convenção já usada em
+// importarContratos, ver actions.ts do Provisionamento).
+export async function salvarItens(processoId: string, itens: NovoItemProcesso[]): Promise<ItemProcesso[]> {
+  await exigirAcesso();
+  const supabase = await createClient();
+
+  const { error: erroExclusao } = await supabase
+    .from("processos_licitatorios_itens")
+    .delete()
+    .eq("processo_id", processoId);
+  if (erroExclusao) throw new Error(erroExclusao.message);
+
+  revalidatePath(`/licitacoes/${processoId}`);
+  if (itens.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from("processos_licitatorios_itens")
+    .insert(
+      itens.map((i) => ({
+        processo_id: processoId,
+        numero_item: i.numeroItem,
+        objeto: i.objeto,
+        unidade: i.unidade,
+        quantidade: i.quantidade,
+        valor_unitario: i.valorUnitario,
+        valor_global: i.valorGlobal,
+      })),
+    )
+    .select("*")
+    .order("numero_item");
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((i) => ({
+    id: i.id,
+    processoId: i.processo_id,
+    numeroItem: i.numero_item,
+    objeto: i.objeto,
+    unidade: i.unidade,
+    quantidade: Number(i.quantidade),
+    valorUnitario: i.valor_unitario != null ? Number(i.valor_unitario) : null,
+    valorGlobal: i.valor_global != null ? Number(i.valor_global) : null,
+  }));
 }
 
 export async function salvarDocumento(
