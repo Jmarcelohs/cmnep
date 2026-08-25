@@ -1,7 +1,7 @@
 import { Celula, PaginaA4, TabelaGrid } from "../celula";
 import { sanitizarHtmlDocumento } from "@/lib/sanitizar-html";
 import { dataPorExtensoFormal, formatarData } from "@/lib/pdf/formato";
-import { montarDotacaoCompleta } from "@/lib/licitacoes/documento-capa";
+import { cargoResumido, montarDotacaoCompleta } from "@/lib/licitacoes/documento-capa";
 import { MODALIDADES_PROCESSO, rotuloNumeroModalidade, rotuloNumeroProcesso } from "@/lib/licitacoes/tipos";
 import type { ModalidadeProcesso, PessoaResumo } from "@/lib/licitacoes/tipos";
 import type { DotacaoOrcamentaria } from "@/lib/suplementacoes/documento";
@@ -55,7 +55,7 @@ export function CapaConteudo({
         {organizador && (
           <div className="mt-16 text-center">
             <p className="font-bold uppercase">{organizador.nome}</p>
-            <p>{organizador.genero === "F" ? "Estagiária" : "Estagiário"}</p>
+            <p>{cargoResumido(organizador.cargo)}</p>
           </div>
         )}
 
