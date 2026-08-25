@@ -4,7 +4,13 @@ import { useState } from "react";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { DOCUMENTOS_PROCESSO } from "@/lib/licitacoes/tipos";
 import type { DocumentoProcesso, TipoDocumentoLicitacao } from "@/lib/licitacoes/tipos";
-import { gerarDocumentoCapa, gerarDocumentoSolicitacaoCompra, gerarDocumentoTr, salvarDocumento } from "../actions";
+import {
+  gerarDocumentoCapa,
+  gerarDocumentoDfd,
+  gerarDocumentoSolicitacaoCompra,
+  gerarDocumentoTr,
+  salvarDocumento,
+} from "../actions";
 
 type ConfigDocumento = {
   gerar: (processoId: string) => Promise<DocumentoProcesso>;
@@ -19,6 +25,12 @@ const CONFIG: Partial<Record<TipoDocumentoLicitacao, ConfigDocumento>> = {
     imprimirHref: (id) => `/licitacoes/${id}/imprimir/capa`,
     titulo: "Capa do Processo — parágrafo de abertura",
     dica: "Gerado automaticamente a partir dos dados do processo — ajuste o texto se precisar antes de imprimir. Os dados do quadro (procedimento, objeto, dotação...) vêm sempre direto do processo.",
+  },
+  dfd: {
+    gerar: gerarDocumentoDfd,
+    imprimirHref: (id) => `/licitacoes/${id}/imprimir/dfd`,
+    titulo: "DFD — Documento de Formalização da Demanda",
+    dica: "Tipificação, tipo de material e prioridade já vêm marcados com o valor mais comum — mude o X de lugar na tabela se este processo for diferente. Revise a justificativa da contratação (seção 2) e o prazo estimado de entrega (seção 4) antes de imprimir.",
   },
   tr: {
     gerar: gerarDocumentoTr,

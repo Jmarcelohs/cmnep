@@ -43,7 +43,7 @@ export type TipoDocumentoLicitacao =
 export const DOCUMENTOS_PROCESSO: { tipo: TipoDocumentoLicitacao; label: string; disponivel: boolean }[] = [
   { tipo: "autuacao", label: "Autuação", disponivel: false },
   { tipo: "capa", label: "Capa do Processo", disponivel: true },
-  { tipo: "dfd", label: "DFD — Documento de Formalização de Demanda", disponivel: false },
+  { tipo: "dfd", label: "DFD — Documento de Formalização de Demanda", disponivel: true },
   { tipo: "etp", label: "ETP — Estudo Técnico Preliminar", disponivel: false },
   {
     tipo: "solicitacao_compra",

@@ -6,6 +6,7 @@ import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import { sanitizarHtmlDocumento } from "@/lib/sanitizar-html";
 import { montarParagrafoAberturaCapa } from "@/lib/licitacoes/documento-capa";
 import { montarCorpoTR } from "@/lib/licitacoes/documento-tr";
+import { montarCorpoDFD } from "@/lib/licitacoes/documento-dfd";
 import { montarParagrafoSolicitacaoCompra } from "@/lib/licitacoes/documento-solicitacao-compra";
 import type { Database } from "@/lib/supabase/database.types";
 import type {
@@ -317,6 +318,27 @@ async function inserirDocumento(
   };
 }
 
+async function buscarItens(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  processoId: string,
+): Promise<ItemProcesso[]> {
+  const { data: itensRows } = await supabase
+    .from("processos_licitatorios_itens")
+    .select("*")
+    .eq("processo_id", processoId)
+    .order("numero_item");
+  return (itensRows ?? []).map((i) => ({
+    id: i.id,
+    processoId: i.processo_id,
+    numeroItem: i.numero_item,
+    objeto: i.objeto,
+    unidade: i.unidade,
+    quantidade: Number(i.quantidade),
+    valorUnitario: i.valor_unitario != null ? Number(i.valor_unitario) : null,
+    valorGlobal: i.valor_global != null ? Number(i.valor_global) : null,
+  }));
+}
+
 // Gera (ou recupera) o Termo de Referência — base jurídica fixa +
 // objeto/itens/dotação/gestor/fiscal do processo (ver montarCorpoTR).
 export async function gerarDocumentoTr(processoId: string): Promise<DocumentoProcesso> {
@@ -333,21 +355,7 @@ export async function gerarDocumentoTr(processoId: string): Promise<DocumentoPro
     .single();
   if (!processo) throw new Error("Processo não encontrado.");
 
-  const { data: itensRows } = await supabase
-    .from("processos_licitatorios_itens")
-    .select("*")
-    .eq("processo_id", processoId)
-    .order("numero_item");
-  const itens: ItemProcesso[] = (itensRows ?? []).map((i) => ({
-    id: i.id,
-    processoId: i.processo_id,
-    numeroItem: i.numero_item,
-    objeto: i.objeto,
-    unidade: i.unidade,
-    quantidade: Number(i.quantidade),
-    valorUnitario: i.valor_unitario != null ? Number(i.valor_unitario) : null,
-    valorGlobal: i.valor_global != null ? Number(i.valor_global) : null,
-  }));
+  const itens = await buscarItens(supabase, processoId);
 
   const idsPessoas = [processo.gestor_contrato_pessoa_id, processo.fiscal_contrato_pessoa_id].filter(
     (v): v is string => Boolean(v),
@@ -366,6 +374,35 @@ export async function gerarDocumentoTr(processoId: string): Promise<DocumentoPro
   });
 
   const documento = await inserirDocumento(supabase, processoId, "tr", corpoHtml, usuario!.id);
+  revalidatePath(`/licitacoes/${processoId}`);
+  return documento;
+}
+
+// Gera (ou recupera) o DFD — objeto/itens/vínculo no PCA/data do processo
+// (ver montarCorpoDFD); tipificação/tipo de material/prioridade já vêm
+// marcados com o valor mais comum nesta Câmara, editável antes de imprimir.
+export async function gerarDocumentoDfd(processoId: string): Promise<DocumentoProcesso> {
+  const usuario = await exigirAcesso();
+  const supabase = await createClient();
+
+  const existente = await buscarDocumentoExistente(supabase, processoId, "dfd");
+  if (existente) return existente;
+
+  const { data: processo } = await supabase
+    .from("processos_licitatorios")
+    .select("*")
+    .eq("id", processoId)
+    .single();
+  if (!processo) throw new Error("Processo não encontrado.");
+
+  const itens = await buscarItens(supabase, processoId);
+
+  const corpoHtml = montarCorpoDFD({
+    processo: paraProcesso({ ...processo, ficha: null } as unknown as LinhaProcesso),
+    itens,
+  });
+
+  const documento = await inserirDocumento(supabase, processoId, "dfd", corpoHtml, usuario!.id);
   revalidatePath(`/licitacoes/${processoId}`);
   return documento;
 }

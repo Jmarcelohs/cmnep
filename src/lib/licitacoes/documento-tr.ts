@@ -1,37 +1,7 @@
-import { formatarMoeda } from "@/lib/pdf/formato";
 import { MESA_DIRETORA } from "@/lib/suplementacoes/documento";
-import { cargoResumido, montarDotacaoCompleta } from "./documento-capa";
+import { cargoResumido, montarDotacaoCompleta, PRESIDENTE_MATRICULA, tabelaItensHtml } from "./documento-comum";
 import type { DotacaoOrcamentaria } from "@/lib/suplementacoes/documento";
 import type { ItemProcesso, PessoaResumo, Processo } from "./tipos";
-
-// Igual a MESA_DIRETORA (src/lib/suplementacoes/documento.ts) — composição
-// fixa por biênio, não lida de uma tabela dinâmica, pro documento gerado
-// ficar definitivo mesmo se a composição mudar depois. Matrícula vem do
-// Termo de Referência real usado como modelo (04/08/2026).
-const PRESIDENTE_MATRICULA = "1089";
-
-function tabelaItensHtml(itens: ItemProcesso[]): string {
-  const linhas = itens
-    .map(
-      (i) => `<tr>
-        <td>${String(i.numeroItem).padStart(3, "0")}</td>
-        <td>${i.objeto}</td>
-        <td>${i.unidade}</td>
-        <td>${i.quantidade}</td>
-        <td>${i.valorUnitario != null ? formatarMoeda(i.valorUnitario) : ""}</td>
-        <td>${i.valorGlobal != null ? formatarMoeda(i.valorGlobal) : ""}</td>
-      </tr>`,
-    )
-    .join("");
-
-  return `<p><strong>DEMANDA – BEM/SERVIÇO/OBRAS E/OU INSTALAÇÕES</strong></p>
-  <table>
-    <thead>
-      <tr><th>ITEM</th><th>OBJETO</th><th>UNID.</th><th>QUANT.</th><th>V. UNITÁRIO</th><th>V. GLOBAL</th></tr>
-    </thead>
-    <tbody>${linhas}</tbody>
-  </table>`;
-}
 
 // Só a fundamentação de dispensa por valor (inciso II, art. 75) — as
 // demais modalidades ainda não têm o texto legal correspondente montado;

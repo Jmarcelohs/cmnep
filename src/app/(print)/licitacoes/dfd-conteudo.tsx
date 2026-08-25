@@ -1,5 +1,5 @@
 import { DocumentoPaginadoConteudo } from "./documento-paginado-conteudo";
 
-export function TrConteudo({ corpoHtml }: { corpoHtml: string }) {
+export function DfdConteudo({ corpoHtml }: { corpoHtml: string }) {
   return <DocumentoPaginadoConteudo corpoHtml={corpoHtml} />;
 }
