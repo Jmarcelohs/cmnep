@@ -25,6 +25,10 @@ function camposIniciais(): NovoProcesso {
     pesquisaPrecosPessoaId: null,
     gestorContratoPessoaId: null,
     fiscalContratoPessoaId: null,
+    trSolucaoEscolhida: "",
+    trNaturezaExecucao: "nao_continuada",
+    trJustificativaNatureza:
+      "O objeto da presente contratação é classificado como de natureza não continuada, uma vez que sua execução se limita a um período determinado, com início e término definidos, não havendo necessidade de prolongamento ou renovação para a manutenção das atividades essenciais da instituição.",
   };
 }
 

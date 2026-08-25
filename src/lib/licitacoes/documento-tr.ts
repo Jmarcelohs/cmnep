@@ -1,3 +1,4 @@
+import { dataPorExtenso } from "@/lib/pdf/formato";
 import { MESA_DIRETORA } from "@/lib/suplementacoes/documento";
 import { cargoResumido, montarDotacaoCompleta, PRESIDENTE_MATRICULA, tabelaItensHtml } from "./documento-comum";
 import type { DotacaoOrcamentaria } from "@/lib/suplementacoes/documento";
@@ -20,10 +21,12 @@ function fundamentacaoModalidadeHtml(processo: Processo): string {
 
 // Corpo completo do Termo de Referência — base jurídica fixa (confirmado
 // com o usuário: as seções que citam a Lei 14.133/2021 são iguais em toda
-// dispensa por valor), com objeto/itens/dotação/gestor/fiscal
-// interpolados. Guardado como HTML editável (mesmo padrão da Capa) — ajuste
-// livre antes de imprimir, já que a seção 2 (Fundamentos) é só um ponto de
-// partida genérico, não a justificativa técnica específica do processo.
+// dispensa por valor), com objeto/itens/dotação/gestor/fiscal e os campos
+// estruturados do TR (solução escolhida, natureza da execução — ver
+// migration 0053) interpolados. Diferente de Capa/DFD/ETP, não é editado
+// como um bloco de HTML livre — é sempre recalculado a partir do processo,
+// e os únicos campos realmente variáveis (seção 2.3-2.5 e seção 14) têm
+// formulário próprio (ver TrFormulario).
 export function montarCorpoTR({
   processo,
   itens,
@@ -51,7 +54,7 @@ ${tabelaItensHtml(itens)}
 <p><strong>2. FUNDAMENTOS DA CONTRATAÇÃO</strong></p>
 <p>2.1. A contratação se baseia no Estudo Técnico Preliminar (ETP) realizado para a análise da viabilidade da contratação.</p>
 <p>2.2. No ETP, com base nos requisitos para a contratação, foi realizado levantamento de mercado, que concluiu pela real necessidade da presente contratação. A conclusão pela necessidade de contratação se justifica pelo fato de que não se vislumbra outra solução viável no mercado senão a contratação do objeto descrito no item 1. Além disso, foi realizado levantamento dos potenciais fornecedores com o objetivo de verificar a possibilidade de escolha de propostas mais vantajosas para a Administração Pública.</p>
-<p>[Descreva aqui a solução escolhida e o resultado esperado, com base no ETP deste processo — texto de ponto de partida, ajuste antes de imprimir.]</p>
+<p>${processo.trSolucaoEscolhida || "[Descreva aqui a solução escolhida e o resultado esperado, com base no ETP deste processo — preencha pelo formulário do TR.]"}</p>
 
 <p><strong>3. DA JUSTIFICATIVA DA SITUAÇÃO DE DISPENSA DE LICITAÇÃO EM RAZÃO DE VALOR</strong></p>
 ${fundamentacaoModalidadeHtml(processo)}
@@ -128,14 +131,14 @@ ${fundamentacaoModalidadeHtml(processo)}
 <p><strong>14. DO PRAZO DE EXECUÇÃO CONTRATUAL</strong></p>
 <table>
   <tbody>
-    <tr><td>Natureza Continuada</td><td></td></tr>
-    <tr><td>Natureza Não Continuada</td><td>X</td></tr>
-    <tr><td>Justificativa</td><td>O objeto da presente contratação é classificado como de natureza não continuada, uma vez que sua execução se limita a um período determinado, com início e término definidos, não havendo necessidade de prolongamento ou renovação para a manutenção das atividades essenciais da instituição.</td></tr>
+    <tr><td>Natureza Continuada</td><td>${processo.trNaturezaExecucao === "continuada" ? "X" : ""}</td></tr>
+    <tr><td>Natureza Não Continuada</td><td>${processo.trNaturezaExecucao === "nao_continuada" ? "X" : ""}</td></tr>
+    <tr><td>Justificativa</td><td>${processo.trJustificativaNatureza}</td></tr>
   </tbody>
 </table>
 
 <p><strong>15. APROVAÇÃO DA AUTORIDADE SUPERIOR</strong></p>
 <p>15.1. Aprovo o Termo de Referência e determino à Coordenadoria de Licitações e Contratos a realização dos atos necessários à contratação do objeto.</p>
-<p style="text-align:right">Nepomuceno, Minas Gerais, [data].</p>
+<p style="text-align:right">Nepomuceno, Minas Gerais, ${dataPorExtenso(processo.dataAbertura)}.</p>
 <p style="text-align:center">${MESA_DIRETORA.presidente.nome}<br />${MESA_DIRETORA.presidente.cargo}<br />Matrícula n° ${PRESIDENTE_MATRICULA}</p>`;
 }

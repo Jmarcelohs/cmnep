@@ -64,6 +64,9 @@ function paraLinhaDb(dados: NovoProcesso) {
     pesquisa_precos_pessoa_id: dados.pesquisaPrecosPessoaId,
     gestor_contrato_pessoa_id: dados.gestorContratoPessoaId,
     fiscal_contrato_pessoa_id: dados.fiscalContratoPessoaId,
+    tr_solucao_escolhida: dados.trSolucaoEscolhida,
+    tr_natureza_execucao: dados.trNaturezaExecucao,
+    tr_justificativa_natureza: dados.trJustificativaNatureza,
   };
 }
 
@@ -84,6 +87,9 @@ function paraProcesso(linha: LinhaProcesso): Processo & { ficha: DotacaoOrcament
     pesquisaPrecosPessoaId: linha.pesquisa_precos_pessoa_id,
     gestorContratoPessoaId: linha.gestor_contrato_pessoa_id,
     fiscalContratoPessoaId: linha.fiscal_contrato_pessoa_id,
+    trSolucaoEscolhida: linha.tr_solucao_escolhida,
+    trNaturezaExecucao: linha.tr_natureza_execucao,
+    trJustificativaNatureza: linha.tr_justificativa_natureza,
     criadoEm: linha.criado_em,
     ficha: linha.ficha,
   };
@@ -340,15 +346,18 @@ async function buscarItens(
   }));
 }
 
-// Gera (ou recupera) o Termo de Referência — base jurídica fixa +
-// objeto/itens/dotação/gestor/fiscal do processo (ver montarCorpoTR).
-export async function gerarDocumentoTr(processoId: string): Promise<DocumentoProcesso> {
-  const usuario = await exigirAcesso();
-  const supabase = await createClient();
-
-  const existente = await buscarDocumentoExistente(supabase, processoId, "tr");
-  if (existente) return existente;
-
+// O TR não é mais um blob editado livremente (ver migration 0053): as
+// partes que variam por processo (solução escolhida, natureza da execução)
+// vivem como campos estruturados no próprio processo, preenchidos pelo
+// TrFormulario. Por isso o corpo_html é sempre recalculado a partir do
+// estado atual do processo — nunca só recuperado de um cache — e como a
+// Solicitação de Compra lê esse mesmo registro (tipo "tr"), o espelhamento
+// entre os dois documentos acontece automaticamente.
+async function regenerarCorpoTr(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  processoId: string,
+  criadoPor: string,
+): Promise<DocumentoProcesso> {
   const { data: processo } = await supabase
     .from("processos_licitatorios")
     .select(SELECT_COM_FICHA)
@@ -374,7 +383,60 @@ export async function gerarDocumentoTr(processoId: string): Promise<DocumentoPro
     fiscal: processo.fiscal_contrato_pessoa_id ? (porId.get(processo.fiscal_contrato_pessoa_id) ?? null) : null,
   });
 
-  const documento = await inserirDocumento(supabase, processoId, "tr", corpoHtml, usuario!.id);
+  const { data, error } = await supabase
+    .from("processos_licitatorios_documentos")
+    .upsert(
+      { processo_id: processoId, tipo: "tr", corpo_html: corpoHtml, criado_por: criadoPor },
+      { onConflict: "processo_id,tipo" },
+    )
+    .select("*")
+    .single();
+  if (error || !data) throw new Error(error?.message ?? "Erro ao gerar o Termo de Referência.");
+  return {
+    id: data.id,
+    processoId: data.processo_id,
+    tipo: data.tipo,
+    corpoHtml: data.corpo_html,
+    criadoEm: data.criado_em,
+    atualizadoEm: data.atualizado_em,
+  };
+}
+
+export async function gerarDocumentoTr(processoId: string): Promise<DocumentoProcesso> {
+  const usuario = await exigirAcesso();
+  const supabase = await createClient();
+  const documento = await regenerarCorpoTr(supabase, processoId, usuario!.id);
+  revalidatePath(`/licitacoes/${processoId}`);
+  return documento;
+}
+
+// Salva os campos estruturados do TR (solução escolhida / natureza da
+// execução / justificativa — preenchidos pelo TrFormulario) e regenera o
+// corpo_html na mesma operação, já refletindo no documento "tr" e em
+// qualquer Solicitação de Compra que o reaproveite.
+export async function salvarCamposTr(
+  processoId: string,
+  dados: {
+    trSolucaoEscolhida: string;
+    trNaturezaExecucao: "continuada" | "nao_continuada";
+    trJustificativaNatureza: string;
+  },
+): Promise<DocumentoProcesso> {
+  const usuario = await exigirAcesso();
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("processos_licitatorios")
+    .update({
+      tr_solucao_escolhida: dados.trSolucaoEscolhida,
+      tr_natureza_execucao: dados.trNaturezaExecucao,
+      tr_justificativa_natureza: dados.trJustificativaNatureza,
+      atualizado_em: new Date().toISOString(),
+    })
+    .eq("id", processoId);
+  if (error) throw new Error(error.message);
+
+  const documento = await regenerarCorpoTr(supabase, processoId, usuario!.id);
   revalidatePath(`/licitacoes/${processoId}`);
   return documento;
 }

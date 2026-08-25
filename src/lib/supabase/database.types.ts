@@ -1066,6 +1066,9 @@ export interface Database {
           pesquisa_precos_pessoa_id: string | null;
           gestor_contrato_pessoa_id: string | null;
           fiscal_contrato_pessoa_id: string | null;
+          tr_solucao_escolhida: string;
+          tr_natureza_execucao: "continuada" | "nao_continuada";
+          tr_justificativa_natureza: string;
           criado_por: string | null;
           criado_em: string;
           atualizado_em: string;

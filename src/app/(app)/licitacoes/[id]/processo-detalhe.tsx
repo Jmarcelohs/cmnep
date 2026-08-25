@@ -12,6 +12,7 @@ import {
   gerarDocumentoTr,
   salvarDocumento,
 } from "../actions";
+import { TrFormulario, type CamposTr } from "./tr-formulario";
 
 type ConfigDocumento = {
   gerar: (processoId: string) => Promise<DocumentoProcesso>;
@@ -56,13 +57,16 @@ const CONFIG: Partial<Record<TipoDocumentoLicitacao, ConfigDocumento>> = {
 export function ProcessoDetalhe({
   processoId,
   documentos: documentosIniciais,
+  camposTr,
 }: {
   processoId: string;
   documentos: DocumentoProcesso[];
+  camposTr: CamposTr;
 }) {
   const [documentos, setDocumentos] = useState<DocumentoProcesso[]>(documentosIniciais);
   const [editando, setEditando] = useState<TipoDocumentoLicitacao | null>(null);
   const [corpoHtml, setCorpoHtml] = useState("");
+  const [valoresTr, setValoresTr] = useState<CamposTr>(camposTr);
   const [carregando, setCarregando] = useState<TipoDocumentoLicitacao | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -104,6 +108,25 @@ export function ProcessoDetalhe({
     }
   }
 
+  if (editando === "tr") {
+    return (
+      <TrFormulario
+        processoId={processoId}
+        valoresIniciais={valoresTr}
+        imprimirHref={CONFIG.tr!.imprimirHref(processoId)}
+        onSalvar={(documento, campos) => {
+          setDocumentos((atual) => {
+            const semTr = atual.filter((d) => d.tipo !== "tr");
+            return [...semTr, documento];
+          });
+          setValoresTr(campos);
+          setEditando(null);
+        }}
+        onFechar={() => setEditando(null)}
+      />
+    );
+  }
+
   if (editando && CONFIG[editando]) {
     const config = CONFIG[editando]!;
     return (
@@ -117,7 +140,7 @@ export function ProcessoDetalhe({
             onChange={setCorpoHtml}
             margemEsquerdaMm={20}
             margemDireitaMm={20}
-            minHeight={editando === "tr" ? "40rem" : "10rem"}
+            minHeight="10rem"
           />
         </div>
         {erro && <p className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{erro}</p>}

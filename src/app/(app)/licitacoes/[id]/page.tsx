@@ -93,7 +93,15 @@ export default async function ProcessoPage({ params }: { params: Promise<{ id: s
       </div>
 
       <div className="mt-6">
-        <ProcessoDetalhe processoId={id} documentos={documentos} />
+        <ProcessoDetalhe
+          processoId={id}
+          documentos={documentos}
+          camposTr={{
+            trSolucaoEscolhida: processo.trSolucaoEscolhida,
+            trNaturezaExecucao: processo.trNaturezaExecucao,
+            trJustificativaNatureza: processo.trJustificativaNatureza,
+          }}
+        />
       </div>
     </div>
   );

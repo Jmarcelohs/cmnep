@@ -91,6 +91,13 @@ export type Processo = {
   pesquisaPrecosPessoaId: string | null;
   gestorContratoPessoaId: string | null;
   fiscalContratoPessoaId: string | null;
+  // Campos estruturados do TR (seção 2.3-2.5 e seção 14) — preenchidos
+  // por um formulário dedicado, não editando o documento inteiro (ver
+  // migration 0053). O corpo_html do documento "tr" é sempre recalculado
+  // a partir destes campos.
+  trSolucaoEscolhida: string;
+  trNaturezaExecucao: "continuada" | "nao_continuada";
+  trJustificativaNatureza: string;
   criadoEm: string;
 };
 

@@ -278,8 +278,8 @@ export function SolicitacaoCompraConteudo({
         dataAbertura={dataAbertura}
       />
       <PropostaComercialConteudo objeto={objeto} itens={itens} />
+      {/* TrConteudo já traz o Anexo I ao final (mesmo checklist, uma vez só) */}
       <TrConteudo corpoHtml={trCorpoHtml} />
-      <AnexoIConteudo />
     </>
   );
 }
