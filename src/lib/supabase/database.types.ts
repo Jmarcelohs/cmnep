@@ -108,6 +108,7 @@ export interface Database {
           cargo: string;
           categoria: Categoria;
           partido: string | null;
+          genero: "M" | "F" | null;
           usuario_id: string | null;
           ativo: boolean;
           criado_em: string;
@@ -1044,6 +1045,98 @@ export interface Database {
             columns: ["ficha_id"];
             isOneToOne: false;
             referencedRelation: "dotacoes_orcamentarias";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      processos_licitatorios: {
+        Row: {
+          id: string;
+          numero_processo: number;
+          ano: number;
+          modalidade: "dispensa" | "inexigibilidade" | "pregao";
+          numero_modalidade: number;
+          data_abertura: string;
+          objeto: string;
+          ficha_id: string | null;
+          dotacao_subelemento: string;
+          vinculo_pca: string;
+          organizador_pessoa_id: string | null;
+          agente_contratacao_pessoa_id: string | null;
+          criado_por: string | null;
+          criado_em: string;
+          atualizado_em: string;
+        };
+        Insert: Partial<Omit<Database["public"]["Tables"]["processos_licitatorios"]["Row"], "id">> & {
+          numero_processo: number;
+          ano: number;
+          modalidade: "dispensa" | "inexigibilidade" | "pregao";
+          numero_modalidade: number;
+        };
+        Update: Partial<Database["public"]["Tables"]["processos_licitatorios"]["Row"]>;
+        Relationships: [
+          {
+            foreignKeyName: "processos_licitatorios_ficha_id_fkey";
+            columns: ["ficha_id"];
+            isOneToOne: false;
+            referencedRelation: "dotacoes_orcamentarias";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "processos_licitatorios_organizador_pessoa_id_fkey";
+            columns: ["organizador_pessoa_id"];
+            isOneToOne: false;
+            referencedRelation: "pessoas";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "processos_licitatorios_agente_contratacao_pessoa_id_fkey";
+            columns: ["agente_contratacao_pessoa_id"];
+            isOneToOne: false;
+            referencedRelation: "pessoas";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      processos_licitatorios_documentos: {
+        Row: {
+          id: string;
+          processo_id: string;
+          tipo:
+            | "capa"
+            | "dfd"
+            | "etp"
+            | "tr"
+            | "certidao_valor"
+            | "solicitacao_abertura"
+            | "termo_aceite"
+            | "solicitacao_orcamento"
+            | "certidao_orcamento"
+            | "solicitacao_parecer_juridico"
+            | "aviso"
+            | "termo_aviso"
+            | "ata_julgamento"
+            | "despacho"
+            | "relatorio_publicacao"
+            | "autuacao";
+          corpo_html: string;
+          criado_por: string | null;
+          criado_em: string;
+          atualizado_em: string;
+        };
+        Insert: Partial<
+          Omit<Database["public"]["Tables"]["processos_licitatorios_documentos"]["Row"], "id">
+        > & {
+          processo_id: string;
+          tipo: Database["public"]["Tables"]["processos_licitatorios_documentos"]["Row"]["tipo"];
+        };
+        Update: Partial<Database["public"]["Tables"]["processos_licitatorios_documentos"]["Row"]>;
+        Relationships: [
+          {
+            foreignKeyName: "processos_licitatorios_documentos_processo_id_fkey";
+            columns: ["processo_id"];
+            isOneToOne: false;
+            referencedRelation: "processos_licitatorios";
             referencedColumns: ["id"];
           },
         ];

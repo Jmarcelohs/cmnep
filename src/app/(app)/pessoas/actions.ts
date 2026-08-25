@@ -15,6 +15,7 @@ export async function criarPessoa(formData: FormData) {
   const categoria = String(formData.get("categoria") ?? "") as Categoria;
   const partido = String(formData.get("partido") ?? "").trim() || null;
   const cpf = apenasDigitos(String(formData.get("cpf") ?? "")) || null;
+  const genero = String(formData.get("genero") ?? "").trim() || null;
 
   if (!nome || !cargo || !categoria) {
     redirect(`/pessoas/nova?error=${encodeURIComponent("Preencha nome, cargo e categoria")}`);
@@ -25,7 +26,14 @@ export async function criarPessoa(formData: FormData) {
 
   const { data: pessoa, error } = await supabase
     .from("pessoas")
-    .insert({ matricula, nome, cargo, categoria, partido: categoria === "Vereador" ? partido : null })
+    .insert({
+      matricula,
+      nome,
+      cargo,
+      categoria,
+      partido: categoria === "Vereador" ? partido : null,
+      genero: genero as "M" | "F" | null,
+    })
     .select("id")
     .single();
 
@@ -50,6 +58,7 @@ export async function editarPessoa(id: string, formData: FormData) {
   const categoria = String(formData.get("categoria") ?? "") as Categoria;
   const partido = String(formData.get("partido") ?? "").trim() || null;
   const cpf = apenasDigitos(String(formData.get("cpf") ?? "")) || null;
+  const genero = String(formData.get("genero") ?? "").trim() || null;
 
   if (!nome || !cargo || !categoria) {
     redirect(`/pessoas/${id}/editar?error=${encodeURIComponent("Preencha nome, cargo e categoria")}`);
@@ -60,7 +69,14 @@ export async function editarPessoa(id: string, formData: FormData) {
 
   const { error } = await supabase
     .from("pessoas")
-    .update({ matricula, nome, cargo, categoria, partido: categoria === "Vereador" ? partido : null })
+    .update({
+      matricula,
+      nome,
+      cargo,
+      categoria,
+      partido: categoria === "Vereador" ? partido : null,
+      genero: genero as "M" | "F" | null,
+    })
     .eq("id", id);
 
   if (error) {

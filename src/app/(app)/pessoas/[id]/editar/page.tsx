@@ -19,7 +19,7 @@ export default async function EditarPessoaPage({
   const supabase = await createClient();
   const { data: pessoa } = await supabase
     .from("pessoas")
-    .select("id, matricula, nome, cargo, categoria, partido")
+    .select("id, matricula, nome, cargo, categoria, partido, genero")
     .eq("id", id)
     .single();
 
@@ -50,6 +50,7 @@ export default async function EditarPessoaPage({
           categoria: pessoa.categoria,
           partido: pessoa.partido ?? "",
           cpf: sensivel?.cpf ?? "",
+          genero: pessoa.genero ?? "",
         }}
       />
     </div>

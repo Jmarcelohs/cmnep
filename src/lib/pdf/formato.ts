@@ -20,6 +20,19 @@ export function dataPorExtenso(dataISO: string | null) {
   return `${String(dia).padStart(2, "0")} de ${MESES[mes - 1]} de ${ano}`;
 }
 
+// Data por extenso em fórmula notarial/cabeçalho de processo, ex.:
+// "2026-08-10" → "aos dez dias do mês de agosto de dois mil e vinte e
+// seis" — usada em documentos de Licitações (capa do processo). Reaproveita
+// numeroPorExtenso (abaixo) pro dia e o ano.
+export function dataPorExtensoFormal(dataISO: string | null): string {
+  if (!dataISO) return "—";
+  const [ano, mes, dia] = dataISO.split("-").map(Number);
+  // Dia 1 usa a forma singular tradicional ("no primeiro dia"), não
+  // "aos um dias" — os demais dias usam a forma plural ("aos dois dias").
+  if (dia === 1) return `no primeiro dia do mês de ${MESES[mes - 1]} de ${numeroPorExtenso(ano)}`;
+  return `aos ${numeroPorExtenso(dia)} dias do mês de ${MESES[mes - 1]} de ${numeroPorExtenso(ano)}`;
+}
+
 const UNIDADES = ["", "um", "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove"];
 const DEZ_A_DEZENOVE = [
   "dez", "onze", "doze", "treze", "quatorze", "quinze",
@@ -62,7 +75,7 @@ function grupoPorExtenso(n: number): string {
 // Extenso de 0 a 999.999.999, dividido em grupos de milhão/mil/resto,
 // unidos por vírgula — exceto o último grupo quando é menor que 100, que
 // usa "e" (regra tradicional do português: "mil e um", "mil, cento e um").
-function numeroPorExtenso(n: number): string {
+export function numeroPorExtenso(n: number): string {
   if (n === 0) return "zero";
 
   const milhoes = Math.floor(n / 1_000_000);

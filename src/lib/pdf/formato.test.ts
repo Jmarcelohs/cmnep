@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dataPorExtenso, formatarData, formatarMoeda, valorPorExtenso } from "./formato";
+import { dataPorExtenso, dataPorExtensoFormal, formatarData, formatarMoeda, valorPorExtenso } from "./formato";
 
 describe("formatarData", () => {
   it("formata uma data ISO como dd/mm/aaaa", () => {
@@ -23,6 +23,24 @@ describe("dataPorExtenso", () => {
 
   it("retorna travessão quando a data é nula", () => {
     expect(dataPorExtenso(null)).toBe("—");
+  });
+});
+
+describe("dataPorExtensoFormal", () => {
+  it("escreve dia e ano por extenso, formato de abertura de processo", () => {
+    expect(dataPorExtensoFormal("2026-08-10")).toBe(
+      "aos dez dias do mês de agosto de dois mil e vinte e seis",
+    );
+  });
+
+  it("usa a forma singular tradicional pro dia 1 ('no primeiro dia')", () => {
+    expect(dataPorExtensoFormal("2026-03-01")).toBe(
+      "no primeiro dia do mês de março de dois mil e vinte e seis",
+    );
+  });
+
+  it("retorna travessão quando a data é nula", () => {
+    expect(dataPorExtensoFormal(null)).toBe("—");
   });
 });
 

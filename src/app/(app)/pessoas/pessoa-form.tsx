@@ -10,6 +10,7 @@ export type ValoresIniciaisPessoa = {
   categoria: string;
   partido: string;
   cpf: string;
+  genero: string;
 };
 
 export function PessoaForm({
@@ -89,6 +90,22 @@ export function PessoaForm({
           <option value="Vereador">Vereador</option>
           <option value="Estagiário">Estagiário</option>
         </select>
+      </div>
+      <div>
+        <label htmlFor="genero" className="block text-sm font-medium text-slate-700">Gênero</label>
+        <select
+          id="genero"
+          name="genero"
+          defaultValue={valoresIniciais?.genero ?? ""}
+          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+        >
+          <option value="">Não informado</option>
+          <option value="F">Feminino</option>
+          <option value="M">Masculino</option>
+        </select>
+        <p className="mt-1 text-xs text-slate-500">
+          Usado só pra concordância de gênero em textos gerados automaticamente (ex.: Licitações).
+        </p>
       </div>
       {categoria === "Vereador" && (
         <div>
