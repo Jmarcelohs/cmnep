@@ -23,6 +23,12 @@ const TAGS_PERMITIDAS = [
   "tr",
   "td",
   "th",
+  // Só pra desenhar o quadradinho de checkbox dos formulários (DFD) — igual
+  // ao padrão já usado em requerimento-conteudo.tsx (borda + "X" dentro,
+  // nunca um glifo Unicode ☐/☒, que some no Adobe Acrobat — ver
+  // [[camara-nepomuceno-pdf-border-rendering]]). Nunca digitado por quem
+  // usa o editor, só gerado pelos montadores de documento.
+  "span",
 ];
 
 export function sanitizarHtmlDocumento(html: string): string {
@@ -33,7 +39,7 @@ export function sanitizarHtmlDocumento(html: string): string {
     // url()/expression()/atributo livre. Os valores são sempre gerados pelo
     // próprio editor (nunca digitados por quem usa), mas a validação por
     // regex garante isso mesmo que o HTML salvo seja adulterado depois.
-    allowedAttributes: { p: ["style"] },
+    allowedAttributes: { p: ["style"], span: ["style"] },
     allowedStyles: {
       p: {
         "text-align": [/^(left|center|right|justify)$/],
@@ -47,6 +53,17 @@ export function sanitizarHtmlDocumento(html: string): string {
         // produz (ver FONTES em rich-text-editor.tsx), não uma família
         // livre.
         "font-family": [/^(Arial, Helvetica, sans-serif|'Times New Roman', Times, serif)$/],
+      },
+      // Valores fixos que desenham só o quadradinho de checkbox (ver
+      // checkboxHtml em documento-comum.ts) — nunca um valor livre, nada de
+      // url()/expression(). Borda em 2px (não 1px) pelo mesmo motivo já
+      // documentado em celula.tsx: traços finos somem no Acrobat.
+      span: {
+        display: [/^inline-block$/],
+        width: [/^[3-6]mm$/],
+        height: [/^[3-6]mm$/],
+        border: [/^2px solid black$/],
+        "text-align": [/^center$/],
       },
     },
     // contentEditable às vezes quebra linha com <div> em vez de <p>

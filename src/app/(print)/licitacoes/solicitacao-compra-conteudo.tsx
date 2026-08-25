@@ -115,9 +115,17 @@ export function PropostaComercialConteudo({ objeto, itens }: { objeto: string; i
             Apresentamos, a seguir, proposta comercial para a {objeto.charAt(0).toLowerCase() + objeto.slice(1)}
           </p>
 
-          <p className="mt-4 text-center font-bold">DADOS DA EMPRESA</p>
-          <table className="mt-1 w-full border-collapse border border-black text-[9pt]">
+          {/* Uma tabela só (DADOS DA EMPRESA + DADOS BANCÁRIOS) — o modelo
+              real mostra as duas seções como um único retângulo contínuo,
+              com os dois cabeçalhos como linhas internas (colSpan=2), não
+              como duas caixas separadas com um espaço entre elas. */}
+          <table className="mt-4 w-full border-collapse border border-black text-[9pt]">
             <tbody>
+              <tr>
+                <td colSpan={2} className="border border-black px-2 py-1 text-center font-bold">
+                  DADOS DA EMPRESA
+                </td>
+              </tr>
               {[
                 "RAZÃO SOCIAL",
                 "CNPJ",
@@ -135,12 +143,11 @@ export function PropostaComercialConteudo({ objeto, itens }: { objeto: string; i
                   <td className="border border-black px-2 py-1">&nbsp;</td>
                 </tr>
               ))}
-            </tbody>
-          </table>
-
-          <p className="mt-4 text-center font-bold">DADOS BANCÁRIOS</p>
-          <table className="mt-1 w-full border-collapse border border-black text-[9pt]">
-            <tbody>
+              <tr>
+                <td colSpan={2} className="border border-black px-2 py-1 text-center font-bold">
+                  DADOS BANCÁRIOS
+                </td>
+              </tr>
               <tr>
                 <td className="border border-black px-2 py-1 text-right font-bold">BANCO:</td>
                 <td className="border border-black px-2 py-1">&nbsp;</td>

@@ -62,3 +62,24 @@ export function tabelaItensHtml(itens: ItemProcesso[]): string {
     <tbody>${linhas}</tbody>
   </table>`;
 }
+
+// Quadradinho de checkbox solto (sem tabela ao redor) — igual ao modelo
+// real do DFD (TIPIFICAÇÃO DO OBJETO / TIPO DE MATERIAL), onde cada opção
+// é só um quadrado com "X" seguido do rótulo, sem grade de tabela.
+// Depende do <span style="..."> liberado em sanitizar-html.ts — nunca usar
+// um glifo Unicode ☐/☒ aqui (some no Adobe Acrobat, ver
+// [[camara-nepomuceno-pdf-border-rendering]]).
+export function checkboxHtml(marcado: boolean, rotulo: string): string {
+  return `<p><span style="display:inline-block;width:4mm;height:4mm;border:2px solid black;text-align:center;">${marcado ? "X" : ""}</span> ${rotulo}</p>`;
+}
+
+// Uma "caixa" de seção — replica o padrão real do DFD, onde cada seção
+// numerada (cabeçalho + conteúdo, inclusive uma tabela de itens ou uma
+// lista de opções) é um único retângulo contínuo com borda. Cada item do
+// array vira uma linha da MESMA tabela — como todo <td> deste módulo já
+// tem borda (ver documento-paginado-conteudo.tsx), o resultado visual é
+// um quadro só, com divisórias finas entre as linhas internas.
+export function caixaHtml(linhasHtml: string[]): string {
+  const linhas = linhasHtml.map((html) => `<tr><td>${html}</td></tr>`).join("");
+  return `<table><tbody>${linhas}</tbody></table>`;
+}
