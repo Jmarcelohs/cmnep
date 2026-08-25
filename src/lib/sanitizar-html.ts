@@ -64,6 +64,7 @@ export function sanitizarHtmlDocumento(html: string): string {
         height: [/^[3-6]mm$/],
         border: [/^2px solid black$/],
         "text-align": [/^center$/],
+        "background-color": [/^(black|white)$/],
       },
     },
     // contentEditable às vezes quebra linha com <div> em vez de <p>

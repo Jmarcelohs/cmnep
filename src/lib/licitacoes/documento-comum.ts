@@ -70,7 +70,8 @@ export function tabelaItensHtml(itens: ItemProcesso[]): string {
 // um glifo Unicode ☐/☒ aqui (some no Adobe Acrobat, ver
 // [[camara-nepomuceno-pdf-border-rendering]]).
 export function checkboxHtml(marcado: boolean, rotulo: string): string {
-  return `<p><span style="display:inline-block;width:4mm;height:4mm;border:2px solid black;text-align:center;">${marcado ? "X" : ""}</span> ${rotulo}</p>`;
+  const cor = marcado ? "black" : "white";
+  return `<p><span style="display:inline-block;width:4mm;height:4mm;border:2px solid black;background-color:${cor};"></span> ${rotulo}</p>`;
 }
 
 // Uma "caixa" de seção — replica o padrão real do DFD, onde cada seção
