@@ -20,6 +20,22 @@ export const ALTURA_UTIL_PAGINA_MM = 225; // 297mm - 48mm (topo) - 24mm (rodapé
 const CARACTERES_POR_LINHA = 82;
 // 12pt × 1,5 de entrelinha ≈ 6,35mm/linha — arredondado por cima.
 export const ALTURA_LINHA_MM = 6.6;
+const TAMANHO_REFERENCIA_PT = 12;
+
+// linhaItemHtml (ver suplementacoes/documento.ts) gera cada bloco de item
+// em font-size:10pt, menor que os 12pt usados pra calibrar
+// ALTURA_LINHA_MM/CARACTERES_POR_LINHA acima — sem escalar por isso, a
+// altura de um bloco de 10pt era superestimada em ~25% (linha maior do que
+// a real, e menos caracteres cabendo por linha do que cabe de verdade).
+// Isso forçava quebras de página bem antes da hora, deixando cada página
+// com uma sobra grande de espaço em branco e o Ato/Decreto espalhado por
+// muito mais páginas do que precisava — o que lia como "espaçamento
+// grande"/"cortado" (visto ao vivo: um Ato de 10 itens ocupando 6 páginas
+// quase vazias em vez de ~3).
+function tamanhoFontePt(html: string): number {
+  const m = html.match(/font-size:\s*(\d+)pt/i);
+  return m ? Number(m[1]) : TAMANHO_REFERENCIA_PT;
+}
 export const ALTURA_LINHA_TABELA_MM = 8;
 export const MARGEM_ENTRE_BLOCOS_MM = 2;
 
@@ -54,13 +70,17 @@ function textoPlano(html: string): string {
 // comprida. Ignorar os <br> e estimar só pelo total de caracteres
 // subestimaria muito a altura de um bloco assim.
 function estimarAlturaParagrafo(html: string): number {
+  const fatorEscala = tamanhoFontePt(html) / TAMANHO_REFERENCIA_PT;
+  const caracteresPorLinha = CARACTERES_POR_LINHA / fatorEscala;
+  const alturaLinha = ALTURA_LINHA_MM * fatorEscala;
+
   const linhas = html.split(/<br\s*\/?>/i);
   let totalLinhas = 0;
   for (const linha of linhas) {
     const comprimento = textoPlano(linha).length;
-    totalLinhas += comprimento === 0 ? 1 : Math.ceil(comprimento / CARACTERES_POR_LINHA);
+    totalLinhas += comprimento === 0 ? 1 : Math.ceil(comprimento / caracteresPorLinha);
   }
-  return totalLinhas * ALTURA_LINHA_MM + MARGEM_ENTRE_BLOCOS_MM;
+  return totalLinhas * alturaLinha + MARGEM_ENTRE_BLOCOS_MM;
 }
 
 function estimarAlturaLista(html: string): number {

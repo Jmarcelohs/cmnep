@@ -99,15 +99,35 @@ function indentacaoDoEstilo(estilo: Record<string, string>) {
   return twips < 0 ? { hanging: -twips } : { firstLine: twips };
 }
 
-function tamanhoMeioPontos(estilo: Record<string, string>): number | undefined {
+// Padrão institucional (ver base de formatação): corpo em Arial 12pt — casa
+// com o CSS global do site (globals.css: --font-sans: Arial, Helvetica,
+// sans-serif), que é a fonte que o PDF acaba herdando por não sobrescrever
+// font-family nos containers do Ato/Decreto. Sem isso, um <p> sem font-size/
+// font-family explícito (caso do texto padrão gerado por montarCorpoAtoPadrao/
+// montarCorpoDecretoPadrao) caía na fonte/tamanho interno do docx-js, que não
+// bate com o PDF.
+const TAMANHO_PADRAO_PT = 12;
+const FONTE_PADRAO = "Arial";
+
+function tamanhoMeioPontos(estilo: Record<string, string>): number {
   const m = estilo["font-size"]?.match(/^(\d+)pt$/);
-  return m ? Number(m[1]) * 2 : undefined;
+  return m ? Number(m[1]) * 2 : TAMANHO_PADRAO_PT * 2;
 }
 
-function nomeFonte(estilo: Record<string, string>): string | undefined {
+function nomeFonte(estilo: Record<string, string>): string {
   const valor = estilo["font-family"];
-  if (!valor) return undefined;
-  return valor.startsWith("Arial") ? "Arial" : valor.includes("Times") ? "Times New Roman" : undefined;
+  if (!valor) return FONTE_PADRAO;
+  return valor.startsWith("Arial") ? "Arial" : valor.includes("Times") ? "Times New Roman" : FONTE_PADRAO;
+}
+
+// Entrelinha 1,5 (360 = 1,5 × 240, a base de "240 por linha" do OOXML) e
+// 6pt antes/depois de cada parágrafo — títulos (>=14pt) ganham 12pt antes/
+// 6pt depois — igual à base de formatação oficial dos documentos da Câmara.
+// Sem isso o docx-js usava o espaçamento padrão dele mesmo (bem maior que
+// o do PDF), que é a causa mais provável do "espaçamentos grandes" relatado.
+function espacamentoDoParagrafo(tamanho: number): { line: number; before: number; after: number } {
+  const ehTitulo = tamanho >= 28; // >= 14pt (em meio-pontos)
+  return { line: 360, before: ehTitulo ? 240 : 120, after: 120 };
 }
 
 type EstiloInline = { bold?: boolean; italics?: boolean; underline?: Record<string, never> };
@@ -188,12 +208,20 @@ function converterTabela(no: Extract<NoHtml, { tipo: "elemento" }>): Table {
           borders: BORDA_CELULA,
           children: [
             new Paragraph({
-              children: coletarRuns(celula.filhos, celula.tag === "th" ? { bold: true } : {}),
+              keepLines: true,
+              children: coletarRuns(
+                celula.filhos,
+                celula.tag === "th" ? { bold: true } : {},
+                TAMANHO_PADRAO_PT * 2,
+                FONTE_PADRAO,
+              ),
             }),
           ],
         }),
     );
-    return new TableRow({ children: celulas });
+    // cantSplit impede o Word de quebrar a linha da tabela entre páginas
+    // (uma célula com texto longo partida ao meio lia como "cortada").
+    return new TableRow({ cantSplit: true, children: celulas });
   });
 
   return new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: linhas });
@@ -201,12 +229,17 @@ function converterTabela(no: Extract<NoHtml, { tipo: "elemento" }>): Table {
 
 function converterLista(no: Extract<NoHtml, { tipo: "elemento" }>): Paragraph[] {
   const itens = elementosDeTag(no.filhos, "li");
+  const tamanho = TAMANHO_PADRAO_PT * 2;
   return itens.map((li, indice) => {
     const prefixo = no.tag === "ol" ? `${indice + 1}. ` : undefined;
-    const runs = coletarRuns(li.filhos, {});
+    const runs = coletarRuns(li.filhos, {}, tamanho, FONTE_PADRAO);
     return new Paragraph({
       bullet: no.tag === "ul" ? { level: 0 } : undefined,
-      children: prefixo ? [new TextRun({ text: prefixo }), ...runs] : runs,
+      keepLines: true,
+      spacing: espacamentoDoParagrafo(tamanho),
+      children: prefixo
+        ? [new TextRun({ text: prefixo, size: tamanho, font: FONTE_PADRAO }), ...runs]
+        : runs,
     });
   });
 }
@@ -222,6 +255,11 @@ function converterBloco(no: NoHtml): (Paragraph | Table)[] {
         new Paragraph({
           alignment: alinhamentoDoEstilo(no.estilo),
           indent: indentacaoDoEstilo(no.estilo),
+          spacing: espacamentoDoParagrafo(tamanho),
+          // Evita que o Word quebre o próprio parágrafo entre páginas no
+          // meio de um bloco longo (ex.: o texto de justificativa/objeto) —
+          // era isso que lia como "formatação cortada".
+          keepLines: true,
           children: runs.length > 0 ? runs : [new TextRun("")],
         }),
       ];
