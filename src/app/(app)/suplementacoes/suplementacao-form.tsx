@@ -33,6 +33,20 @@ function totalLinhas(linhas: Linha[]): number {
   return linhas.reduce((soma, l) => soma + (Number(l.valor) || 0), 0);
 }
 
+// Um <input type="date"> só deveria emitir uma data ISO completa ou "" (nunca
+// um valor parcial, por especificação) — mas na prática já vimos um ano
+// incompleto (ex.: "0002-08-26" em vez de "2026-08-26") escapar disso e ser
+// congelado no texto padrão do Decreto (virou "DE 2" em vez de "DE 2026" —
+// só percebido no PDF, bem depois de salvo). Como o texto padrão é
+// recalculado a cada tecla enquanto o campo não foi editado à mão, uma data
+// assim passageira pode acabar sendo exatamente o que fica salvo se o
+// usuário submeter nesse instante. Validar o formato aqui garante que, na
+// pior das hipóteses, o texto cai pro placeholder "___" (visivelmente
+// errado) em vez de um ano truncado (facilmente passa despercebido).
+function dataCompletaOuVazia(data: string): string {
+  return /^\d{4}-\d{2}-\d{2}$/.test(data) ? data : "";
+}
+
 // Resolve as linhas do formulário (só fichaId + valor em texto) pras fichas
 // completas (com a classificação orçamentária inteira) — o que
 // montarCorpoAtoPadrao/montarCorpoDecretoPadrao precisam pra montar o texto
@@ -166,7 +180,7 @@ export function SuplementacaoForm({
   const corpoAtoPadrao = useMemo(
     () =>
       montarCorpoAtoPadrao({
-        dataAto,
+        dataAto: dataCompletaOuVazia(dataAto),
         itensDestino: itensDestinoResolvidos,
         itensOrigem: itensOrigemResolvidos,
       }),
@@ -176,7 +190,7 @@ export function SuplementacaoForm({
     () =>
       montarCorpoDecretoPadrao({
         numeroDecreto,
-        dataDecreto,
+        dataDecreto: dataCompletaOuVazia(dataDecreto),
         itensDestino: itensDestinoResolvidos,
         itensOrigem: itensOrigemResolvidos,
       }),
