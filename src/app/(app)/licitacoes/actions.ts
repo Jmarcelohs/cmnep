@@ -9,6 +9,7 @@ import { montarCorpoTR } from "@/lib/licitacoes/documento-tr";
 import { montarCorpoDFD } from "@/lib/licitacoes/documento-dfd";
 import { montarCorpoETP } from "@/lib/licitacoes/documento-etp";
 import { montarCorpoCertidaoValor } from "@/lib/licitacoes/documento-certidao-valor";
+import { montarCorpoSolicitacaoAbertura } from "@/lib/licitacoes/documento-solicitacao-abertura";
 import { montarParagrafoSolicitacaoCompra } from "@/lib/licitacoes/documento-solicitacao-compra";
 import type { Database } from "@/lib/supabase/database.types";
 import type {
@@ -534,6 +535,42 @@ export async function gerarDocumentoCertidaoValor(processoId: string): Promise<D
   });
 
   const documento = await inserirDocumento(supabase, processoId, "certidao_valor", corpoHtml, usuario!.id);
+  revalidatePath(`/licitacoes/${processoId}`);
+  return documento;
+}
+
+// Gera (ou recupera) a Solicitação de Abertura de Processo — memorando
+// do Agente de Contratação à Presidência pedindo autorização de abertura
+// e designação de gestor/fiscal (ver documento-solicitacao-abertura.ts
+// pro porquê da assinatura mostrar o cargo funcional, não o pessoal).
+export async function gerarDocumentoSolicitacaoAbertura(processoId: string): Promise<DocumentoProcesso> {
+  const usuario = await exigirAcesso();
+  const supabase = await createClient();
+
+  const existente = await buscarDocumentoExistente(supabase, processoId, "solicitacao_abertura");
+  if (existente) return existente;
+
+  const { data: processo } = await supabase
+    .from("processos_licitatorios")
+    .select("*")
+    .eq("id", processoId)
+    .single();
+  if (!processo) throw new Error("Processo não encontrado.");
+
+  const { data: agente } = processo.agente_contratacao_pessoa_id
+    ? await supabase
+        .from("pessoas")
+        .select("id, nome, cargo, genero")
+        .eq("id", processo.agente_contratacao_pessoa_id)
+        .single()
+    : { data: null as PessoaResumo | null };
+
+  const corpoHtml = montarCorpoSolicitacaoAbertura({
+    processo: paraProcesso({ ...processo, ficha: null } as unknown as LinhaProcesso),
+    agente,
+  });
+
+  const documento = await inserirDocumento(supabase, processoId, "solicitacao_abertura", corpoHtml, usuario!.id);
   revalidatePath(`/licitacoes/${processoId}`);
   return documento;
 }

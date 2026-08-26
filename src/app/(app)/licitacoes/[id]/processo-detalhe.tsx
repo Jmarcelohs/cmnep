@@ -9,6 +9,7 @@ import {
   gerarDocumentoCertidaoValor,
   gerarDocumentoDfd,
   gerarDocumentoEtp,
+  gerarDocumentoSolicitacaoAbertura,
   gerarDocumentoSolicitacaoCompra,
   gerarDocumentoTr,
   salvarDocumento,
@@ -58,6 +59,12 @@ const CONFIG: Partial<Record<TipoDocumentoLicitacao, ConfigDocumento>> = {
     imprimirHref: (id) => `/licitacoes/${id}/imprimir/certidao-valor`,
     titulo: "Certidão de Valor",
     dica: "A fundamentação legal (art. 75, §1º da Lei 14.133/2021) já vem pronta pra dispensa — revise se os valores-limite citados ainda são os vigentes (mudam por decreto federal) antes de imprimir.",
+  },
+  solicitacao_abertura: {
+    gerar: gerarDocumentoSolicitacaoAbertura,
+    imprimirHref: (id) => `/licitacoes/${id}/imprimir/solicitacao-abertura`,
+    titulo: "Solicitação de Abertura de Processo",
+    dica: "Assinada pelo Agente de Contratação do processo — se ele ainda não foi definido, edite o processo antes de imprimir.",
   },
 };
 

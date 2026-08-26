@@ -52,7 +52,7 @@ export const DOCUMENTOS_PROCESSO: { tipo: TipoDocumentoLicitacao; label: string;
   },
   { tipo: "tr", label: "TR — Termo de Referência", disponivel: true },
   { tipo: "certidao_valor", label: "Certidão de Valor", disponivel: true },
-  { tipo: "solicitacao_abertura", label: "Solicitação de Abertura de Processo", disponivel: false },
+  { tipo: "solicitacao_abertura", label: "Solicitação de Abertura de Processo", disponivel: true },
   { tipo: "termo_aceite", label: "Termo de Aceite de Gestor e Fiscal do Contrato", disponivel: false },
   { tipo: "solicitacao_orcamento", label: "Solicitação de Orçamento", disponivel: false },
   { tipo: "certidao_orcamento", label: "Certidão de Orçamento", disponivel: false },

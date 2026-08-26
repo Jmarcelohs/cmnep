@@ -2,6 +2,18 @@ import { formatarMoeda } from "@/lib/pdf/formato";
 import type { DotacaoOrcamentaria } from "@/lib/suplementacoes/documento";
 import type { ItemProcesso } from "./tipos";
 
+export function primeiraLetraMinuscula(texto: string): string {
+  return texto ? texto.charAt(0).toLowerCase() + texto.slice(1) : texto;
+}
+
+// Remove o ponto final do objeto quando ele entra no meio de uma frase
+// maior (ex.: "A {objeto} foi prevista no PCA..." ou "...Nepomuceno; e
+// que aponte...") — sem isso, como o objeto já termina com ".", sobra um
+// ponto seguido de minúscula (ou de ";") no meio da frase.
+export function semPontoFinal(texto: string): string {
+  return texto.replace(/\.\s*$/, "");
+}
+
 // "Oficial Administrativo — Função Efetiva" → "Oficial Administrativo" —
 // a parte antes do travessão é o cargo em si; o resto ("Função Efetiva",
 // "Estágio"...) é só o vínculo/categoria, que não entra na menção inline

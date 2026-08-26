@@ -1,19 +1,13 @@
 import { dataPorExtenso } from "@/lib/pdf/formato";
 import { MESA_DIRETORA } from "@/lib/suplementacoes/documento";
-import { cargoResumido, PRESIDENTE_MATRICULA, tabelaItensHtml } from "./documento-comum";
+import {
+  cargoResumido,
+  primeiraLetraMinuscula,
+  PRESIDENTE_MATRICULA,
+  semPontoFinal,
+  tabelaItensHtml,
+} from "./documento-comum";
 import type { ItemProcesso, PessoaResumo, Processo } from "./tipos";
-
-function primeiraLetraMinuscula(texto: string): string {
-  return texto ? texto.charAt(0).toLowerCase() + texto.slice(1) : texto;
-}
-
-// Remove o ponto final do objeto quando ele entra no meio de uma frase
-// maior (ex.: "A {objeto} foi prevista no PCA...") — sem isso, como o
-// objeto já termina com ".", sobra um ". foi prevista" (ponto seguido de
-// minúscula, no meio da frase).
-function semPontoFinal(texto: string): string {
-  return texto.replace(/\.\s*$/, "");
-}
 
 // Corpo completo do Estudo Técnico Preliminar — igual à Capa/TR/DFD,
 // guardado como HTML editável. Diferente do TR (predominantemente base
