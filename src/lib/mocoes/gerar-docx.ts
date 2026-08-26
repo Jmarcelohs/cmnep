@@ -1,4 +1,3 @@
-import sharp from "sharp";
 import {
   AlignmentType,
   BorderStyle,
@@ -14,6 +13,7 @@ import {
   VerticalAlign,
   WidthType,
 } from "docx";
+import { escalar, paraPng } from "@/lib/docx/imagem";
 import {
   aberturaCongratulacaoSegmentos,
   aberturaPesarSegmentos,
@@ -51,34 +51,9 @@ function segmentosParaRuns(segmentos: SegmentoMocao[], size: number): TextRun[] 
   return segmentos.map((s) => new TextRun({ text: s.texto, bold: s.negrito, size }));
 }
 
-// docx-js exige um Buffer + tipo explícito de imagem — normaliza pra PNG
-// via sharp independente do formato de origem (as assinaturas aceitam
-// jpeg/png/webp no cadastro, ver /vereadores), evitando ter que detectar
-// o formato real de cada arquivo.
-async function paraPng(origem: Buffer): Promise<{ data: Buffer; width: number; height: number }> {
-  const data = await sharp(origem).png().toBuffer();
-  const meta = await sharp(data).metadata();
-  return { data, width: meta.width ?? 1, height: meta.height ?? 1 };
-}
-
 async function bufferDeUrl(url: string): Promise<Buffer> {
   const resposta = await fetch(url);
   return Buffer.from(await resposta.arrayBuffer());
-}
-
-function escalar(
-  largura: number,
-  altura: number,
-  larguraAlvo: number,
-  alturaMax: number,
-): { width: number; height: number } {
-  let w = larguraAlvo;
-  let h = (altura / largura) * w;
-  if (h > alturaMax) {
-    h = alturaMax;
-    w = (largura / altura) * h;
-  }
-  return { width: Math.round(w), height: Math.round(h) };
 }
 
 async function celulaAssinatura(

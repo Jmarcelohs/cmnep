@@ -21,6 +21,9 @@ export default async function ImprimirDecretoPage({
       <PrintButton
         url={`/api/suplementacoes/${id}/decreto/pdf`}
         nomeArquivoPadrao={`decreto-suplementacao-${id}.pdf`}
+        urlSecundaria={`/api/suplementacoes/${id}/decreto/docx`}
+        nomeArquivoSecundarioPadrao={`decreto-suplementacao-${id}.docx`}
+        rotuloSecundario="Baixar em Word"
       />
       <DecretoSuplementacaoConteudo
         numeroDecreto={suplementacao.numero_decreto || "___"}

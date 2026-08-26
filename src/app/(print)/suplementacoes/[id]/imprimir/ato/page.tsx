@@ -21,6 +21,9 @@ export default async function ImprimirAtoPage({
       <PrintButton
         url={`/api/suplementacoes/${id}/ato/pdf`}
         nomeArquivoPadrao={`ato-mesa-diretora-${id}.pdf`}
+        urlSecundaria={`/api/suplementacoes/${id}/ato/docx`}
+        nomeArquivoSecundarioPadrao={`ato-mesa-diretora-${id}.docx`}
+        rotuloSecundario="Baixar em Word"
       />
       <AtoMesaDiretoraConteudo
         dataAto={suplementacao.data_ato}
