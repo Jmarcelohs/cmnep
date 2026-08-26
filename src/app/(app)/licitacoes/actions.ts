@@ -8,6 +8,7 @@ import { montarParagrafoAberturaCapa } from "@/lib/licitacoes/documento-capa";
 import { montarCorpoTR } from "@/lib/licitacoes/documento-tr";
 import { montarCorpoDFD } from "@/lib/licitacoes/documento-dfd";
 import { montarCorpoETP } from "@/lib/licitacoes/documento-etp";
+import { montarCorpoCertidaoValor } from "@/lib/licitacoes/documento-certidao-valor";
 import { montarParagrafoSolicitacaoCompra } from "@/lib/licitacoes/documento-solicitacao-compra";
 import type { Database } from "@/lib/supabase/database.types";
 import type {
@@ -505,6 +506,34 @@ export async function gerarDocumentoEtp(processoId: string): Promise<DocumentoPr
   });
 
   const documento = await inserirDocumento(supabase, processoId, "etp", corpoHtml, usuario!.id);
+  revalidatePath(`/licitacoes/${processoId}`);
+  return documento;
+}
+
+// Gera (ou recupera) a Certidão de Valor — assinada pela Diretoria de
+// Tesouraria e Financeiro (ver DIRETORA_TESOURARIA, documento-comum.ts),
+// certifica o limite de dispensa por valor do art. 75, §1º da Lei
+// 14.133/2021. Só precisa do objeto/modalidade/data do processo, já
+// disponíveis sem consulta extra.
+export async function gerarDocumentoCertidaoValor(processoId: string): Promise<DocumentoProcesso> {
+  const usuario = await exigirAcesso();
+  const supabase = await createClient();
+
+  const existente = await buscarDocumentoExistente(supabase, processoId, "certidao_valor");
+  if (existente) return existente;
+
+  const { data: processo } = await supabase
+    .from("processos_licitatorios")
+    .select("*")
+    .eq("id", processoId)
+    .single();
+  if (!processo) throw new Error("Processo não encontrado.");
+
+  const corpoHtml = montarCorpoCertidaoValor({
+    processo: paraProcesso({ ...processo, ficha: null } as unknown as LinhaProcesso),
+  });
+
+  const documento = await inserirDocumento(supabase, processoId, "certidao_valor", corpoHtml, usuario!.id);
   revalidatePath(`/licitacoes/${processoId}`);
   return documento;
 }

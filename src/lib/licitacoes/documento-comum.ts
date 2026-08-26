@@ -16,6 +16,16 @@ export function cargoResumido(cargo: string): string {
 // documentos reais usados como modelo (TR e DFD, ambos de 08/2026).
 export const PRESIDENTE_MATRICULA = "1089";
 
+// Assina a Certidão de Valor (e provavelmente a futura Certidão de
+// Orçamento) — mesma convenção de MESA_DIRETORA: fixa, não lida da tabela
+// pessoas (mesmo essa pessoa já existindo lá), pra ficar definitivo mesmo
+// se quem ocupa o cargo mudar depois. Nome/cargo vêm do modelo real de
+// Certidão de Valor (08/2026).
+export const DIRETORA_TESOURARIA = {
+  nome: "Alexsânia Vitória Martins Alves",
+  cargo: "Diretora de Tesouraria e Financeiro",
+};
+
 // "2001" → "2.001" (atividade/projeto, 4 dígitos: 1 + 3).
 function formatarProjetoAtividade(codigo: string): string {
   return `${codigo.slice(0, 1)}.${codigo.slice(1)}`;

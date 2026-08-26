@@ -6,6 +6,7 @@ import { DOCUMENTOS_PROCESSO } from "@/lib/licitacoes/tipos";
 import type { DocumentoProcesso, TipoDocumentoLicitacao } from "@/lib/licitacoes/tipos";
 import {
   gerarDocumentoCapa,
+  gerarDocumentoCertidaoValor,
   gerarDocumentoDfd,
   gerarDocumentoEtp,
   gerarDocumentoSolicitacaoCompra,
@@ -51,6 +52,12 @@ const CONFIG: Partial<Record<TipoDocumentoLicitacao, ConfigDocumento>> = {
     imprimirHref: (id) => `/licitacoes/${id}/imprimir/solicitacao-compra`,
     titulo: "Solicitação de Compra — parágrafo do pedido",
     dica: "Gera também o Termo de Referência (se ainda não existir) — o pacote impresso junta Solicitação + Proposta Comercial em branco + TR + Anexo I. Anexo II (fotos/medidas) não é gerado automaticamente ainda.",
+  },
+  certidao_valor: {
+    gerar: gerarDocumentoCertidaoValor,
+    imprimirHref: (id) => `/licitacoes/${id}/imprimir/certidao-valor`,
+    titulo: "Certidão de Valor",
+    dica: "A fundamentação legal (art. 75, §1º da Lei 14.133/2021) já vem pronta pra dispensa — revise se os valores-limite citados ainda são os vigentes (mudam por decreto federal) antes de imprimir.",
   },
 };
 
