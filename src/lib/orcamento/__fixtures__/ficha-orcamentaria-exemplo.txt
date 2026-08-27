@@ -1,0 +1,135 @@
+          Estado de Minas Gerais                                                               Página: 1 / 40
+                                                                                            Data: 27/08/2026
+          CAMARA MUNICIPAL DE NEPOMUCENO
+                                                                                                             Código
+          Controle da Despesa Orçamentária - Período de 01/01/2026 a 27/08/2026
+                                                                                                                       1
+Cadastro              Descrição                                                                                       01
+                                                                                                                    001
+Entidade:             CAMARA MUNICIPAL DE NEPOMUCENO
+Despesa:                                                                                                               1
+Orgão:                LEGISLATIVO MUNICIPAL                                                                           31
+Unidade:              GABINETE SECRETARIA DA CÂMARA                                                               0002
+Função:               LEGISLATIVA                                                                                 1.001
+Subfunção:            AÇÃO LEGISLATIVA                                                      4.4.90.51.00.00.00.00
+Programas:            ATUAÇÃO LEGISLATIVA DA CÂMARA MUNICIPAL                                     Saldo da Despesa
+Projeto / Atividade:  AQUISIÇÃO DE EQUIPAMENTOS E MATERIAIS PERMANENTES
+Natureza da Despesa:  OBRAS E INSTALACOES                                                                           0,00
+                                                                                                                    0,00
+Recurso               Dotação Inicial Empenhado  Suplementado         Bloqueio Desbloqueio
+
+1.500.000.0000.000 - RECURSOS NÃO VINCULADOS DE IMPOSTOS
+
+                      10.000,00  0,00                     -10.000,00  0,00       0,00
+
+Saldo da Dotação      10.000,00  0,00                     -10.000,00  0,00       0,00
+
+                                 Sistema Contábil - Betha Sistemas. Usuário: thulerspuri. Emissão: 27/08/2026, às 14:04:11. Protocolo: dc2ba5b9-3ff2-4aca-864a-020d8330151c
+          Estado de Minas Gerais                                                              Página: 2 / 40
+                                                                                           Data: 27/08/2026
+          CAMARA MUNICIPAL DE NEPOMUCENO
+                                                                                                            Código
+          Controle da Despesa Orçamentária - Período de 01/01/2026 a 27/08/2026
+                                                                                                                      2
+Cadastro              Descrição                                                                                      01
+                                                                                                                   001
+Entidade:             CAMARA MUNICIPAL DE NEPOMUCENO
+Despesa:                                                                                                              1
+Orgão:                LEGISLATIVO MUNICIPAL                                                                          31
+Unidade:              GABINETE SECRETARIA DA CÂMARA                                                              0002
+Função:               LEGISLATIVA                                                                                1.002
+Subfunção:            AÇÃO LEGISLATIVA                                                     4.4.90.52.00.00.00.00
+Programas:            ATUAÇÃO LEGISLATIVA DA CÂMARA MUNICIPAL                                    Saldo da Despesa
+Projeto / Atividade:  AQUISIÇÃO DE EQUIPAMENTOS E MATERIAIS PERMANENTES
+Natureza da Despesa:  EQUIPAMENTOS E MATERIAL PERMANENTE                                                           0,00
+                                                                                                                   0,00
+Recurso               Dotação Inicial Empenhado  Suplementado        Bloqueio Desbloqueio
+
+1.500.000.0000.000 - RECURSOS NÃO VINCULADOS DE IMPOSTOS
+
+                      1.000,00   0,00                     -1.000,00  0,00        0,00
+
+Saldo da Dotação      1.000,00   0,00                     -1.000,00  0,00        0,00
+
+                                Sistema Contábil - Betha Sistemas. Usuário: thulerspuri. Emissão: 27/08/2026, às 14:04:11. Protocolo: dc2ba5b9-3ff2-4aca-864a-020d8330151c
+          Estado de Minas Gerais                                                          Página: 3 / 40
+                                                                                       Data: 27/08/2026
+          CAMARA MUNICIPAL DE NEPOMUCENO
+                                                                                                        Código
+          Controle da Despesa Orçamentária - Período de 01/01/2026 a 27/08/2026
+                                                                                                                  3
+Cadastro              Descrição                                                                                  01
+                                                                                                               001
+Entidade:             CAMARA MUNICIPAL DE NEPOMUCENO
+Despesa:                                                                                                          1
+Orgão:                LEGISLATIVO MUNICIPAL                                                                      31
+Unidade:              GABINETE SECRETARIA DA CÂMARA                                                          0002
+Função:               LEGISLATIVA                                                                            1.003
+Subfunção:            AÇÃO LEGISLATIVA                                                 4.4.90.51.00.00.00.00
+Programas:            ATUAÇÃO LEGISLATIVA DA CÂMARA MUNICIPAL                                Saldo da Despesa
+Projeto / Atividade:  AQUISIÇÃO DE EQUIPAMENTOS E MATERIAIS PERMANENTES
+Natureza da Despesa:  OBRAS E INSTALACOES                                                               48.250,00
+                                                                                                        48.250,00
+Recurso               Dotação Inicial Empenhado  Suplementado   Bloqueio Desbloqueio
+
+1.500.000.0000.000 - RECURSOS NÃO VINCULADOS DE IMPOSTOS
+
+                      50.000,00  1.750,00                 0,00  0,00             0,00
+
+Saldo da Dotação      50.000,00  1.750,00                 0,00  0,00             0,00
+
+                                 Sistema Contábil - Betha Sistemas. Usuário: thulerspuri. Emissão: 27/08/2026, às 14:04:11. Protocolo: dc2ba5b9-3ff2-4aca-864a-020d8330151c
+          Estado de Minas Gerais                                                              Página: 4 / 40
+                                                                                           Data: 27/08/2026
+          CAMARA MUNICIPAL DE NEPOMUCENO
+                                                                                                            Código
+          Controle da Despesa Orçamentária - Período de 01/01/2026 a 27/08/2026
+                                                                                                                      4
+Cadastro              Descrição                                                                                      01
+                                                                                                                   001
+Entidade:             CAMARA MUNICIPAL DE NEPOMUCENO
+Despesa:                                                                                                              1
+Orgão:                LEGISLATIVO MUNICIPAL                                                                          31
+Unidade:              GABINETE SECRETARIA DA CÂMARA                                                              0002
+Função:               LEGISLATIVA                                                                                2.001
+Subfunção:            AÇÃO LEGISLATIVA                                                     3.1.90.04.00.00.00.00
+Programas:            ATUAÇÃO LEGISLATIVA DA CÂMARA MUNICIPAL                                    Saldo da Despesa
+Projeto / Atividade:  MANUTENÇÃO DAS ATIVIDADES DO LEGISLATIVO MUNICIPAL
+Natureza da Despesa:  CONTRATACAO POR TEMPO DETERMINADO                                                            0,00
+                                                                                                                   0,00
+Recurso               Dotação Inicial Empenhado  Suplementado        Bloqueio Desbloqueio
+
+1.500.000.0000.000 - RECURSOS NÃO VINCULADOS DE IMPOSTOS
+
+                      1.000,00   0,00                     -1.000,00  0,00        0,00
+
+Saldo da Dotação      1.000,00   0,00                     -1.000,00  0,00        0,00
+
+                                Sistema Contábil - Betha Sistemas. Usuário: thulerspuri. Emissão: 27/08/2026, às 14:04:11. Protocolo: dc2ba5b9-3ff2-4aca-864a-020d8330151c
+          Estado de Minas Gerais                                                               Página: 5 / 40
+                                                                                            Data: 27/08/2026
+          CAMARA MUNICIPAL DE NEPOMUCENO
+                                                                                                             Código
+          Controle da Despesa Orçamentária - Período de 01/01/2026 a 27/08/2026
+                                                                                                                       5
+Cadastro              Descrição                                                                                       01
+                                                                                                                    001
+Entidade:             CAMARA MUNICIPAL DE NEPOMUCENO
+Despesa:                                                                                                               1
+Orgão:                LEGISLATIVO MUNICIPAL                                                                           31
+Unidade:              GABINETE SECRETARIA DA CÂMARA                                                               0002
+Função:               LEGISLATIVA                                                                                 2.001
+Subfunção:            AÇÃO LEGISLATIVA                                                      3.1.90.11.00.00.00.00
+Programas:            ATUAÇÃO LEGISLATIVA DA CÂMARA MUNICIPAL                                     Saldo da Despesa
+Projeto / Atividade:  MANUTENÇÃO DAS ATIVIDADES DO LEGISLATIVO MUNICIPAL
+Natureza da Despesa:  VENCIMENTOS E VANTAGENS FIXAS PESSOAL CIVIL                                          769.430,29
+                                                                                                           769.430,29
+Recurso               Dotação Inicial Empenhado  Suplementado         Bloqueio Desbloqueio
+
+1.500.000.0000.000 - RECURSOS NÃO VINCULADOS DE IMPOSTOS
+
+                      2.309.329,00 1.494.115,75           -45.782,96  0,00       0,00
+
+Saldo da Dotação      2.309.329,00 1.494.115,75           -45.782,96  0,00       0,00
+
+                      Sistema Contábil - Betha Sistemas. Usuário: thulerspuri. Emissão: 27/08/2026, às 14:04:11. Protocolo: dc2ba5b9-3ff2-4aca-864a-020d8330151c

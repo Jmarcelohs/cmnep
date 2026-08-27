@@ -922,6 +922,9 @@ export interface Database {
           fonte_nome: string;
           saldo_referencia: number | null;
           saldo_referencia_em: string | null;
+          dotacao_inicial_referencia: number | null;
+          suplementado_referencia: number | null;
+          empenhado_referencia: number | null;
           ativo: boolean;
           criado_em: string;
         };
@@ -944,6 +947,28 @@ export interface Database {
         };
         Update: Partial<Database["public"]["Tables"]["dotacoes_orcamentarias"]["Row"]>;
         Relationships: [];
+      };
+      orcamento_solicitacoes_atualizacao: {
+        Row: {
+          id: string;
+          solicitado_por: string;
+          solicitado_em: string;
+        };
+        Insert: Partial<
+          Omit<Database["public"]["Tables"]["orcamento_solicitacoes_atualizacao"]["Row"], "id">
+        > & {
+          solicitado_por: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["orcamento_solicitacoes_atualizacao"]["Row"]>;
+        Relationships: [
+          {
+            foreignKeyName: "orcamento_solicitacoes_atualizacao_solicitado_por_fkey";
+            columns: ["solicitado_por"];
+            isOneToOne: false;
+            referencedRelation: "usuarios";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       suplementacoes_orcamentarias: {
         Row: {
@@ -1163,6 +1188,7 @@ export interface Database {
             | "tr"
             | "certidao_valor"
             | "solicitacao_abertura"
+            | "autorizacao_abertura"
             | "termo_aceite"
             | "solicitacao_compra"
             | "solicitacao_orcamento"

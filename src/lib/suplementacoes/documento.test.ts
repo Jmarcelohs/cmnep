@@ -28,6 +28,9 @@ const FICHA_22: DotacaoOrcamentaria = {
   fonte_nome: "Recursos Ordinários",
   saldo_referencia: 4601.86,
   saldo_referencia_em: "2026-08-12",
+  dotacao_inicial_referencia: null,
+  suplementado_referencia: null,
+  empenhado_referencia: null,
   ativo: true,
   criado_em: "2026-08-12T00:00:00Z",
 };
