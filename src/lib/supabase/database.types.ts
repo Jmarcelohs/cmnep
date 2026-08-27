@@ -1188,7 +1188,6 @@ export interface Database {
             | "tr"
             | "certidao_valor"
             | "solicitacao_abertura"
-            | "autorizacao_abertura"
             | "termo_aceite"
             | "solicitacao_compra"
             | "solicitacao_orcamento"
