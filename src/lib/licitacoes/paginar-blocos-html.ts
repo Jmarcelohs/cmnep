@@ -86,10 +86,26 @@ function celulasNivelSuperior(trHtml: string): Faixa[] {
   return faixasPorProfundidadeDeTabela(trHtml, "td|th", 0);
 }
 
-function estimarAlturaTextoCelula(texto: string): number {
+// CARACTERES_POR_LINHA_CELULA é calibrado pra uma célula "de referência"
+// (~2 colunas, tipo as tabelas de checkbox do TR) — uma linha com mais
+// colunas divide a mesma largura entre mais células, então cada uma
+// cabe menos texto por linha. Amortecido por raiz quadrada (não divisão
+// direta por N) pra não subestimar demais colunas estreitas de rótulo/
+// número ao lado de uma larga (ex.: ITEM/UNID./QUANT. ao lado de OBJETO
+// na tabela "DEMANDA" — ver tabelaItensHtml em documento-comum.ts):
+// N=2 → ~85 (sem mudança), N=6 → ~35, batendo com o que o objeto real de
+// um DFD (texto longo, 6 colunas) quebra na prática (visto comparando
+// com o PDF renderizado — a estimativa antiga, flat 85 pra qualquer N,
+// subestimava a altura da tabela de itens e deixava a caixa "1. DO
+// OBJETO" estourar a página, cortando o texto no rodapé do timbrado).
+function caracteresPorLinhaCelula(numeroColunas: number): number {
+  return Math.max(25, Math.round(CARACTERES_POR_LINHA_CELULA / Math.sqrt(Math.max(1, numeroColunas))));
+}
+
+function estimarAlturaTextoCelula(texto: string, numeroColunas: number): number {
   const limpo = texto.trim();
   if (!limpo) return ALTURA_LINHA_TABELA_MM;
-  const linhas = Math.ceil(limpo.length / CARACTERES_POR_LINHA_CELULA) + 0.3;
+  const linhas = Math.ceil(limpo.length / caracteresPorLinhaCelula(numeroColunas)) + 0.3;
   return Math.max(ALTURA_LINHA_TABELA_MM, linhas * ALTURA_LINHA_MM);
 }
 
@@ -97,16 +113,19 @@ function estimarAlturaTextoCelula(texto: string): number {
 // item "1. DO OBJETO" do DFD, que embute a tabela DEMANDA dentro da
 // mesma caixa — ver caixaHtml), a altura da célula é a da tabela
 // aninhada; senão, é o texto da célula tratado como um parágrafo.
-function estimarAlturaCelula(celulaHtml: string): number {
+// `numeroColunas` é o número de células irmãs na mesma linha (afeta só
+// a estimativa de texto solto — a tabela aninhada já calcula a própria
+// largura a partir das colunas dela mesma).
+function estimarAlturaCelula(celulaHtml: string, numeroColunas: number): number {
   const conteudo = celulaHtml.replace(/^<t[dh][^>]*>/i, "").replace(/<\/t[dh]>$/i, "");
   const faixaTabela = faixasDeTag(conteudo, "table")[0];
   if (!faixaTabela) {
-    return estimarAlturaTextoCelula(conteudo.replace(/<[^>]+>/g, " "));
+    return estimarAlturaTextoCelula(conteudo.replace(/<[^>]+>/g, " "), numeroColunas);
   }
   const antes = conteudo.slice(0, faixaTabela.inicio).replace(/<[^>]+>/g, " ").trim();
   const depois = conteudo.slice(faixaTabela.fim).replace(/<[^>]+>/g, " ").trim();
-  const alturaAntes = antes ? estimarAlturaTextoCelula(antes) : 0;
-  const alturaDepois = depois ? estimarAlturaTextoCelula(depois) : 0;
+  const alturaAntes = antes ? estimarAlturaTextoCelula(antes, numeroColunas) : 0;
+  const alturaDepois = depois ? estimarAlturaTextoCelula(depois, numeroColunas) : 0;
   return alturaAntes + estimarAlturaTabela(conteudo.slice(faixaTabela.inicio, faixaTabela.fim)) + alturaDepois;
 }
 
@@ -115,7 +134,7 @@ function estimarAlturaCelula(celulaHtml: string): number {
 function estimarAlturaLinha(trHtml: string): number {
   const celulas = celulasNivelSuperior(trHtml);
   if (celulas.length === 0) return ALTURA_LINHA_TABELA_MM;
-  const alturas = celulas.map((f) => estimarAlturaCelula(trHtml.slice(f.inicio, f.fim)));
+  const alturas = celulas.map((f) => estimarAlturaCelula(trHtml.slice(f.inicio, f.fim), celulas.length));
   return Math.max(...alturas) + 2;
 }
 

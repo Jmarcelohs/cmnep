@@ -59,6 +59,29 @@ describe("estimarAlturaTabela", () => {
     expect(longa - curta).toBeGreaterThan(2 * ALTURA_LINHA_MM);
   });
 
+  it("uma célula de tabela com muitas colunas (ex.: a tabela DEMANDA de 6 colunas) estima mais linhas de quebra do que uma de poucas colunas, pro mesmo texto", () => {
+    // Bug real visto num DFD ao vivo (item com objeto de 1362 caracteres):
+    // a coluna OBJETO da tabela "DEMANDA – BEM/SERVIÇO/OBRAS E/OU
+    // INSTALAÇÕES" (6 colunas: ITEM/OBJETO/UNID./QUANT./V. UNITÁRIO/
+    // V. GLOBAL, ver tabelaItensHtml em documento-comum.ts) é bem mais
+    // estreita que uma célula de 2 colunas — o texto quebra em muito mais
+    // linhas na prática do que uma estimativa "flat" (mesma quantidade de
+    // caracteres por linha pra qualquer tabela) previa, fazendo a caixa
+    // "1. DO OBJETO" do DFD estourar o rodapé da página (visto comparando
+    // com o PDF renderizado de verdade).
+    const textoLongo =
+      "Contratação de empresa especializada para prestação de serviço continuado de licenciamento de uso de sistema informatizado de gestão legislativa municipal, em modelo de Software como Serviço.";
+
+    const duasColunas = estimarAlturaTabela(
+      `<table><tbody><tr><td>rótulo</td><td>${textoLongo}</td></tr></tbody></table>`,
+    );
+    const seisColunas = estimarAlturaTabela(
+      `<table><tbody><tr><td>001</td><td>${textoLongo}</td><td>UN</td><td>01</td><td>R$ 1,00</td><td>R$ 1,00</td></tr></tbody></table>`,
+    );
+
+    expect(seisColunas).toBeGreaterThan(duasColunas);
+  });
+
   it("uma linha com tabela aninhada é pelo menos tão alta quanto a tabela aninhada sozinha", () => {
     const tabelaAninhadaSozinha = estimarAlturaTabela(
       "<table><thead><tr><th>ITEM</th></tr></thead><tbody><tr><td>001</td></tr><tr><td>002</td></tr><tr><td>003</td></tr></tbody></table>",
