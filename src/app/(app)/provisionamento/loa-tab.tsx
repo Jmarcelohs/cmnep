@@ -284,14 +284,58 @@ function NovaDotacaoForm({
   );
 }
 
+// Mostra o saldo entre o valor total definido pra proposta e o que já foi
+// distribuído entre as dotações — "débito" é o que já está preenchido nas
+// linhas, "crédito" é o que ainda cabe. Arredonda pra centavos antes de
+// comparar com zero, já que valorTotal - totalDistribuido raramente bate
+// exato em ponto flutuante mesmo quando as duas somas "deveriam" ser iguais.
+function ResumoValorTotal({ valorTotal, totalDistribuido }: { valorTotal: number; totalDistribuido: number }) {
+  if (valorTotal <= 0) {
+    return (
+      <p className="text-xs text-slate-500">
+        Defina o valor total da proposta pra acompanhar quanto ainda pode ser distribuído entre as dotações.
+      </p>
+    );
+  }
+
+  const saldoCentavos = Math.round((valorTotal - totalDistribuido) * 100);
+  const saldo = saldoCentavos / 100;
+
+  if (saldoCentavos > 0) {
+    return (
+      <p className="rounded-md bg-blue-50 px-3 py-2 text-xs text-blue-700">
+        Débito (já distribuído): <strong>{formatarMoeda(totalDistribuido)}</strong> — Crédito (ainda disponível):{" "}
+        <strong>{formatarMoeda(saldo)}</strong>
+      </p>
+    );
+  }
+  if (saldoCentavos === 0) {
+    return (
+      <p className="rounded-md bg-green-50 px-3 py-2 text-xs text-green-700">
+        Valor total já foi totalmente distribuído entre as dotações ({formatarMoeda(totalDistribuido)}).
+      </p>
+    );
+  }
+  return (
+    <p className="rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">
+      O valor distribuído ultrapassa o total da proposta em <strong>{formatarMoeda(Math.abs(saldo))}</strong> (
+      {formatarMoeda(totalDistribuido)} de {formatarMoeda(valorTotal)}).
+    </p>
+  );
+}
+
 export function LoaTab({
   linhasIniciais,
   fichas,
   onSalvar,
+  valorTotalInicial,
+  onSalvarValorTotal,
 }: {
   linhasIniciais: LoaProjecao[];
   fichas: DotacaoOrcamentaria[];
   onSalvar: (linhas: NovaLoaLinha[]) => Promise<LoaProjecao[] | null>;
+  valorTotalInicial: number;
+  onSalvarValorTotal: (valor: number) => Promise<number | null>;
 }) {
   const [linhas, setLinhas] = useState<NovaLoaLinha[]>(
     linhasIniciais.length > 0 ? linhasIniciais : linhasDeFichas2026(fichas),
@@ -301,6 +345,10 @@ export function LoaTab({
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [salvoComSucesso, setSalvoComSucesso] = useState(false);
+
+  const [valorTotal, setValorTotal] = useState(valorTotalInicial);
+  const [salvandoValorTotal, setSalvandoValorTotal] = useState(false);
+  const [erroValorTotal, setErroValorTotal] = useState<string | null>(null);
 
   const total2027 = linhas.reduce((soma, l) => soma + l.valorProjetado, 0);
   const total2026 = totalFichas2026(fichas);
@@ -368,6 +416,20 @@ export function LoaTab({
     }
   }
 
+  async function salvarValorTotal() {
+    setSalvandoValorTotal(true);
+    setErroValorTotal(null);
+    try {
+      const resultado = await onSalvarValorTotal(valorTotal);
+      if (resultado === null) setErroValorTotal("Não foi possível salvar o valor total.");
+      else setValorTotal(resultado);
+    } catch (err) {
+      setErroValorTotal(err instanceof Error ? err.message : "Não foi possível salvar o valor total.");
+    } finally {
+      setSalvandoValorTotal(false);
+    }
+  }
+
   return (
     <div>
       <p className="text-sm text-slate-600">
@@ -382,6 +444,32 @@ export function LoaTab({
       {salvoComSucesso && (
         <p className="mt-3 rounded-md bg-green-50 px-3 py-2 text-sm text-green-700">Proposta salva.</p>
       )}
+
+      <div className="mt-4 flex flex-wrap items-end gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+        <div>
+          <label className="block text-xs font-medium text-slate-500">Valor total da proposta 2027 (R$)</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            value={valorTotal}
+            onChange={(e) => setValorTotal(Number(e.target.value) || 0)}
+            className="mt-1 w-48 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={salvarValorTotal}
+          disabled={salvandoValorTotal}
+          className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-white disabled:opacity-50"
+        >
+          {salvandoValorTotal ? "Salvando…" : "Salvar valor total"}
+        </button>
+        <div className="min-w-[240px] flex-1">
+          <ResumoValorTotal valorTotal={valorTotal} totalDistribuido={total2027} />
+        </div>
+        {erroValorTotal && <p className="w-full text-xs text-red-600">{erroValorTotal}</p>}
+      </div>
 
       <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200">
         <table className="min-w-full divide-y divide-slate-200 text-sm">

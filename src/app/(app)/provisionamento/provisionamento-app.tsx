@@ -2,7 +2,15 @@
 
 import { useState } from "react";
 import type { Contrato, DotacaoOrcamentaria, LoaProjecao, NovaLoaLinha, NovoContrato } from "@/lib/provisionamento/tipos";
-import { apagarTodosContratos, criarContrato, editarContrato, excluirContrato, importarContratos, salvarLoaProjecao } from "./actions";
+import {
+  apagarTodosContratos,
+  criarContrato,
+  editarContrato,
+  excluirContrato,
+  importarContratos,
+  salvarLoaProjecao,
+  salvarValorTotalLoa,
+} from "./actions";
 import { ContratosTab } from "./contratos-tab";
 import { ProvisionamentoTab } from "./provisionamento-tab";
 import { DotacaoTab } from "./dotacao-tab";
@@ -23,10 +31,12 @@ export function ProvisionamentoApp({
   contratosIniciais,
   fichas,
   loaProjecaoInicial,
+  valorTotalLoaInicial,
 }: {
   contratosIniciais: Contrato[];
   fichas: DotacaoOrcamentaria[];
   loaProjecaoInicial: LoaProjecao[];
+  valorTotalLoaInicial: number;
 }) {
   const [contratos, setContratos] = useState<Contrato[]>(contratosIniciais);
   const [aba, setAba] = useState<Aba>("contratos");
@@ -68,6 +78,10 @@ export function ProvisionamentoApp({
 
   async function aoSalvarLoa(linhas: NovaLoaLinha[]) {
     return comErro(salvarLoaProjecao(linhas));
+  }
+
+  async function aoSalvarValorTotalLoa(valor: number) {
+    return comErro(salvarValorTotalLoa(valor));
   }
 
   return (
@@ -117,7 +131,13 @@ export function ProvisionamentoApp({
         )}
         {aba === "dotacao" && <DotacaoTab contratos={contratos} ano={ano} />}
         {aba === "loa" && (
-          <LoaTab linhasIniciais={loaProjecaoInicial} fichas={fichas} onSalvar={aoSalvarLoa} />
+          <LoaTab
+            linhasIniciais={loaProjecaoInicial}
+            fichas={fichas}
+            onSalvar={aoSalvarLoa}
+            valorTotalInicial={valorTotalLoaInicial}
+            onSalvarValorTotal={aoSalvarValorTotalLoa}
+          />
         )}
         {aba === "parametros" && (
           <ParametrosTab contratos={contratos} onImportar={aoImportar} onApagarTudo={aoApagarTudo} />

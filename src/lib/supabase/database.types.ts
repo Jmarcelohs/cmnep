@@ -1072,6 +1072,18 @@ export interface Database {
           },
         ];
       };
+      loa_configuracoes: {
+        Row: {
+          ano: number;
+          valor_total: number;
+          atualizado_em: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["loa_configuracoes"]["Row"]> & {
+          ano: number;
+        };
+        Update: Partial<Database["public"]["Tables"]["loa_configuracoes"]["Row"]>;
+        Relationships: [];
+      };
       provisionamento_contratos: {
         Row: {
           id: string;

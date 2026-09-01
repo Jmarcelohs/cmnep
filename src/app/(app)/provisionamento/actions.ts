@@ -264,3 +264,31 @@ export async function salvarLoaProjecao(linhas: NovaLoaLinha[]): Promise<LoaProj
   revalidatePath("/provisionamento");
   return (data ?? []).map(paraLoaProjecao);
 }
+
+// Valor total da proposta (o "teto" que o usuário define pra acompanhar,
+// em tempo real, quanto já foi distribuído entre as dotações e quanto
+// ainda cabe) — uma linha só por ano, migration 0057.
+export async function obterValorTotalLoa(): Promise<number> {
+  await exigirAdmin();
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("loa_configuracoes")
+    .select("valor_total")
+    .eq("ano", ANO_LOA)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data?.valor_total ?? 0;
+}
+
+export async function salvarValorTotalLoa(valor: number): Promise<number> {
+  await exigirAdmin();
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("loa_configuracoes")
+    .upsert({ ano: ANO_LOA, valor_total: valor, atualizado_em: new Date().toISOString() }, { onConflict: "ano" })
+    .select("valor_total")
+    .single();
+  if (error || !data) throw new Error(error?.message ?? "Erro ao salvar o valor total da proposta.");
+  revalidatePath("/provisionamento");
+  return data.valor_total;
+}
