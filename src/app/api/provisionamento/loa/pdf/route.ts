@@ -15,5 +15,5 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
   }
 
-  return gerarPdfDeRota(request, "/provisionamento/loa/imprimir", "proposta-loa-2027.pdf");
+  return gerarPdfDeRota(request, "/provisionamento/loa/imprimir", "proposta-loa-2027.pdf", [], true);
 }
