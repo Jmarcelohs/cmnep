@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { formatarMoeda } from "@/lib/pdf/formato";
 import { baixarArquivo, montarCsv } from "@/lib/provisionamento/csv";
+import { DownloadPdfButton } from "@/components/download-pdf-button";
 import type { DotacaoOrcamentaria, LoaClassificacao, LoaProjecao, NovaLoaLinha } from "@/lib/provisionamento/tipos";
 
 // "1001" -> "1.001", "2077" -> "2.077" — mesmo formato usado no relatório
@@ -285,7 +286,9 @@ export function LoaTab({
       <p className="text-sm text-slate-600">
         Proposta de orçamento pra LOA 2027, partindo das dotações de 2026 — edite o valor projetado de
         cada linha ou inclua dotações novas. Ferramenta de planejamento interno, sem nenhum efeito
-        automático no orçamento oficial quando 2027 começar.
+        automático no orçamento oficial quando 2027 começar. O CSV exportado reflete o que está na tela
+        agora, mesmo sem salvar; o PDF é gerado a partir da última versão salva — clique em &quot;Salvar
+        proposta&quot; antes de baixar o PDF se tiver alterações recentes.
       </p>
 
       {erro && <p className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{erro}</p>}
@@ -386,6 +389,11 @@ export function LoaTab({
           >
             Exportar CSV
           </button>
+          <DownloadPdfButton
+            url="/api/provisionamento/loa/pdf"
+            nomeArquivoPadrao="proposta-loa-2027.pdf"
+            label="Baixar PDF"
+          />
           <button
             type="button"
             onClick={salvar}
