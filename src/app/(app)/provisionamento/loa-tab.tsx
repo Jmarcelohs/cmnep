@@ -5,8 +5,10 @@ import { formatarMoeda } from "@/lib/pdf/formato";
 import { baixarArquivo, montarCsv } from "@/lib/provisionamento/csv";
 import type { DotacaoOrcamentaria, LoaClassificacao, LoaProjecao, NovaLoaLinha } from "@/lib/provisionamento/tipos";
 
-function rotuloLinha(l: LoaClassificacao): string {
-  return `${l.elementoNome} — ${l.projetoAtividadeNome}`;
+// "1001" -> "1.001", "2077" -> "2.077" — mesmo formato usado no relatório
+// real (Relação de Despesas) e já usado como referência dos grupos.
+function formatarCodigoAtividade(codigo: string): string {
+  return codigo.length > 1 ? `${codigo.slice(0, 1)}.${codigo.slice(1)}` : codigo;
 }
 
 // Código orçamentário completo (órgão.unidade.subfunção.programa.projeto-
@@ -81,6 +83,31 @@ function linhasDeFichas2026(fichas: DotacaoOrcamentaria[]): NovaLoaLinha[] {
 
 function totalFichas2026(fichas: DotacaoOrcamentaria[]): number {
   return fichas.reduce((soma, f) => soma + (f.dotacao_inicial_referencia ?? 0) + (f.suplementado_referencia ?? 0), 0);
+}
+
+type GrupoAtividade = {
+  codigo: string;
+  nome: string;
+  itens: { indice: number; linha: NovaLoaLinha }[];
+  subtotal: number;
+};
+
+// Separa a proposta por Projeto/Atividade (ex.: 1.001, 2.077) — mesma
+// lógica de classificação orçamentária do relatório real, só que
+// agrupando linhas em vez de listar tudo solto, pra facilitar a leitura
+// (pedido explícito do usuário). Guarda o índice original de cada linha
+// no array plano `linhas`, já que é por ele que atualizarValor/
+// removerLinha operam.
+function agruparPorAtividade(linhas: NovaLoaLinha[]): GrupoAtividade[] {
+  const grupos = new Map<string, GrupoAtividade>();
+  linhas.forEach((linha, indice) => {
+    const chave = linha.projetoAtividadeCodigo;
+    const grupo = grupos.get(chave) ?? { codigo: chave, nome: linha.projetoAtividadeNome, itens: [], subtotal: 0 };
+    grupo.itens.push({ indice, linha });
+    grupo.subtotal += linha.valorProjetado;
+    grupos.set(chave, grupo);
+  });
+  return Array.from(grupos.values()).sort((a, b) => a.codigo.localeCompare(b.codigo));
 }
 
 const CAMPOS_CLASSIFICACAO: { campo: keyof LoaClassificacao; label: string }[] = [
@@ -195,6 +222,7 @@ export function LoaTab({
 
   const total2027 = linhas.reduce((soma, l) => soma + l.valorProjetado, 0);
   const total2026 = totalFichas2026(fichas);
+  const grupos = agruparPorAtividade(linhas);
 
   function atualizarValor(indice: number, valor: number) {
     setSalvoComSucesso(false);
@@ -274,43 +302,56 @@ export function LoaTab({
               <th className="px-4 py-2"></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
-            {linhas.map((l, i) => (
-              <tr key={i} className="hover:bg-slate-50">
-                <td className="px-4 py-2">
-                  <p className="font-mono text-xs text-slate-500">{codigoCompletoLinha(l)}</p>
-                  <p className="font-medium text-slate-900">{rotuloLinha(l)}</p>
-                  <p className="text-xs text-slate-500">{l.fonteNome}</p>
+          {grupos.map((grupo) => (
+            <tbody key={grupo.codigo} className="divide-y divide-slate-100">
+              <tr className="bg-slate-100">
+                <td colSpan={2} className="px-4 py-1.5">
+                  <span className="font-mono text-xs text-slate-500">{formatarCodigoAtividade(grupo.codigo)}</span>{" "}
+                  <span className="text-xs font-semibold text-slate-700">{grupo.nome}</span>
                 </td>
-                <td className="px-4 py-2 text-right">
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={l.valorProjetado}
-                    onChange={(e) => atualizarValor(i, Number(e.target.value) || 0)}
-                    className="w-32 rounded-md border border-slate-300 px-2 py-1 text-right text-sm"
-                  />
-                </td>
-                <td className="px-4 py-2 text-right">
-                  <button
-                    type="button"
-                    onClick={() => removerLinha(i)}
-                    className="text-xs font-medium text-red-600 hover:underline"
-                  >
-                    Remover
-                  </button>
+                <td className="px-4 py-1.5 text-right text-xs font-semibold text-slate-700">
+                  {formatarMoeda(grupo.subtotal)}
                 </td>
               </tr>
-            ))}
-            {linhas.length === 0 && (
+              {grupo.itens.map(({ indice, linha }) => (
+                <tr key={indice} className="hover:bg-slate-50">
+                  <td className="px-4 py-2">
+                    <p className="font-mono text-xs text-slate-500">{codigoCompletoLinha(linha)}</p>
+                    <p className="font-medium text-slate-900">{linha.elementoNome}</p>
+                    <p className="text-xs text-slate-500">{linha.fonteNome}</p>
+                  </td>
+                  <td className="px-4 py-2 text-right">
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={linha.valorProjetado}
+                      onChange={(e) => atualizarValor(indice, Number(e.target.value) || 0)}
+                      className="w-32 rounded-md border border-slate-300 px-2 py-1 text-right text-sm"
+                    />
+                  </td>
+                  <td className="px-4 py-2 text-right">
+                    <button
+                      type="button"
+                      onClick={() => removerLinha(indice)}
+                      className="text-xs font-medium text-red-600 hover:underline"
+                    >
+                      Remover
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          ))}
+          {linhas.length === 0 && (
+            <tbody>
               <tr>
                 <td colSpan={3} className="px-4 py-6 text-center text-slate-400">
                   Nenhuma dotação na proposta.
                 </td>
               </tr>
-            )}
-          </tbody>
+            </tbody>
+          )}
           {linhas.length > 0 && (
             <tfoot className="border-t-2 border-slate-300 font-semibold">
               <tr>
