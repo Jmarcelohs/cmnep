@@ -1023,6 +1023,55 @@ export interface Database {
           },
         ];
       };
+      loa_projecoes: {
+        Row: {
+          id: string;
+          ano: number;
+          dotacao_origem_id: string | null;
+          orgao_codigo: string;
+          orgao_nome: string;
+          unidade_codigo: string;
+          unidade_nome: string;
+          subfuncao_codigo: string;
+          subfuncao_nome: string;
+          programa_codigo: string;
+          programa_nome: string;
+          projeto_atividade_codigo: string;
+          projeto_atividade_nome: string;
+          elemento_codigo: string;
+          elemento_nome: string;
+          fonte_codigo: string;
+          fonte_nome: string;
+          valor_projetado: number;
+          criado_em: string;
+        };
+        Insert: Partial<Omit<Database["public"]["Tables"]["loa_projecoes"]["Row"], "id">> & {
+          orgao_codigo: string;
+          orgao_nome: string;
+          unidade_codigo: string;
+          unidade_nome: string;
+          subfuncao_codigo: string;
+          subfuncao_nome: string;
+          programa_codigo: string;
+          programa_nome: string;
+          projeto_atividade_codigo: string;
+          projeto_atividade_nome: string;
+          elemento_codigo: string;
+          elemento_nome: string;
+          fonte_codigo: string;
+          fonte_nome: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["loa_projecoes"]["Row"]>;
+        Relationships: [
+          {
+            foreignKeyName: "loa_projecoes_dotacao_origem_id_fkey";
+            columns: ["dotacao_origem_id"];
+            isOneToOne: false;
+            referencedRelation: "dotacoes_orcamentarias";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       provisionamento_contratos: {
         Row: {
           id: string;

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
 import type { Database } from "@/lib/supabase/database.types";
-import type { Contrato, DotacaoOrcamentaria, NovoContrato } from "@/lib/provisionamento/tipos";
+import type { Contrato, DotacaoOrcamentaria, LoaProjecao, NovaLoaLinha, NovoContrato } from "@/lib/provisionamento/tipos";
 
 // Movimento orçamentário/contábil — mesma sensibilidade de Suplementações
 // Orçamentárias, restrito a admin.
@@ -167,4 +167,100 @@ export async function apagarTodosContratos(): Promise<void> {
   const { error } = await supabase.from("provisionamento_contratos").delete().not("id", "is", null);
   if (error) throw new Error(error.message);
   revalidatePath("/provisionamento");
+}
+
+// Proposta LOA 2027 (migration 0056) — ano fixo por enquanto (ver
+// tipos.ts); um seletor de ano/múltiplas propostas fica pra quando
+// precisar de 2028.
+const ANO_LOA = 2027;
+
+type LinhaLoaDb = Database["public"]["Tables"]["loa_projecoes"]["Row"];
+
+function paraLoaProjecao(linha: LinhaLoaDb): LoaProjecao {
+  return {
+    id: linha.id,
+    ano: linha.ano,
+    dotacaoOrigemId: linha.dotacao_origem_id,
+    orgaoCodigo: linha.orgao_codigo,
+    orgaoNome: linha.orgao_nome,
+    unidadeCodigo: linha.unidade_codigo,
+    unidadeNome: linha.unidade_nome,
+    subfuncaoCodigo: linha.subfuncao_codigo,
+    subfuncaoNome: linha.subfuncao_nome,
+    programaCodigo: linha.programa_codigo,
+    programaNome: linha.programa_nome,
+    projetoAtividadeCodigo: linha.projeto_atividade_codigo,
+    projetoAtividadeNome: linha.projeto_atividade_nome,
+    elementoCodigo: linha.elemento_codigo,
+    elementoNome: linha.elemento_nome,
+    fonteCodigo: linha.fonte_codigo,
+    fonteNome: linha.fonte_nome,
+    valorProjetado: linha.valor_projetado,
+    criadoEm: linha.criado_em,
+  };
+}
+
+function paraLoaLinhaDb(linha: NovaLoaLinha) {
+  return {
+    ano: ANO_LOA,
+    dotacao_origem_id: linha.dotacaoOrigemId,
+    orgao_codigo: linha.orgaoCodigo,
+    orgao_nome: linha.orgaoNome,
+    unidade_codigo: linha.unidadeCodigo,
+    unidade_nome: linha.unidadeNome,
+    subfuncao_codigo: linha.subfuncaoCodigo,
+    subfuncao_nome: linha.subfuncaoNome,
+    programa_codigo: linha.programaCodigo,
+    programa_nome: linha.programaNome,
+    projeto_atividade_codigo: linha.projetoAtividadeCodigo,
+    projeto_atividade_nome: linha.projetoAtividadeNome,
+    elemento_codigo: linha.elementoCodigo,
+    elemento_nome: linha.elementoNome,
+    fonte_codigo: linha.fonteCodigo,
+    fonte_nome: linha.fonteNome,
+    valor_projetado: linha.valorProjetado,
+  };
+}
+
+export async function listarLoaProjecao(): Promise<LoaProjecao[]> {
+  await exigirAdmin();
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("loa_projecoes")
+    .select("*")
+    .eq("ano", ANO_LOA)
+    .order("orgao_codigo")
+    .order("unidade_codigo")
+    .order("projeto_atividade_codigo")
+    .order("elemento_codigo");
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(paraLoaProjecao);
+}
+
+// Apaga tudo e reinsere a lista inteira — mesma convenção de
+// importarContratos acima: a tela sempre manda o estado completo, mais
+// simples e seguro que tentar diferenciar quais linhas mudaram.
+export async function salvarLoaProjecao(linhas: NovaLoaLinha[]): Promise<LoaProjecao[]> {
+  await exigirAdmin();
+  const supabase = await createClient();
+
+  const { error: erroExclusao } = await supabase.from("loa_projecoes").delete().eq("ano", ANO_LOA);
+  if (erroExclusao) throw new Error(erroExclusao.message);
+
+  if (linhas.length === 0) {
+    revalidatePath("/provisionamento");
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("loa_projecoes")
+    .insert(linhas.map(paraLoaLinhaDb))
+    .select("*")
+    .order("orgao_codigo")
+    .order("unidade_codigo")
+    .order("projeto_atividade_codigo")
+    .order("elemento_codigo");
+  if (error) throw new Error(error.message);
+  revalidatePath("/provisionamento");
+  return (data ?? []).map(paraLoaProjecao);
 }

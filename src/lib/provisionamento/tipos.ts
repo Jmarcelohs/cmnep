@@ -87,3 +87,39 @@ export type Contrato = {
 };
 
 export type NovoContrato = Omit<Contrato, "id" | "criadoEm" | "ficha">;
+
+// Proposta LOA 2027 (migration 0056) — cada linha é independente e
+// totalmente editável, com a classificação orçamentária completa (mesmos
+// 7 níveis de DotacaoOrcamentaria) em vez de uma referência a uma ficha
+// já cadastrada — mesa de trabalho de planejamento, nunca vira dado
+// oficial automaticamente. dotacaoOrigemId só rastreia "essa linha veio
+// da ficha X de 2026", null pras incluídas manualmente.
+export type LoaClassificacao = {
+  orgaoCodigo: string;
+  orgaoNome: string;
+  unidadeCodigo: string;
+  unidadeNome: string;
+  subfuncaoCodigo: string;
+  subfuncaoNome: string;
+  programaCodigo: string;
+  programaNome: string;
+  projetoAtividadeCodigo: string;
+  projetoAtividadeNome: string;
+  elementoCodigo: string;
+  elementoNome: string;
+  fonteCodigo: string;
+  fonteNome: string;
+};
+
+export type LoaProjecao = LoaClassificacao & {
+  id: string;
+  ano: number;
+  dotacaoOrigemId: string | null;
+  valorProjetado: number;
+  criadoEm: string;
+};
+
+export type NovaLoaLinha = LoaClassificacao & {
+  dotacaoOrigemId: string | null;
+  valorProjetado: number;
+};

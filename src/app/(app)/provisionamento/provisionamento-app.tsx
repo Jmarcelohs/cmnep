@@ -1,28 +1,32 @@
 "use client";
 
 import { useState } from "react";
-import type { Contrato, DotacaoOrcamentaria, NovoContrato } from "@/lib/provisionamento/tipos";
-import { apagarTodosContratos, criarContrato, editarContrato, excluirContrato, importarContratos } from "./actions";
+import type { Contrato, DotacaoOrcamentaria, LoaProjecao, NovaLoaLinha, NovoContrato } from "@/lib/provisionamento/tipos";
+import { apagarTodosContratos, criarContrato, editarContrato, excluirContrato, importarContratos, salvarLoaProjecao } from "./actions";
 import { ContratosTab } from "./contratos-tab";
 import { ProvisionamentoTab } from "./provisionamento-tab";
 import { DotacaoTab } from "./dotacao-tab";
 import { ParametrosTab } from "./parametros-tab";
+import { LoaTab } from "./loa-tab";
 
-type Aba = "contratos" | "provisionamento" | "dotacao" | "parametros";
+type Aba = "contratos" | "provisionamento" | "dotacao" | "parametros" | "loa";
 
 const ABAS: { valor: Aba; label: string }[] = [
   { valor: "contratos", label: "Contratos" },
   { valor: "provisionamento", label: "Provisionamento" },
   { valor: "dotacao", label: "Por Dotação/Ficha" },
+  { valor: "loa", label: "Proposta LOA 2027" },
   { valor: "parametros", label: "Parâmetros" },
 ];
 
 export function ProvisionamentoApp({
   contratosIniciais,
   fichas,
+  loaProjecaoInicial,
 }: {
   contratosIniciais: Contrato[];
   fichas: DotacaoOrcamentaria[];
+  loaProjecaoInicial: LoaProjecao[];
 }) {
   const [contratos, setContratos] = useState<Contrato[]>(contratosIniciais);
   const [aba, setAba] = useState<Aba>("contratos");
@@ -60,6 +64,10 @@ export function ProvisionamentoApp({
   async function aoApagarTudo() {
     const resultado = await comErro(apagarTodosContratos());
     if (resultado !== null) setContratos([]);
+  }
+
+  async function aoSalvarLoa(linhas: NovaLoaLinha[]) {
+    return comErro(salvarLoaProjecao(linhas));
   }
 
   return (
@@ -108,6 +116,9 @@ export function ProvisionamentoApp({
           <ProvisionamentoTab contratos={contratos} ano={ano} onAlterarAno={setAno} />
         )}
         {aba === "dotacao" && <DotacaoTab contratos={contratos} ano={ano} />}
+        {aba === "loa" && (
+          <LoaTab linhasIniciais={loaProjecaoInicial} fichas={fichas} onSalvar={aoSalvarLoa} />
+        )}
         {aba === "parametros" && (
           <ParametrosTab contratos={contratos} onImportar={aoImportar} onApagarTudo={aoApagarTudo} />
         )}
