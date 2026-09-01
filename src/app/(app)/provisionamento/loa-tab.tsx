@@ -9,6 +9,20 @@ function rotuloLinha(l: LoaClassificacao): string {
   return `${l.elementoNome} — ${l.projetoAtividadeNome}`;
 }
 
+// Código orçamentário completo (órgão.unidade.subfunção.programa.projeto-
+// atividade.elemento.fonte, código acumulado a cada nível) — mesma lógica
+// de segmentosFicha em src/lib/suplementacoes/documento.ts (já usada nos
+// Atos/Decretos reais), só que sobre os campos em camelCase de
+// LoaClassificacao em vez do formato de linha do banco.
+function codigoCompletoLinha(l: LoaClassificacao): string {
+  const unidade = `${l.orgaoCodigo}.${l.unidadeCodigo}`;
+  const subfuncao = `${unidade}.${l.subfuncaoCodigo}`;
+  const programa = `${subfuncao}.${l.programaCodigo}`;
+  const projetoAtividade = `${programa}.${l.projetoAtividadeCodigo}`;
+  const elemento = `${projetoAtividade}.${l.elementoCodigo}`;
+  return `${elemento}.${l.fonteCodigo}`;
+}
+
 // Base pra pré-popular uma linha nova — as 4 primeiras camadas de
 // classificação (órgão/unidade/subfunção/programa) são "praticamente
 // fixas" pra essa Câmara (só um órgão, uma unidade — ver comentário
@@ -199,15 +213,26 @@ export function LoaTab({
   }
 
   function exportarCsv() {
-    const cabecalho = ["Órgão", "Unidade", "Subfunção", "Programa", "Projeto/Atividade", "Elemento de Despesa", "Fonte de Recurso", "Valor Projetado 2027"];
+    const cabecalho = [
+      "Código Orçamentário Completo",
+      "Cód. Órgão", "Órgão",
+      "Cód. Unidade", "Unidade",
+      "Cód. Subfunção", "Subfunção",
+      "Cód. Programa", "Programa",
+      "Cód. Projeto/Atividade", "Projeto/Atividade",
+      "Cód. Elemento de Despesa", "Elemento de Despesa",
+      "Cód. Fonte de Recurso", "Fonte de Recurso",
+      "Valor Projetado 2027",
+    ];
     const dados = linhas.map((l) => [
-      l.orgaoNome,
-      l.unidadeNome,
-      l.subfuncaoNome,
-      l.programaNome,
-      l.projetoAtividadeNome,
-      l.elementoNome,
-      l.fonteNome,
+      codigoCompletoLinha(l),
+      l.orgaoCodigo, l.orgaoNome,
+      l.unidadeCodigo, l.unidadeNome,
+      l.subfuncaoCodigo, l.subfuncaoNome,
+      l.programaCodigo, l.programaNome,
+      l.projetoAtividadeCodigo, l.projetoAtividadeNome,
+      l.elementoCodigo, l.elementoNome,
+      l.fonteCodigo, l.fonteNome,
       l.valorProjetado.toFixed(2),
     ]);
     baixarArquivo("proposta-loa-2027.csv", montarCsv(cabecalho, dados), "text/csv;charset=utf-8");
@@ -253,6 +278,7 @@ export function LoaTab({
             {linhas.map((l, i) => (
               <tr key={i} className="hover:bg-slate-50">
                 <td className="px-4 py-2">
+                  <p className="font-mono text-xs text-slate-500">{codigoCompletoLinha(l)}</p>
                   <p className="font-medium text-slate-900">{rotuloLinha(l)}</p>
                   <p className="text-xs text-slate-500">{l.fonteNome}</p>
                 </td>
