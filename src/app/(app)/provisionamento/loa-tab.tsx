@@ -128,6 +128,86 @@ const CAMPOS_CLASSIFICACAO: { campo: keyof LoaClassificacao; label: string }[] =
   { campo: "fonteNome", label: "Fonte de Recurso" },
 ];
 
+const CAMPOS_FICHA_GRUPO: { campo: "elementoCodigo" | "elementoNome" | "fonteCodigo" | "fonteNome"; label: string }[] = [
+  { campo: "elementoCodigo", label: "Código do Elemento de Despesa" },
+  { campo: "elementoNome", label: "Elemento de Despesa" },
+  { campo: "fonteCodigo", label: "Código da Fonte de Recurso" },
+  { campo: "fonteNome", label: "Fonte de Recurso" },
+];
+
+// Inclui uma ficha dentro de uma atividade já existente na proposta —
+// Órgão/Unidade/Subfunção/Programa/Projeto-Atividade vêm prontos do
+// grupo (não dá pra mudar aqui, é o que define em qual grupo a linha
+// cai), só falta Elemento de Despesa/Fonte/Valor. Mais rápido que
+// "+ Incluir dotação" (que pede a classificação inteira) pro caso comum
+// de adicionar mais um elemento numa atividade que já existe.
+function NovaFichaGrupoForm({
+  base,
+  onIncluir,
+  onCancelar,
+}: {
+  base: Omit<LoaClassificacao, "elementoCodigo" | "elementoNome" | "fonteCodigo" | "fonteNome">;
+  onIncluir: (linha: NovaLoaLinha) => void;
+  onCancelar: () => void;
+}) {
+  const [campos, setCampos] = useState({ elementoCodigo: "", elementoNome: "", fonteCodigo: "", fonteNome: "" });
+  const [valor, setValor] = useState(0);
+
+  function atualizar<K extends keyof typeof campos>(campo: K, valor: string) {
+    setCampos((c) => ({ ...c, [campo]: valor }));
+  }
+
+  function aoSubmeter(e: React.FormEvent) {
+    e.preventDefault();
+    onIncluir({ ...base, ...campos, dotacaoOrigemId: null, valorProjetado: valor });
+  }
+
+  return (
+    <form onSubmit={aoSubmeter} className="mt-2 space-y-3 rounded-md border border-slate-200 bg-white p-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {CAMPOS_FICHA_GRUPO.map(({ campo, label }) => (
+          <div key={campo}>
+            <label className="block text-xs font-medium text-slate-500">{label}</label>
+            <input
+              value={campos[campo]}
+              onChange={(e) => atualizar(campo, e.target.value)}
+              required
+              className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+            />
+          </div>
+        ))}
+        <div>
+          <label className="block text-xs font-medium text-slate-500">Valor projetado (R$)</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            value={valor}
+            onChange={(e) => setValor(Number(e.target.value) || 0)}
+            required
+            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+          />
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <button
+          type="submit"
+          className="rounded-md bg-brand-navy px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-navy-light"
+        >
+          Adicionar ficha
+        </button>
+        <button
+          type="button"
+          onClick={onCancelar}
+          className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+        >
+          Cancelar
+        </button>
+      </div>
+    </form>
+  );
+}
+
 function NovaDotacaoForm({
   fichas,
   onIncluir,
@@ -217,6 +297,7 @@ export function LoaTab({
     linhasIniciais.length > 0 ? linhasIniciais : linhasDeFichas2026(fichas),
   );
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const [grupoAdicionandoFicha, setGrupoAdicionandoFicha] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [salvoComSucesso, setSalvoComSucesso] = useState(false);
@@ -239,6 +320,12 @@ export function LoaTab({
     setSalvoComSucesso(false);
     setLinhas((atual) => [...atual, linha]);
     setMostrarFormulario(false);
+  }
+
+  function incluirFichaNoGrupo(linha: NovaLoaLinha) {
+    setSalvoComSucesso(false);
+    setLinhas((atual) => [...atual, linha]);
+    setGrupoAdicionandoFicha(null);
   }
 
   function exportarCsv() {
@@ -308,14 +395,45 @@ export function LoaTab({
           {grupos.map((grupo) => (
             <tbody key={grupo.codigo} className="divide-y divide-slate-100">
               <tr className="bg-slate-100">
-                <td colSpan={2} className="px-4 py-1.5">
+                <td className="px-4 py-1.5">
                   <span className="font-mono text-xs text-slate-500">{formatarCodigoAtividade(grupo.codigo)}</span>{" "}
                   <span className="text-xs font-semibold text-slate-700">{grupo.nome}</span>
                 </td>
                 <td className="px-4 py-1.5 text-right text-xs font-semibold text-slate-700">
                   {formatarMoeda(grupo.subtotal)}
                 </td>
+                <td className="px-4 py-1.5 text-right">
+                  <button
+                    type="button"
+                    onClick={() => setGrupoAdicionandoFicha(grupo.codigo === grupoAdicionandoFicha ? null : grupo.codigo)}
+                    className="text-xs font-medium text-brand-navy hover:underline"
+                  >
+                    + ficha
+                  </button>
+                </td>
               </tr>
+              {grupoAdicionandoFicha === grupo.codigo && (
+                <tr>
+                  <td colSpan={3} className="bg-slate-50 px-4 py-2">
+                    <NovaFichaGrupoForm
+                      base={{
+                        orgaoCodigo: grupo.itens[0].linha.orgaoCodigo,
+                        orgaoNome: grupo.itens[0].linha.orgaoNome,
+                        unidadeCodigo: grupo.itens[0].linha.unidadeCodigo,
+                        unidadeNome: grupo.itens[0].linha.unidadeNome,
+                        subfuncaoCodigo: grupo.itens[0].linha.subfuncaoCodigo,
+                        subfuncaoNome: grupo.itens[0].linha.subfuncaoNome,
+                        programaCodigo: grupo.itens[0].linha.programaCodigo,
+                        programaNome: grupo.itens[0].linha.programaNome,
+                        projetoAtividadeCodigo: grupo.codigo,
+                        projetoAtividadeNome: grupo.nome,
+                      }}
+                      onIncluir={incluirFichaNoGrupo}
+                      onCancelar={() => setGrupoAdicionandoFicha(null)}
+                    />
+                  </td>
+                </tr>
+              )}
               {grupo.itens.map(({ indice, linha }) => (
                 <tr key={indice} className="hover:bg-slate-50">
                   <td className="px-4 py-2">
