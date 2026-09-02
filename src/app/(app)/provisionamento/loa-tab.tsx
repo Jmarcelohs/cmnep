@@ -6,6 +6,12 @@ import { baixarArquivo, montarCsv } from "@/lib/provisionamento/csv";
 import { DownloadPdfButton } from "@/components/download-pdf-button";
 import type { DotacaoOrcamentaria, LoaClassificacao, LoaProjecao, NovaLoaLinha } from "@/lib/provisionamento/tipos";
 
+// Fonte de recurso padrão de toda a Câmara — confirmado pelo usuário,
+// não é só "o que apareceu mais nos dados". Pré-preenche a Fonte de
+// Recurso nos formulários de nova ficha/dotação; o usuário ainda pode
+// trocar (menu suspenso + "Outro") no caso raro de precisar de outra.
+const FONTE_PADRAO = { codigo: "1500", nome: "Recursos Ordinários" };
+
 // "1001" -> "1.001", "2077" -> "2.077" — mesmo formato usado no relatório
 // real (Relação de Despesas) e já usado como referência dos grupos.
 function formatarCodigoAtividade(codigo: string): string {
@@ -251,7 +257,12 @@ function NovaFichaGrupoForm({
   onIncluir: (linha: NovaLoaLinha) => void;
   onCancelar: () => void;
 }) {
-  const [campos, setCampos] = useState({ elementoCodigo: "", elementoNome: "", fonteCodigo: "", fonteNome: "" });
+  const [campos, setCampos] = useState({
+    elementoCodigo: "",
+    elementoNome: "",
+    fonteCodigo: FONTE_PADRAO.codigo,
+    fonteNome: FONTE_PADRAO.nome,
+  });
   const [valor, setValor] = useState(0);
 
   function aoSubmeter(e: React.FormEvent) {
@@ -327,8 +338,8 @@ function NovaDotacaoForm({
     projetoAtividadeNome: "",
     elementoCodigo: "",
     elementoNome: "",
-    fonteCodigo: "",
-    fonteNome: "",
+    fonteCodigo: FONTE_PADRAO.codigo,
+    fonteNome: FONTE_PADRAO.nome,
   });
   const [valor, setValor] = useState(0);
 
