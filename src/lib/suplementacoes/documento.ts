@@ -1,4 +1,5 @@
 import { dataPorExtenso, formatarMoeda, valorPorExtenso } from "@/lib/pdf/formato";
+import { sanitizarHtmlDocumento } from "@/lib/sanitizar-html";
 import type { Database } from "@/lib/supabase/database.types";
 
 export const NOME_CAMARA = "Câmara Municipal de Nepomuceno";
@@ -207,4 +208,22 @@ export function montarCorpoDecretoPadrao({
     corpoArtigoHtml(itensOrigem, art2Intro) +
     art3
   );
+}
+
+// Diz se um corpo_ato_html/corpo_decreto_html JÁ SALVO diverge do que o
+// texto padrão geraria pros MESMOS dados — ou seja, se foi de verdade
+// editado à mão (formatação/redação customizada) em vez de só aceito como
+// veio. Usado pra decidir o estado inicial de "tocado" no formulário: um
+// registro cujo corpo salvo é idêntico ao padrão nunca deveria "travar" o
+// texto contra atualizações de campos como o Número do Decreto, que é
+// justamente pra ser preenchido depois (ver suplementacao-form.tsx).
+//
+// Compara depois de passar o padrão pelo MESMO sanitizador usado ao
+// salvar (sanitizarHtmlDocumento, chamado nas actions ao gravar o
+// formulário) — sem isso, toda comparação dá "diferente" só por causa de
+// normalizações do sanitizador (ex.: "<br>" vira "<br />"), mesmo quando
+// o texto nunca foi tocado.
+export function corpoFoiEditadoManualmente(corpoSalvo: string | null, corpoPadrao: string): boolean {
+  if (!corpoSalvo) return false;
+  return corpoSalvo !== sanitizarHtmlDocumento(corpoPadrao);
 }

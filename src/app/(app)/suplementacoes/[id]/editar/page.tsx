@@ -2,7 +2,12 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUsuario } from "@/lib/auth/get-current-usuario";
-import { rotuloFicha } from "@/lib/suplementacoes/documento";
+import {
+  corpoFoiEditadoManualmente,
+  montarCorpoAtoPadrao,
+  montarCorpoDecretoPadrao,
+  rotuloFicha,
+} from "@/lib/suplementacoes/documento";
 import { buscarSuplementacaoCompleta } from "@/lib/suplementacoes/dados";
 import { editarSuplementacao } from "../../actions";
 import { SuplementacaoForm } from "../../suplementacao-form";
@@ -35,6 +40,23 @@ export default async function EditarSuplementacaoPage({
     rotulo: rotuloFicha(d),
     dotacao: d,
   }));
+
+  // Se o texto salvo é idêntico ao que o padrão geraria pros mesmos dados
+  // (ninguém editou à mão, só aceitou como veio), o formulário não deve
+  // tratá-lo como "tocado" — ver corpoFoiEditadoManualmente pro porquê.
+  const corpoAtoTocadoInicial = corpoFoiEditadoManualmente(
+    suplementacao.corpo_ato_html,
+    montarCorpoAtoPadrao({ dataAto: suplementacao.data_ato, itensDestino, itensOrigem }),
+  );
+  const corpoDecretoTocadoInicial = corpoFoiEditadoManualmente(
+    suplementacao.corpo_decreto_html,
+    montarCorpoDecretoPadrao({
+      numeroDecreto: suplementacao.numero_decreto ?? "",
+      dataDecreto: suplementacao.data_decreto ?? suplementacao.data_ato,
+      itensDestino,
+      itensOrigem,
+    }),
+  );
 
   return (
     <div>
@@ -81,6 +103,8 @@ export default async function EditarSuplementacaoPage({
           data_decreto: suplementacao.data_decreto ?? suplementacao.data_ato,
           corpo_ato_html: suplementacao.corpo_ato_html ?? "",
           corpo_decreto_html: suplementacao.corpo_decreto_html ?? "",
+          corpoAtoTocadoInicial,
+          corpoDecretoTocadoInicial,
           itensDestino: itensDestino.map((i) => ({ fichaId: i.dotacao.id, valor: String(i.valor) })),
           itensOrigem: itensOrigem.map((i) => ({ fichaId: i.dotacao.id, valor: String(i.valor) })),
         }}

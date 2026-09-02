@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  corpoFoiEditadoManualmente,
   montarCorpoAtoPadrao,
   montarCorpoDecretoPadrao,
   numeroRomano,
@@ -154,5 +155,39 @@ describe("montarCorpoDecretoPadrao", () => {
       itensOrigem: ITENS_ORIGEM,
     });
     expect(html).toContain("DECRETO Nº ___ DE");
+  });
+});
+
+describe("corpoFoiEditadoManualmente", () => {
+  it("não considera tocado quando o corpo salvo é nulo (registro novo)", () => {
+    expect(corpoFoiEditadoManualmente(null, "<p>qualquer coisa</p>")).toBe(false);
+  });
+
+  it("não considera tocado quando o corpo salvo é só o padrão sanitizado (ex.: <br> virou <br />)", () => {
+    // Bug real corrigido por essa função: sanitizarHtmlDocumento (rodada
+    // nas actions ao salvar) normaliza "<br>" pra "<br />" — comparar o
+    // padrão cru contra o valor salvo sempre dava "diferente" mesmo
+    // quando o usuário nunca editou nada à mão, congelando o texto do
+    // Decreto contra atualizações do Número do Decreto preenchido depois.
+    const padrao = montarCorpoDecretoPadrao({
+      numeroDecreto: "2.342",
+      dataDecreto: "2026-05-12",
+      itensDestino: ITENS_DESTINO,
+      itensOrigem: ITENS_ORIGEM,
+    });
+    expect(padrao).toContain("<br>");
+    const salvoComoTeriaSidoPersistido = padrao.replace(/<br>/g, "<br />");
+    expect(corpoFoiEditadoManualmente(salvoComoTeriaSidoPersistido, padrao)).toBe(false);
+  });
+
+  it("considera tocado quando o texto salvo diverge de verdade do padrão", () => {
+    const padrao = montarCorpoDecretoPadrao({
+      numeroDecreto: "2.342",
+      dataDecreto: "2026-05-12",
+      itensDestino: ITENS_DESTINO,
+      itensOrigem: ITENS_ORIGEM,
+    });
+    const editadoAMao = padrao.replace("DECRETA:", "DECRETA, com um parágrafo extra:");
+    expect(corpoFoiEditadoManualmente(editadoAMao, padrao)).toBe(true);
   });
 });

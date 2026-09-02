@@ -25,6 +25,13 @@ export type ValoresIniciaisSuplementacao = {
   data_decreto: string;
   corpo_ato_html: string;
   corpo_decreto_html: string;
+  // Calculados no servidor (editar/page.tsx), não aqui — precisam do
+  // mesmo sanitizador usado ao salvar (corpoFoiEditadoManualmente em
+  // documento.ts) pra comparar corretamente o texto salvo contra o
+  // padrão; refazer essa conta no cliente sem o sanitizador dava falso
+  // positivo (ver histórico de commit desse comentário).
+  corpoAtoTocadoInicial: boolean;
+  corpoDecretoTocadoInicial: boolean;
   itensDestino: Linha[];
   itensOrigem: Linha[];
 };
@@ -201,11 +208,23 @@ export function SuplementacaoForm({
   // campo não foi tocado à mão, o valor exibido é sempre o padrão recém
   // calculado (acompanha ficha/data mudando) — sem precisar de um efeito
   // pra "sincronizar" estado, só computa direto no render.
+  //
+  // "Tocado" não pode ser só "já existe corpo_ato_html/corpo_decreto_html
+  // salvo" — todo registro tem um desses salvo desde o primeiro submit,
+  // mesmo que o usuário nunca tenha editado o texto à mão (só aceitou o
+  // padrão auto-gerado). Tratar isso como "tocado" congela o texto pra
+  // sempre: reabrir o registro depois pra só preencher o Número do
+  // Decreto (fluxo esperado — o campo é "opcional", preenchido quando a
+  // Prefeitura atribuir) não atualiza o texto, porque ele já "foi tocado"
+  // desde o primeiro save. O valor inicial certo (corpoAtoTocadoInicial/
+  // corpoDecretoTocadoInicial) vem pronto do servidor — ver
+  // corpoFoiEditadoManualmente em documento.ts pra saber por que essa
+  // conta não dá pra refazer aqui no cliente sem o sanitizador.
   const [corpoAto, setCorpoAto] = useState(valoresIniciais?.corpo_ato_html ?? "");
-  const [corpoAtoTocado, setCorpoAtoTocado] = useState(Boolean(valoresIniciais?.corpo_ato_html));
+  const [corpoAtoTocado, setCorpoAtoTocado] = useState(valoresIniciais?.corpoAtoTocadoInicial ?? false);
   const [corpoDecreto, setCorpoDecreto] = useState(valoresIniciais?.corpo_decreto_html ?? "");
   const [corpoDecretoTocado, setCorpoDecretoTocado] = useState(
-    Boolean(valoresIniciais?.corpo_decreto_html),
+    valoresIniciais?.corpoDecretoTocadoInicial ?? false,
   );
 
   const corpoAtoExibido = corpoAtoTocado ? corpoAto : corpoAtoPadrao;
