@@ -86,6 +86,23 @@ function totalFichas2026(fichas: DotacaoOrcamentaria[]): number {
   return fichas.reduce((soma, f) => soma + (f.dotacao_inicial_referencia ?? 0) + (f.suplementado_referencia ?? 0), 0);
 }
 
+type ParCodigoNome = { codigo: string; nome: string };
+
+// Deduplica por código, mantendo o primeiro nome visto — usada pra montar
+// as listas de Elemento de Despesa/Fonte de Recurso já conhecidos (das 40
+// fichas de 2026 + o que já foi incluído na proposta), pro menu suspenso
+// do "+ ficha" sugerir em vez de exigir digitar código e nome na mão toda
+// vez.
+function paresUnicos(pares: ParCodigoNome[]): ParCodigoNome[] {
+  const vistos = new Map<string, string>();
+  for (const { codigo, nome } of pares) {
+    if (codigo && !vistos.has(codigo)) vistos.set(codigo, nome);
+  }
+  return Array.from(vistos.entries())
+    .map(([codigo, nome]) => ({ codigo, nome }))
+    .sort((a, b) => a.codigo.localeCompare(b.codigo));
+}
+
 type GrupoAtividade = {
   codigo: string;
   nome: string;
@@ -111,6 +128,8 @@ function agruparPorAtividade(linhas: NovaLoaLinha[]): GrupoAtividade[] {
   return Array.from(grupos.values()).sort((a, b) => a.codigo.localeCompare(b.codigo));
 }
 
+// Elemento de Despesa e Fonte de Recurso saem daqui — viram um menu
+// suspenso (CampoParCodigoNome), não campos de texto soltos.
 const CAMPOS_CLASSIFICACAO: { campo: keyof LoaClassificacao; label: string }[] = [
   { campo: "orgaoCodigo", label: "Código do Órgão" },
   { campo: "orgaoNome", label: "Órgão" },
@@ -122,18 +141,96 @@ const CAMPOS_CLASSIFICACAO: { campo: keyof LoaClassificacao; label: string }[] =
   { campo: "programaNome", label: "Programa" },
   { campo: "projetoAtividadeCodigo", label: "Código do Projeto/Atividade" },
   { campo: "projetoAtividadeNome", label: "Projeto/Atividade" },
-  { campo: "elementoCodigo", label: "Código do Elemento de Despesa" },
-  { campo: "elementoNome", label: "Elemento de Despesa" },
-  { campo: "fonteCodigo", label: "Código da Fonte de Recurso" },
-  { campo: "fonteNome", label: "Fonte de Recurso" },
 ];
 
-const CAMPOS_FICHA_GRUPO: { campo: "elementoCodigo" | "elementoNome" | "fonteCodigo" | "fonteNome"; label: string }[] = [
-  { campo: "elementoCodigo", label: "Código do Elemento de Despesa" },
-  { campo: "elementoNome", label: "Elemento de Despesa" },
-  { campo: "fonteCodigo", label: "Código da Fonte de Recurso" },
-  { campo: "fonteNome", label: "Fonte de Recurso" },
-];
+// Um campo código+nome (Elemento de Despesa ou Fonte de Recurso) que vira
+// menu suspenso quando já existem opções conhecidas (das fichas de 2026 +
+// o que já está na proposta) — escolher uma opção preenche código e nome
+// juntos, sem digitar. "Outro" alterna pra dois campos de texto livre,
+// pro caso de um elemento/fonte que ainda não apareceu em nenhuma ficha.
+function CampoParCodigoNome({
+  label,
+  opcoes,
+  codigo,
+  nome,
+  onMudar,
+}: {
+  label: string;
+  opcoes: ParCodigoNome[];
+  codigo: string;
+  nome: string;
+  onMudar: (codigo: string, nome: string) => void;
+}) {
+  const [manual, setManual] = useState(opcoes.length === 0);
+
+  function aoSelecionar(valorCodigo: string) {
+    if (valorCodigo === "__outro__") {
+      setManual(true);
+      onMudar("", "");
+      return;
+    }
+    const opcao = opcoes.find((o) => o.codigo === valorCodigo);
+    if (opcao) onMudar(opcao.codigo, opcao.nome);
+  }
+
+  if (manual) {
+    return (
+      <div className="sm:col-span-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+          <label className="block text-xs font-medium text-slate-500">Código do(a) {label}</label>
+          <input
+            value={codigo}
+            onChange={(e) => onMudar(e.target.value, nome)}
+            required
+            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-slate-500">{label}</label>
+          <div className="mt-1 flex gap-1">
+            <input
+              value={nome}
+              onChange={(e) => onMudar(codigo, e.target.value)}
+              required
+              className="w-full min-w-0 flex-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+            />
+            {opcoes.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setManual(false)}
+                className="shrink-0 text-xs font-medium text-brand-navy hover:underline"
+              >
+                usar lista
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="sm:col-span-2">
+      <label className="block text-xs font-medium text-slate-500">{label}</label>
+      <select
+        value={codigo}
+        onChange={(e) => aoSelecionar(e.target.value)}
+        required
+        className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+      >
+        <option value="" disabled>
+          Selecione…
+        </option>
+        {opcoes.map((o) => (
+          <option key={o.codigo} value={o.codigo}>
+            {o.codigo} - {o.nome}
+          </option>
+        ))}
+        <option value="__outro__">Outro (digitar manualmente)</option>
+      </select>
+    </div>
+  );
+}
 
 // Inclui uma ficha dentro de uma atividade já existente na proposta —
 // Órgão/Unidade/Subfunção/Programa/Projeto-Atividade vêm prontos do
@@ -143,19 +240,19 @@ const CAMPOS_FICHA_GRUPO: { campo: "elementoCodigo" | "elementoNome" | "fonteCod
 // de adicionar mais um elemento numa atividade que já existe.
 function NovaFichaGrupoForm({
   base,
+  elementos,
+  fontes,
   onIncluir,
   onCancelar,
 }: {
   base: Omit<LoaClassificacao, "elementoCodigo" | "elementoNome" | "fonteCodigo" | "fonteNome">;
+  elementos: ParCodigoNome[];
+  fontes: ParCodigoNome[];
   onIncluir: (linha: NovaLoaLinha) => void;
   onCancelar: () => void;
 }) {
   const [campos, setCampos] = useState({ elementoCodigo: "", elementoNome: "", fonteCodigo: "", fonteNome: "" });
   const [valor, setValor] = useState(0);
-
-  function atualizar<K extends keyof typeof campos>(campo: K, valor: string) {
-    setCampos((c) => ({ ...c, [campo]: valor }));
-  }
 
   function aoSubmeter(e: React.FormEvent) {
     e.preventDefault();
@@ -165,17 +262,20 @@ function NovaFichaGrupoForm({
   return (
     <form onSubmit={aoSubmeter} className="mt-2 space-y-3 rounded-md border border-slate-200 bg-white p-3">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {CAMPOS_FICHA_GRUPO.map(({ campo, label }) => (
-          <div key={campo}>
-            <label className="block text-xs font-medium text-slate-500">{label}</label>
-            <input
-              value={campos[campo]}
-              onChange={(e) => atualizar(campo, e.target.value)}
-              required
-              className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
-            />
-          </div>
-        ))}
+        <CampoParCodigoNome
+          label="Elemento de Despesa"
+          opcoes={elementos}
+          codigo={campos.elementoCodigo}
+          nome={campos.elementoNome}
+          onMudar={(elementoCodigo, elementoNome) => setCampos((c) => ({ ...c, elementoCodigo, elementoNome }))}
+        />
+        <CampoParCodigoNome
+          label="Fonte de Recurso"
+          opcoes={fontes}
+          codigo={campos.fonteCodigo}
+          nome={campos.fonteNome}
+          onMudar={(fonteCodigo, fonteNome) => setCampos((c) => ({ ...c, fonteCodigo, fonteNome }))}
+        />
         <div>
           <label className="block text-xs font-medium text-slate-500">Valor projetado (R$)</label>
           <input
@@ -210,10 +310,14 @@ function NovaFichaGrupoForm({
 
 function NovaDotacaoForm({
   fichas,
+  elementos,
+  fontes,
   onIncluir,
   onCancelar,
 }: {
   fichas: DotacaoOrcamentaria[];
+  elementos: ParCodigoNome[];
+  fontes: ParCodigoNome[];
   onIncluir: (linha: NovaLoaLinha) => void;
   onCancelar: () => void;
 }) {
@@ -252,6 +356,20 @@ function NovaDotacaoForm({
             />
           </div>
         ))}
+        <CampoParCodigoNome
+          label="Elemento de Despesa"
+          opcoes={elementos}
+          codigo={campos.elementoCodigo}
+          nome={campos.elementoNome}
+          onMudar={(elementoCodigo, elementoNome) => setCampos((c) => ({ ...c, elementoCodigo, elementoNome }))}
+        />
+        <CampoParCodigoNome
+          label="Fonte de Recurso"
+          opcoes={fontes}
+          codigo={campos.fonteCodigo}
+          nome={campos.fonteNome}
+          onMudar={(fonteCodigo, fonteNome) => setCampos((c) => ({ ...c, fonteCodigo, fonteNome }))}
+        />
         <div>
           <label className="block text-xs font-medium text-slate-500">Valor projetado (R$)</label>
           <input
@@ -353,6 +471,19 @@ export function LoaTab({
   const total2027 = linhas.reduce((soma, l) => soma + l.valorProjetado, 0);
   const total2026 = totalFichas2026(fichas);
   const grupos = agruparPorAtividade(linhas);
+
+  // Elemento de Despesa/Fonte de Recurso já conhecidos (das fichas de 2026
+  // + o que já está na proposta) — alimenta o menu suspenso do "+ ficha" e
+  // do "+ Incluir dotação", pra não exigir digitar código e nome na mão
+  // pra algo que provavelmente já existe em alguma outra linha.
+  const elementosConhecidos = paresUnicos([
+    ...fichas.map((f) => ({ codigo: f.elemento_codigo, nome: f.elemento_nome })),
+    ...linhas.map((l) => ({ codigo: l.elementoCodigo, nome: l.elementoNome })),
+  ]);
+  const fontesConhecidas = paresUnicos([
+    ...fichas.map((f) => ({ codigo: f.fonte_codigo, nome: f.fonte_nome })),
+    ...linhas.map((l) => ({ codigo: l.fonteCodigo, nome: l.fonteNome })),
+  ]);
 
   function atualizarValor(indice: number, valor: number) {
     setSalvoComSucesso(false);
@@ -504,6 +635,8 @@ export function LoaTab({
                 <tr>
                   <td colSpan={3} className="bg-slate-50 px-4 py-2">
                     <NovaFichaGrupoForm
+                      elementos={elementosConhecidos}
+                      fontes={fontesConhecidas}
                       base={{
                         orgaoCodigo: grupo.itens[0].linha.orgaoCodigo,
                         orgaoNome: grupo.itens[0].linha.orgaoNome,
@@ -577,7 +710,13 @@ export function LoaTab({
       </div>
 
       {mostrarFormulario ? (
-        <NovaDotacaoForm fichas={fichas} onIncluir={incluirDotacao} onCancelar={() => setMostrarFormulario(false)} />
+        <NovaDotacaoForm
+          fichas={fichas}
+          elementos={elementosConhecidos}
+          fontes={fontesConhecidas}
+          onIncluir={incluirDotacao}
+          onCancelar={() => setMostrarFormulario(false)}
+        />
       ) : (
         <div className="mt-4 flex flex-wrap gap-2">
           <button
