@@ -8,6 +8,15 @@ const NOMES_MESES = [
   "Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez",
 ];
 
+// Sem o "R$" — usado só nas 12 colunas de mês do relatório impresso, onde
+// cada centímetro de largura conta (12 colunas de valor + Contrato +
+// Ficha + Total, tudo numa página A4 paisagem só). O cabeçalho e o título
+// já deixam claro que os valores são em reais; repetir "R$" em toda
+// célula não cabia com fonte legível.
+function valorSemPrefixo(valor: number): string {
+  return formatarMoeda(valor).replace(/^R\$\s*/, "");
+}
+
 export function ProvisionamentoTab({
   contratos,
   ano,
@@ -49,10 +58,6 @@ export function ProvisionamentoTab({
         </button>
       </div>
 
-      <h2 className="mt-4 hidden text-lg font-semibold text-brand-navy print:block">
-        Provisionamento Orçamentário {ano} — Câmara Municipal de Nepomuceno/MG
-      </h2>
-
       {alertas.length > 0 && (
         <div className="mt-4 space-y-2 print:hidden">
           {alertas.map((a, i) => (
@@ -68,35 +73,72 @@ export function ProvisionamentoTab({
         </div>
       )}
 
-      <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200 print:overflow-visible print:border-0">
-        <table className="min-w-full divide-y divide-slate-200 text-xs print:text-[8pt]">
+      {/* provisionamento-relatorio-print: força A4 paisagem só nesse
+          window.print() (ver globals.css) — as 15 colunas (Contrato +
+          Ficha + 12 meses + Total) não cabem em retrato de jeito nenhum.
+          O título entra AQUI DENTRO (não antes) pra sair na mesma página
+          paisagem — um elemento com "page" só some vale a partir de onde
+          a quebra de página acontece; posto antes, ficaria sozinho numa
+          página retrato em branco. print:table-fixed + as larguras em mm
+          no cabeçalho garantem que as colunas cabem juntas numa página
+          só, mesmo com fonte maior — sem isso, a coluna Contrato (nome de
+          contrato pode ser bem longo) cresceria livre e empurraria os
+          meses pra fora da página. */}
+      <div className="provisionamento-relatorio-print mt-4 overflow-x-auto rounded-lg border border-slate-200 print:overflow-visible print:break-before-page print:border-0 print:p-[6mm]">
+        <h2 className="hidden text-lg font-semibold text-brand-navy print:block">
+          Provisionamento Orçamentário {ano} — Câmara Municipal de Nepomuceno/MG
+        </h2>
+        <p className="mb-3 hidden text-[8pt] text-slate-500 print:block">
+          Valores mensais em reais (R$) — símbolo omitido nas colunas de mês por espaço.
+        </p>
+        {/* print:w-fit (+ min-w-0) desfaz o min-w-full/comportamento de
+            esticar até o container (herdado de algum ancestor flex/grid
+            na árvore do app) — com table-fixed, qualquer coisa que force
+            a tabela a ocupar mais que a soma das larguras em mm faz o
+            navegador esticar TODAS as colunas proporcionalmente,
+            ignorando os valores em mm de cada uma. */}
+        <table className="min-w-full table-auto divide-y divide-slate-200 text-xs print:w-fit print:min-w-0 print:table-fixed print:text-[9pt]">
           <thead className="bg-brand-navy/5 print:bg-transparent">
             <tr>
-              <th className="sticky left-0 bg-brand-navy/5 px-3 py-2 text-left font-medium text-slate-600 print:static print:bg-transparent">
+              <th className="sticky left-0 bg-brand-navy/5 px-3 py-2 text-left font-medium text-slate-600 print:static print:w-[30mm] print:bg-transparent print:px-1 print:py-1">
                 Contrato
               </th>
-              <th className="px-2 py-2 text-left font-medium text-slate-600">Ficha</th>
+              <th className="px-2 py-2 text-left font-medium text-slate-600 print:w-[12mm] print:px-1 print:py-1">
+                Ficha
+              </th>
               {NOMES_MESES.map((m) => (
-                <th key={m} className="px-2 py-2 text-right font-medium text-slate-600">
+                <th
+                  key={m}
+                  className="px-2 py-2 text-right font-medium text-slate-600 print:w-[18mm] print:px-1 print:py-1"
+                >
                   {m}
                 </th>
               ))}
-              <th className="px-2 py-2 text-right font-medium text-slate-600">Total {ano}</th>
+              <th className="px-2 py-2 text-right font-medium text-slate-600 print:w-[25mm] print:px-1 print:py-1">
+                Total {ano} (R$)
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {contratos.map((c) => {
               const valoresMensais = provisionamentoMensalContrato(c, ano);
               return (
-                <tr key={c.id} className="hover:bg-slate-50 print:hover:bg-transparent">
-                  <td className="sticky left-0 bg-white px-3 py-2 text-slate-900 print:static">{c.nome}</td>
-                  <td className="px-2 py-2 text-slate-700">{c.ficha ? `Ficha ${c.ficha.ficha}` : "—"}</td>
+                <tr key={c.id} className="hover:bg-slate-50 print:break-inside-avoid print:hover:bg-transparent">
+                  <td
+                    className="sticky left-0 bg-white px-3 py-2 text-slate-900 print:static print:truncate print:px-1 print:py-1"
+                    title={c.nome}
+                  >
+                    {c.nome}
+                  </td>
+                  <td className="px-2 py-2 text-slate-700 print:px-1 print:py-1">
+                    {c.ficha ? `Ficha ${c.ficha.ficha}` : "—"}
+                  </td>
                   {valoresMensais.map((v, i) => (
-                    <td key={i} className="px-2 py-2 text-right text-slate-700">
-                      {v > 0 ? formatarMoeda(v) : "—"}
+                    <td key={i} className="px-2 py-2 text-right text-slate-700 print:px-1 print:py-1">
+                      {v > 0 ? valorSemPrefixo(v) : "—"}
                     </td>
                   ))}
-                  <td className="px-2 py-2 text-right font-semibold text-slate-900">
+                  <td className="px-2 py-2 text-right font-semibold text-slate-900 print:px-1 print:py-1">
                     {formatarMoeda(totalAnualContrato(c, ano))}
                   </td>
                 </tr>
@@ -113,14 +155,18 @@ export function ProvisionamentoTab({
           {contratos.length > 0 && (
             <tfoot className="border-t-2 border-slate-300 font-semibold">
               <tr>
-                <td className="sticky left-0 bg-white px-3 py-2 text-slate-900 print:static">Total</td>
-                <td className="px-2 py-2" />
+                <td className="sticky left-0 bg-white px-3 py-2 text-slate-900 print:static print:px-1 print:py-1">
+                  Total
+                </td>
+                <td className="px-2 py-2 print:px-1 print:py-1" />
                 {totaisPorMes.map((v, i) => (
-                  <td key={i} className="px-2 py-2 text-right text-slate-900">
-                    {formatarMoeda(v)}
+                  <td key={i} className="px-2 py-2 text-right text-slate-900 print:px-1 print:py-1">
+                    {valorSemPrefixo(v)}
                   </td>
                 ))}
-                <td className="px-2 py-2 text-right text-slate-900">{formatarMoeda(totalGeral)}</td>
+                <td className="px-2 py-2 text-right text-slate-900 print:px-1 print:py-1">
+                  {formatarMoeda(totalGeral)}
+                </td>
               </tr>
             </tfoot>
           )}

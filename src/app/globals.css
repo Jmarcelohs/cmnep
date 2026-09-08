@@ -53,6 +53,23 @@ body {
   page: paisagem;
 }
 
+/* Página nomeada pro relatório de Provisionamento Orçamentário (aba
+   Provisionamento) — impresso via window.print() direto, sem passar
+   pelo Puppeteer, então não tem o problema de landscape:true não
+   funcionar (isso só afeta o Chromium empacotado da Vercel usado em
+   gerar-pdf.ts). Margem 0 igual ao @page padrão — o espaçamento da
+   página vem do padding do próprio conteúdo (ver provisionamento-tab.tsx),
+   não do @page, pra não competir com o @page global usado em todo o
+   resto do sistema. */
+@page provisionamento-relatorio {
+  size: A4 landscape;
+  margin: 0;
+}
+
+.provisionamento-relatorio-print {
+  page: provisionamento-relatorio;
+}
+
 @media print {
   .no-print {
     display: none !important;
