@@ -6,6 +6,7 @@ import {
   provisionamentoMensalContrato,
   rotuloFichaContrato,
   totalAnualContrato,
+  totalAnualPorFichaId,
   valorMensalContrato,
 } from "./calculo";
 import type { Contrato, DotacaoOrcamentaria } from "./tipos";
@@ -229,6 +230,23 @@ describe("consolidarPorDotacao", () => {
     const a = contrato({ fichaId: null, ficha: null });
     const grupos = consolidarPorDotacao([a], 2027);
     expect(grupos[0].chave).toBe("(sem ficha)");
+  });
+});
+
+describe("totalAnualPorFichaId", () => {
+  it("soma o total anual dos contratos por fichaId — chave pro 'puxar valores' da Proposta LOA", () => {
+    const a = contrato({ id: "a", fichaId: FICHA_50.id, ficha: FICHA_50, percentualEstimado: 0 });
+    const b = contrato({ id: "b", fichaId: FICHA_50.id, ficha: FICHA_50, percentualEstimado: 0 });
+    const c = contrato({ id: "c", fichaId: FICHA_60.id, ficha: FICHA_60, percentualEstimado: 0 });
+    const totais = totalAnualPorFichaId([a, b, c], 2027);
+    expect(totais.get(FICHA_50.id)).toBeCloseTo(240000, 2); // 2 contratos × 10.000 × 12
+    expect(totais.get(FICHA_60.id)).toBeCloseTo(120000, 2);
+  });
+
+  it("ignora contratos sem ficha vinculada", () => {
+    const a = contrato({ fichaId: null, ficha: null });
+    const totais = totalAnualPorFichaId([a], 2027);
+    expect(totais.size).toBe(0);
   });
 });
 

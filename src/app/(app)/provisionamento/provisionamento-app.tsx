@@ -134,6 +134,7 @@ export function ProvisionamentoApp({
           <LoaTab
             linhasIniciais={loaProjecaoInicial}
             fichas={fichas}
+            contratos={contratos}
             onSalvar={aoSalvarLoa}
             valorTotalInicial={valorTotalLoaInicial}
             onSalvarValorTotal={aoSalvarValorTotalLoa}

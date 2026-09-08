@@ -3,8 +3,22 @@
 import { useState } from "react";
 import { formatarMoeda } from "@/lib/pdf/formato";
 import { baixarArquivo, montarCsv } from "@/lib/provisionamento/csv";
+import { totalAnualPorFichaId } from "@/lib/provisionamento/calculo";
 import { DownloadPdfButton } from "@/components/download-pdf-button";
-import type { DotacaoOrcamentaria, LoaClassificacao, LoaProjecao, NovaLoaLinha } from "@/lib/provisionamento/tipos";
+import type {
+  Contrato,
+  DotacaoOrcamentaria,
+  LoaClassificacao,
+  LoaProjecao,
+  NovaLoaLinha,
+} from "@/lib/provisionamento/tipos";
+
+// Mesmo ano fixo de ANO_LOA em actions.ts — usado aqui só pra calcular o
+// total anual dos contratos (totalAnualPorFichaId), não o seletor "Ano de
+// referência" compartilhado com as abas Provisionamento/Por Dotação
+// (esse pode estar em qualquer ano enquanto o usuário navega por ali; a
+// LOA sempre puxa o valor de 2027, independente do que estiver selecionado).
+const ANO_LOA = 2027;
 
 // Fonte de recurso padrão de toda a Câmara — confirmado pelo usuário,
 // não é só "o que apareceu mais nos dados". Pré-preenche a Fonte de
@@ -456,12 +470,14 @@ function ResumoValorTotal({ valorTotal, totalDistribuido }: { valorTotal: number
 export function LoaTab({
   linhasIniciais,
   fichas,
+  contratos,
   onSalvar,
   valorTotalInicial,
   onSalvarValorTotal,
 }: {
   linhasIniciais: LoaProjecao[];
   fichas: DotacaoOrcamentaria[];
+  contratos: Contrato[];
   onSalvar: (linhas: NovaLoaLinha[]) => Promise<LoaProjecao[] | null>;
   valorTotalInicial: number;
   onSalvarValorTotal: (valor: number) => Promise<number | null>;
@@ -516,6 +532,29 @@ export function LoaTab({
     setSalvoComSucesso(false);
     setLinhas((atual) => [...atual, linha]);
     setGrupoAdicionandoFicha(null);
+  }
+
+  // Substitui o valor projetado de cada linha que veio de uma ficha de
+  // 2026 (dotacaoOrigemId) pelo total anual consolidado dos contratos
+  // vinculados a essa ficha em 2027 (mesma conta de "Por Dotação/Ficha",
+  // já descrita ali como "número de referência pra preencher o rascunho
+  // da LOA"). Linhas incluídas manualmente (sem ficha de origem) não têm
+  // de onde puxar e ficam como estão.
+  function puxarValoresDeDotacao() {
+    const confirmado = window.confirm(
+      "Isso substitui o valor projetado de cada dotação vinculada a uma ficha de 2026 pelo total consolidado em \"Por Dotação/Ficha\" para 2027 — sobrescreve qualquer valor já digitado nessas linhas. Dotações incluídas manualmente não são afetadas. Continuar?",
+    );
+    if (!confirmado) return;
+
+    const totais = totalAnualPorFichaId(contratos, ANO_LOA);
+    setSalvoComSucesso(false);
+    setLinhas((atual) =>
+      atual.map((l) =>
+        l.dotacaoOrigemId && totais.has(l.dotacaoOrigemId)
+          ? { ...l, valorProjetado: totais.get(l.dotacaoOrigemId)! }
+          : l,
+      ),
+    );
   }
 
   function exportarCsv() {
@@ -736,6 +775,15 @@ export function LoaTab({
             className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
           >
             + Incluir dotação
+          </button>
+          <button
+            type="button"
+            onClick={puxarValoresDeDotacao}
+            disabled={contratos.length === 0}
+            title="Substitui o valor de cada dotação vinculada a uma ficha pelo total consolidado em Por Dotação/Ficha (2027)"
+            className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Puxar valores de Por Dotação/Ficha
           </button>
           <button
             type="button"

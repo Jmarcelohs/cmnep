@@ -85,6 +85,21 @@ export function totalAnualContrato(contrato: Contrato, ano: number): number {
   return provisionamentoMensalContrato(contrato, ano).reduce((soma, v) => soma + v, 0);
 }
 
+// Total anual consolidado por ficha (chave = fichaId, não o rótulo de
+// consolidarPorDotacao) — usado pra "puxar" os valores de Por Dotação/
+// Ficha pra dentro da Proposta LOA (ver loa-tab.tsx), que casa linhas
+// pelo id real da ficha (dotacaoOrigemId), não por um rótulo de texto.
+// Contratos sem ficha vinculada (fichaId null) não entram — não têm
+// como ficha nenhuma da LOA.
+export function totalAnualPorFichaId(contratos: Contrato[], ano: number): Map<string, number> {
+  const totais = new Map<string, number>();
+  for (const contrato of contratos) {
+    if (!contrato.fichaId) continue;
+    totais.set(contrato.fichaId, (totais.get(contrato.fichaId) ?? 0) + totalAnualContrato(contrato, ano));
+  }
+  return totais;
+}
+
 export type GrupoDotacao = {
   chave: string;
   contratos: Contrato[];
