@@ -145,6 +145,12 @@ export default async function DecretosPage({
                       url={`/api/decretos/${d.id}/pdf`}
                       nomeArquivoPadrao={`decreto-titulo-honorario-${d.numero}-${d.ano}.pdf`}
                     />
+                    <DownloadPdfButton
+                      variant="menu"
+                      url={`/api/decretos/${d.id}/docx`}
+                      nomeArquivoPadrao={`decreto-titulo-honorario-${d.numero}-${d.ano}.docx`}
+                      label="Salvar Word"
+                    />
                     {podeGerenciar && (
                       <>
                         <Link
