@@ -66,9 +66,6 @@ export function RequerimentoInternoConteudo({
       <div className="ml-[30mm] mr-[20mm] mt-[32mm] mb-[26mm] flex flex-1 flex-col text-[12pt] leading-relaxed">
         <p className="text-center text-[13pt] font-bold">REQUERIMENTO</p>
         <p className="mt-1 text-center text-[11pt] font-bold uppercase">{requerimento.assunto}</p>
-        <p className="mt-1 text-center text-[9pt] text-slate-500">
-          Nº {requerimento.numero}/{requerimento.ano}
-        </p>
 
         <p className="mt-4 text-center">
           {CARGOS.map((c) => (
