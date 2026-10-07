@@ -121,7 +121,7 @@ export function RequerimentoInternoConteudo({
             {paragrafoDecisao({ decisao: requerimento.decisao, fundamento: requerimento.fundamento })}
           </p>
           <p className="mt-4 text-right">
-            Nepomuceno, {dataPorExtenso(requerimento.decisao_data ?? requerimento.data_requerimento)}.
+            Nepomuceno, {dataPorExtenso(requerimento.data_requerimento)}.
           </p>
           <div className="mx-auto mt-[14mm] w-[120mm] border-t border-black pt-1 text-center">
             <p className="font-bold">{PRESIDENTE}</p>
