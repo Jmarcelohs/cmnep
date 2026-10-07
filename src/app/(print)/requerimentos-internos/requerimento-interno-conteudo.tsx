@@ -109,7 +109,7 @@ export function RequerimentoInternoConteudo({
           </p>
         )}
 
-        <div className="mt-[16mm] text-center">
+        <div className="mt-[12mm] text-center">
           <div className="mx-auto w-[90mm] border-t border-black pt-1">
             <p className="font-bold">{requerimento.nome}</p>
             <p>
@@ -119,14 +119,14 @@ export function RequerimentoInternoConteudo({
           </div>
         </div>
 
-        <div className="mt-[14mm] border-t border-black pt-3">
+        <div className="mt-[9mm] border-t border-black pt-3">
           <p className="indent-[1.25cm] text-justify">
             {paragrafoDecisao({ decisao: requerimento.decisao, fundamento: requerimento.fundamento })}
           </p>
           <p className="mt-4 text-right">
             Nepomuceno, {dataPorExtenso(requerimento.decisao_data ?? requerimento.data_requerimento)}.
           </p>
-          <div className="mx-auto mt-[20mm] w-[90mm] border-t border-black pt-1 text-center">
+          <div className="mx-auto mt-[14mm] w-[120mm] border-t border-black pt-1 text-center">
             <p className="font-bold">{PRESIDENTE}</p>
             <p>Presidente da {NOME_CAMARA}</p>
           </div>
