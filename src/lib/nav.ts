@@ -63,19 +63,24 @@ export const NAV_ESTRUTURA: NavEntry[] = [
     ],
   },
   {
-    href: "/suplementacoes",
-    label: "Suplementações Orçamentárias",
-    apenas: ["admin"],
-  },
-  {
-    href: "/provisionamento",
-    label: "Provisionamento Orçamentário",
-    apenas: ["admin"],
-  },
-  {
-    href: "/orcamento",
-    label: "Painel de Orçamento",
-    apenas: ["admin", "ordenador_despesa"],
+    label: "Orçamento",
+    items: [
+      {
+        href: "/suplementacoes",
+        label: "Suplementações Orçamentárias",
+        apenas: ["admin"],
+      },
+      {
+        href: "/provisionamento",
+        label: "Provisionamento Orçamentário",
+        apenas: ["admin"],
+      },
+      {
+        href: "/orcamento",
+        label: "Painel de Orçamento",
+        apenas: ["admin", "ordenador_despesa"],
+      },
+    ],
   },
   { href: "/auditoria", label: "Auditoria", apenas: ["admin"] },
 ];
