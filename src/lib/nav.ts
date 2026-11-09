@@ -19,8 +19,9 @@ export type NavEntry = NavLeaf | NavGroup;
 export const NAV_ESTRUTURA: NavEntry[] = [
   { href: "/dashboard", label: "Painel" },
   { href: "/relatorios/anual", label: "Relatório Anual" },
-  { href: "/agenda", label: "Agenda" },
-  { href: "/mensagens", label: "Mensagens" },
+  // Agenda, Mensagens e Licitações foram desativadas (menu removido e rotas
+  // redirecionadas em next.config.ts). Código e dados continuam no repositório/
+  // banco — para reativar, devolva os itens aqui e tire os redirects.
   {
     label: "Diárias e Reembolsos",
     items: [
@@ -60,11 +61,6 @@ export const NAV_ESTRUTURA: NavEntry[] = [
       { href: "/vereadores", label: "Vereadores", oculto: ["servidor", "gestor_diarias", "estagiario"] },
       { href: "/usuarios", label: "Usuários", apenas: ["admin"] },
     ],
-  },
-  {
-    href: "/licitacoes",
-    label: "Licitações",
-    apenas: ["admin", "ordenador_despesa", "servidor"],
   },
   {
     href: "/suplementacoes",
